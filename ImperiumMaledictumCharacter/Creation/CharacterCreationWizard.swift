@@ -307,15 +307,15 @@ struct CharacteristicsStage: View {
                 GridItem(.flexible()),
                 GridItem(.flexible())
             ], spacing: 16) {
-                CharacteristicField("Weapon Skill", value: $character.weaponSkill)
-                CharacteristicField("Ballistic Skill", value: $character.ballisticSkill)
-                CharacteristicField("Strength", value: $character.strength)
-                CharacteristicField("Toughness", value: $character.toughness)
-                CharacteristicField("Agility", value: $character.agility)
-                CharacteristicField("Intelligence", value: $character.intelligence)
-                CharacteristicField("Willpower", value: $character.willpower)
-                CharacteristicField("Fellowship", value: $character.fellowship)
-                CharacteristicField("Influence", value: $character.influence)
+                CharacteristicField(name: "Weapon Skill", value: $character.weaponSkill)
+                CharacteristicField(name: "Ballistic Skill", value: $character.ballisticSkill)
+                CharacteristicField(name: "Strength", value: $character.strength)
+                CharacteristicField(name: "Toughness", value: $character.toughness)
+                CharacteristicField(name: "Agility", value: $character.agility)
+                CharacteristicField(name: "Intelligence", value: $character.intelligence)
+                CharacteristicField(name: "Willpower", value: $character.willpower)
+                CharacteristicField(name: "Fellowship", value: $character.fellowship)
+                CharacteristicField(name: "Influence", value: $character.influence)
             }
         }
     }

@@ -234,15 +234,15 @@ struct CharacteristicsTab: View {
                 GridItem(.flexible()),
                 GridItem(.flexible())
             ], spacing: 16) {
-                CharacteristicDisplay("Weapon Skill", value: character.weaponSkill)
-                CharacteristicDisplay("Ballistic Skill", value: character.ballisticSkill)
-                CharacteristicDisplay("Strength", value: character.strength)
-                CharacteristicDisplay("Toughness", value: character.toughness)
-                CharacteristicDisplay("Agility", value: character.agility)
-                CharacteristicDisplay("Intelligence", value: character.intelligence)
-                CharacteristicDisplay("Willpower", value: character.willpower)
-                CharacteristicDisplay("Fellowship", value: character.fellowship)
-                CharacteristicDisplay("Influence", value: character.influence)
+                CharacteristicDisplay(name: "Weapon Skill", value: character.weaponSkill)
+                CharacteristicDisplay(name: "Ballistic Skill", value: character.ballisticSkill)
+                CharacteristicDisplay(name: "Strength", value: character.strength)
+                CharacteristicDisplay(name: "Toughness", value: character.toughness)
+                CharacteristicDisplay(name: "Agility", value: character.agility)
+                CharacteristicDisplay(name: "Intelligence", value: character.intelligence)
+                CharacteristicDisplay(name: "Willpower", value: character.willpower)
+                CharacteristicDisplay(name: "Fellowship", value: character.fellowship)
+                CharacteristicDisplay(name: "Influence", value: character.influence)
             }
             .padding()
         }
