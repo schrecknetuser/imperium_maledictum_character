@@ -9,7 +9,7 @@ import Foundation
 import SwiftData
 
 // MARK: - Base Character Protocol
-protocol BaseCharacter: AnyObject, Codable, Identifiable {
+protocol BaseCharacter: AnyObject, Identifiable {
     var id: UUID { get set }
     var name: String { get set }
     var player: String { get set }

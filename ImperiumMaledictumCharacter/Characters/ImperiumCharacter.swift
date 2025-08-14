@@ -63,7 +63,6 @@ class ImperiumCharacter: BaseCharacter {
     }
     
     init() {
-        super.init()
         resetToDefaults()
     }
     
