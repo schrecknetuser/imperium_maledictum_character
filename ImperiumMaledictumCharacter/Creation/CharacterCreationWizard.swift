@@ -417,9 +417,9 @@ struct EquipmentStage: View {
                     .font(.headline)
                 
                 HStack {
-                    Text("Thrones:")
+                    Text("Solars:")
                     Spacer()
-                    TextField("0", value: $character.thrones, format: .number)
+                    TextField("0", value: $character.solars, format: .number)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .frame(width: 100)
                 }

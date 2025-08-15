@@ -170,8 +170,8 @@ struct OverviewTab: View {
                             DetailRow(title: "Nemesis", value: imperium.nemesis)
                         }
                         
-                        if imperium.thrones > 0 {
-                            DetailRow(title: "Wealth", value: "\(imperium.thrones) Thrones")
+                        if imperium.solars > 0 {
+                            DetailRow(title: "Wealth", value: "\(imperium.solars) Solars")
                         }
                     }
                     .padding()
