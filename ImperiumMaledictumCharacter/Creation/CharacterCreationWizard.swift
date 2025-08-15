@@ -192,7 +192,7 @@ struct CharacteristicsStage: View {
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Text("Allocate 90 points among your characteristics. Each characteristic starts at 20 and each point increases it by 5. Maximum of 100 per characteristic.")
+            Text("Allocate 90 points among your characteristics. Each characteristic starts at 20 and each point increases it by 5. Characteristics can range from 5 to 100.")
                 .font(.caption)
                 .foregroundColor(.secondary)
             
@@ -287,7 +287,8 @@ struct CharacteristicsStage: View {
         let characteristics = character.characteristics
         for name in CharacteristicNames.allCharacteristics {
             let characteristic = characteristics[name] ?? Characteristic(name: name, initialValue: 20, advances: 0)
-            allocatedPoints[name] = characteristic.initialValue - 20
+            // Calculate allocated points as (initialValue - 20) / 5
+            allocatedPoints[name] = (characteristic.initialValue - 20) / 5
         }
         updateRemainingPoints()
     }
@@ -333,39 +334,47 @@ struct CharacteristicAllocationField: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             
-            HStack {
-                Button("-") {
-                    if allocatedPoints > 0 {
-                        allocatedPoints -= 1
-                        onPointsChanged()
-                    }
+            HStack(spacing: 8) {
+                Button(action: {
+                    allocatedPoints -= 1
+                    onPointsChanged()
+                }) {
+                    Image(systemName: "minus")
+                        .font(.title2)
+                        .fontWeight(.bold)
                 }
-                .buttonStyle(.bordered)
-                .disabled(allocatedPoints <= 0)
+                .frame(width: 44, height: 44)
+                .background(Color(.systemGray5))
+                .foregroundColor(.primary)
+                .cornerRadius(8)
+                .disabled(finalValue <= 5) // Allow going down to 5 (minimum viable characteristic)
                 
-                Spacer()
-                
-                VStack {
+                VStack(spacing: 2) {
                     Text("\(finalValue)")
                         .font(.title2)
                         .fontWeight(.bold)
+                        .foregroundColor(finalValue < 20 ? .orange : .primary)
                     Text("(\(allocatedPoints) pts)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
                 .frame(minWidth: 60)
                 
-                Spacer()
-                
-                Button("+") {
-                    if finalValue < 100 {
-                        allocatedPoints += 1
-                        onPointsChanged()
-                    }
+                Button(action: {
+                    allocatedPoints += 1
+                    onPointsChanged()
+                }) {
+                    Image(systemName: "plus")
+                        .font(.title2)
+                        .fontWeight(.bold)
                 }
-                .buttonStyle(.bordered)
+                .frame(width: 44, height: 44)
+                .background(Color(.systemGray5))
+                .foregroundColor(.primary)
+                .cornerRadius(8)
                 .disabled(finalValue >= 100)
             }
+            .frame(maxWidth: .infinity)
         }
         .padding()
         .background(Color(.systemGray6))

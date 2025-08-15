@@ -79,6 +79,16 @@ struct CharacterListView: View {
                             CharacterRow(character: character)
                         }
                         .foregroundColor(.primary)
+                        .swipeActions(edge: .trailing) {
+                            Button {
+                                if let index = store.characters.firstIndex(where: { $0.id == character.id }) {
+                                    store.deleteCharacter(at: IndexSet([index]))
+                                }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            .tint(.red)
+                        }
                     }
                     .onDelete { offsets in
                         let indicesToDelete = IndexSet(offsets.compactMap { offset in
@@ -111,6 +121,13 @@ struct CharacterListView: View {
                             CharacterRow(character: character)
                         }
                         .swipeActions(edge: .trailing) {
+                            Button {
+                                store.deleteCharacter(character)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            .tint(.red)
+                            
                             Button {
                                 store.archiveCharacter(character)
                             } label: {
@@ -148,6 +165,13 @@ struct CharacterListView: View {
                             CharacterRow(character: character)
                         }
                         .swipeActions(edge: .trailing) {
+                            Button {
+                                store.deleteCharacter(character)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            .tint(.red)
+                            
                             Button {
                                 store.unarchiveCharacter(character)
                             } label: {
