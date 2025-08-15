@@ -228,25 +228,308 @@ struct DetailRow: View {
 struct CharacteristicsTab: View {
     let character: any BaseCharacter
     
+    var imperiumCharacter: ImperiumCharacter? {
+        return character as? ImperiumCharacter
+    }
+    
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 16) {
-                CharacteristicDisplay(name: "Weapon Skill", value: character.weaponSkill)
-                CharacteristicDisplay(name: "Ballistic Skill", value: character.ballisticSkill)
-                CharacteristicDisplay(name: "Strength", value: character.strength)
-                CharacteristicDisplay(name: "Toughness", value: character.toughness)
-                CharacteristicDisplay(name: "Agility", value: character.agility)
-                CharacteristicDisplay(name: "Intelligence", value: character.intelligence)
-                CharacteristicDisplay(name: "Willpower", value: character.willpower)
-                CharacteristicDisplay(name: "Fellowship", value: character.fellowship)
-                CharacteristicDisplay(name: "Influence", value: character.influence)
+            VStack(spacing: 20) {
+                // Characteristics Table
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Characteristics")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    VStack(spacing: 0) {
+                        // Header row
+                        HStack {
+                            Text("Char.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .leading)
+                            Text("Base")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .center)
+                            Text("Adv.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .center)
+                            Text("Total")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 50, alignment: .center)
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemGray5))
+                        
+                        ForEach(getCharacteristicsList(), id: \.abbreviation) { characteristic in
+                            HStack {
+                                Text(characteristic.abbreviation)
+                                    .font(.caption)
+                                    .frame(width: 40, alignment: .leading)
+                                Text("\(characteristic.baseValue)")
+                                    .font(.caption)
+                                    .frame(width: 40, alignment: .center)
+                                Text("\(characteristic.advances)")
+                                    .font(.caption)
+                                    .frame(width: 40, alignment: .center)
+                                Text("\(characteristic.totalValue)")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .frame(width: 50, alignment: .center)
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 6)
+                            .background(Color(.systemGray6).opacity(0.5))
+                        }
+                    }
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
+                
+                // Skills Table
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Skills")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    VStack(spacing: 0) {
+                        // Header row
+                        HStack {
+                            Text("Skill")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text("Char.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .center)
+                            Text("Adv.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .center)
+                            Text("Total")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 50, alignment: .center)
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemGray5))
+                        
+                        ForEach(getSkillsList(), id: \.name) { skill in
+                            HStack {
+                                Text(skill.name)
+                                    .font(.caption)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text(skill.characteristicAbbreviation)
+                                    .font(.caption)
+                                    .frame(width: 40, alignment: .center)
+                                Text("\(skill.advances)")
+                                    .font(.caption)
+                                    .frame(width: 40, alignment: .center)
+                                Text("\(skill.totalValue)")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .frame(width: 50, alignment: .center)
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 6)
+                            .background(Color(.systemGray6).opacity(0.5))
+                        }
+                    }
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
+                
+                // Specializations Table
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Specializations")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    VStack(spacing: 0) {
+                        // Header row
+                        HStack {
+                            Text("Specialization")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text("Skill")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 60, alignment: .center)
+                            Text("Adv.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .center)
+                            Text("Total")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 50, alignment: .center)
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemGray5))
+                        
+                        ForEach(getSpecializationsList(), id: \.name) { specialization in
+                            HStack {
+                                Text(specialization.name)
+                                    .font(.caption)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text(specialization.skillName)
+                                    .font(.caption)
+                                    .frame(width: 60, alignment: .center)
+                                Text("\(specialization.advances)")
+                                    .font(.caption)
+                                    .frame(width: 40, alignment: .center)
+                                Text("\(specialization.totalValue)")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .frame(width: 50, alignment: .center)
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 6)
+                            .background(Color(.systemGray6).opacity(0.5))
+                        }
+                    }
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
             }
             .padding()
         }
     }
+    
+    private func getCharacteristicsList() -> [CharacteristicRowData] {
+        var result: [CharacteristicRowData] = []
+        
+        if let imperium = imperiumCharacter {
+            let characteristics = imperium.characteristics
+            let characteristicInfo = [
+                ("WS", "Weapon Skill", characteristics[CharacteristicNames.weaponSkill] ?? Characteristic(name: CharacteristicNames.weaponSkill, initialValue: 20, advances: 0)),
+                ("BS", "Ballistic Skill", characteristics[CharacteristicNames.ballisticSkill] ?? Characteristic(name: CharacteristicNames.ballisticSkill, initialValue: 20, advances: 0)),
+                ("Str", "Strength", characteristics[CharacteristicNames.strength] ?? Characteristic(name: CharacteristicNames.strength, initialValue: 20, advances: 0)),
+                ("Tgh", "Toughness", characteristics[CharacteristicNames.toughness] ?? Characteristic(name: CharacteristicNames.toughness, initialValue: 20, advances: 0)),
+                ("Agi", "Agility", characteristics[CharacteristicNames.agility] ?? Characteristic(name: CharacteristicNames.agility, initialValue: 20, advances: 0)),
+                ("Int", "Intelligence", characteristics[CharacteristicNames.intelligence] ?? Characteristic(name: CharacteristicNames.intelligence, initialValue: 20, advances: 0)),
+                ("Per", "Perception", characteristics[CharacteristicNames.perception] ?? Characteristic(name: CharacteristicNames.perception, initialValue: 20, advances: 0)),
+                ("Wil", "Willpower", characteristics[CharacteristicNames.willpower] ?? Characteristic(name: CharacteristicNames.willpower, initialValue: 20, advances: 0)),
+                ("Fel", "Fellowship", characteristics[CharacteristicNames.fellowship] ?? Characteristic(name: CharacteristicNames.fellowship, initialValue: 20, advances: 0))
+            ]
+            
+            for (abbrev, name, characteristic) in characteristicInfo {
+                result.append(CharacteristicRowData(
+                    abbreviation: abbrev,
+                    name: name,
+                    baseValue: characteristic.initialValue,
+                    advances: characteristic.advances,
+                    totalValue: characteristic.derivedValue
+                ))
+            }
+        }
+        
+        return result
+    }
+    
+    private func getSkillsList() -> [SkillRowData] {
+        var result: [SkillRowData] = []
+        
+        if let imperium = imperiumCharacter {
+            let skillAdvances = imperium.skillAdvances
+            
+            // Define skill-to-characteristic mapping
+            let skillCharacteristicMap = [
+                "Awareness": "Per",
+                "Athletics": "Str", 
+                "Ballistic Skill": "BS",
+                "Deceive": "Fel",
+                "Dodge": "Agi",
+                "Inquiry": "Fel",
+                "Intimidate": "Str",
+                "Investigation": "Int",
+                "Leadership": "Fel",
+                "Lore": "Int",
+                "Medicae": "Int",
+                "Melee": "WS",
+                "Navigate": "Int",
+                "Operate": "Agi",
+                "Pilot": "Agi",
+                "Psychic Mastery": "Wil",
+                "Ranged": "BS",
+                "Rapport": "Fel",
+                "Reflexes": "Agi",
+                "Stealth": "Agi",
+                "Survival": "Tgh",
+                "Tech": "Int",
+                "Weapon Skill": "WS"
+            ]
+            
+            for (skillName, advances) in skillAdvances.sorted(by: { $0.key < $1.key }) {
+                if advances > 0 {
+                    let characteristicAbbrev = skillCharacteristicMap[skillName] ?? "Int"
+                    let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
+                    
+                    result.append(SkillRowData(
+                        name: skillName,
+                        characteristicAbbreviation: characteristicAbbrev,
+                        advances: advances,
+                        totalValue: characteristicValue + (advances * 5)
+                    ))
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    private func getSpecializationsList() -> [SpecializationRowData] {
+        // For now, return empty array as we need to implement specializations tracking
+        return []
+    }
+    
+    private func getCharacteristicValue(for abbreviation: String, from character: ImperiumCharacter) -> Int {
+        let characteristics = character.characteristics
+        switch abbreviation {
+        case "WS": return characteristics[CharacteristicNames.weaponSkill]?.derivedValue ?? 20
+        case "BS": return characteristics[CharacteristicNames.ballisticSkill]?.derivedValue ?? 20
+        case "Str": return characteristics[CharacteristicNames.strength]?.derivedValue ?? 20
+        case "Tgh": return characteristics[CharacteristicNames.toughness]?.derivedValue ?? 20
+        case "Agi": return characteristics[CharacteristicNames.agility]?.derivedValue ?? 20
+        case "Int": return characteristics[CharacteristicNames.intelligence]?.derivedValue ?? 20
+        case "Per": return characteristics[CharacteristicNames.perception]?.derivedValue ?? 20
+        case "Wil": return characteristics[CharacteristicNames.willpower]?.derivedValue ?? 20
+        case "Fel": return characteristics[CharacteristicNames.fellowship]?.derivedValue ?? 20
+        default: return 20
+        }
+    }
+}
+
+struct CharacteristicRowData {
+    let abbreviation: String
+    let name: String
+    let baseValue: Int
+    let advances: Int
+    let totalValue: Int
+}
+
+struct SkillRowData {
+    let name: String
+    let characteristicAbbreviation: String
+    let advances: Int
+    let totalValue: Int
+}
+
+struct SpecializationRowData {
+    let name: String
+    let skillName: String
+    let advances: Int
+    let totalValue: Int
 }
 
 struct CharacteristicDisplay: View {
@@ -319,8 +602,14 @@ struct TalentsTab: View {
         NavigationView {
             List {
                 if let imperium = imperiumCharacter {
-                    ForEach(imperium.talents, id: \.self) { talent in
+                    ForEach(imperium.talentNames, id: \.self) { talent in
                         Text(talent)
+                    }
+                    
+                    if imperium.talentNames.isEmpty {
+                        Text("No talents selected")
+                            .foregroundColor(.secondary)
+                            .italic()
                     }
                 } else {
                     Text("Talents not available for this character type")
@@ -347,8 +636,28 @@ struct EquipmentTab: View {
         NavigationView {
             List {
                 if let imperium = imperiumCharacter {
-                    ForEach(imperium.equipment, id: \.self) { item in
-                        Text(item)
+                    Section("Equipment") {
+                        ForEach(imperium.equipmentNames, id: \.self) { item in
+                            Text(item)
+                        }
+                        
+                        if imperium.equipmentNames.isEmpty {
+                            Text("No equipment")
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
+                    }
+                    
+                    Section("Weapons") {
+                        ForEach(imperium.weaponNames, id: \.self) { weapon in
+                            Text(weapon)
+                        }
+                        
+                        if imperium.weaponNames.isEmpty {
+                            Text("No weapons")
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
                     }
                 } else {
                     Text("Equipment not available for this character type")

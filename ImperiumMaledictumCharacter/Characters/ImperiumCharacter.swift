@@ -28,6 +28,7 @@ class ImperiumCharacter: BaseCharacter {
     // Core characteristics - using new data model approach 
     var characteristicsData: String = "" // JSON data for characteristics
     var skillsAdvancesData: String = "" // JSON data for skill advances
+    var factionSkillAdvancesData: String = "" // JSON data for faction-specific skill advances
     var talentNamesData: String = "" // JSON array of talent names
     var equipmentNamesData: String = "" // JSON array of equipment names  
     var weaponNamesData: String = "" // JSON array of weapon names
@@ -236,6 +237,22 @@ class ImperiumCharacter: BaseCharacter {
         }
     }
     
+    var factionSkillAdvances: [String: Int] {
+        get {
+            guard let data = factionSkillAdvancesData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String: Int].self, from: data) else {
+                return [:]
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                factionSkillAdvancesData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
     var talentNames: [String] {
         get {
             guard let data = talentNamesData.data(using: .utf8),
@@ -247,6 +264,38 @@ class ImperiumCharacter: BaseCharacter {
         set {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 talentNamesData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
+    var equipmentNames: [String] {
+        get {
+            guard let data = equipmentNamesData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                equipmentNamesData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
+    var weaponNames: [String] {
+        get {
+            guard let data = weaponNamesData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                weaponNamesData = String(data: encoded, encoding: .utf8) ?? ""
             }
             lastModified = Date()
         }

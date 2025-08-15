@@ -192,7 +192,7 @@ struct CharacteristicsStage: View {
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Text("Allocate 90 points among your characteristics. Each characteristic starts at 20 and each point increases it by 5. Characteristics can range from 5 to 100.")
+            Text("Allocate 90 points among your characteristics. Each characteristic starts at 20 and each point increases it by 1. Characteristics can range from 5 to 100.")
                 .font(.caption)
                 .foregroundColor(.secondary)
             
@@ -210,10 +210,10 @@ struct CharacteristicsStage: View {
             .cornerRadius(8)
             
             LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 16) {
+                GridItem(.flexible(), spacing: 8),
+                GridItem(.flexible(), spacing: 8),
+                GridItem(.flexible(), spacing: 8)
+            ], spacing: 12) {
                 CharacteristicAllocationField(
                     name: CharacteristicNames.weaponSkill,
                     baseValue: 20,
@@ -287,8 +287,8 @@ struct CharacteristicsStage: View {
         let characteristics = character.characteristics
         for name in CharacteristicNames.allCharacteristics {
             let characteristic = characteristics[name] ?? Characteristic(name: name, initialValue: 20, advances: 0)
-            // Calculate allocated points as (initialValue - 20) / 5
-            allocatedPoints[name] = (characteristic.initialValue - 20) / 5
+            // Calculate allocated points as (initialValue - 20)
+            allocatedPoints[name] = characteristic.initialValue - 20
         }
         updateRemainingPoints()
     }
@@ -296,7 +296,7 @@ struct CharacteristicsStage: View {
     private func saveCharacteristicsToCharacter() {
         var characteristics = character.characteristics
         for (name, points) in allocatedPoints {
-            characteristics[name] = Characteristic(name: name, initialValue: 20 + (points * 5), advances: 0)
+            characteristics[name] = Characteristic(name: name, initialValue: 20 + points, advances: 0)
         }
         character.characteristics = characteristics
     }
@@ -324,59 +324,59 @@ struct CharacteristicAllocationField: View {
     let onPointsChanged: () -> Void
     
     var finalValue: Int {
-        return baseValue + (allocatedPoints * 5)
+        return baseValue + allocatedPoints
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(name)
-                .font(.headline)
+                .font(.caption)
+                .fontWeight(.medium)
                 .lineLimit(1)
-                .minimumScaleFactor(0.8)
+                .minimumScaleFactor(0.7)
             
-            HStack(spacing: 8) {
+            HStack(spacing: 4) {
                 Button(action: {
                     allocatedPoints -= 1
                     onPointsChanged()
                 }) {
                     Image(systemName: "minus")
-                        .font(.title2)
+                        .font(.caption)
                         .fontWeight(.bold)
                 }
-                .frame(width: 44, height: 44)
+                .frame(width: 32, height: 32)
                 .background(Color(.systemGray5))
                 .foregroundColor(.primary)
-                .cornerRadius(8)
+                .cornerRadius(6)
                 .disabled(finalValue <= 5) // Allow going down to 5 (minimum viable characteristic)
                 
-                VStack(spacing: 2) {
+                VStack(spacing: 1) {
                     Text("\(finalValue)")
-                        .font(.title2)
+                        .font(.subheadline)
                         .fontWeight(.bold)
                         .foregroundColor(finalValue < 20 ? .orange : .primary)
-                    Text("(\(allocatedPoints) pts)")
-                        .font(.caption)
+                    Text("(\(allocatedPoints))")
+                        .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                .frame(minWidth: 60)
+                .frame(minWidth: 40)
                 
                 Button(action: {
                     allocatedPoints += 1
                     onPointsChanged()
                 }) {
                     Image(systemName: "plus")
-                        .font(.title2)
+                        .font(.caption)
                         .fontWeight(.bold)
                 }
-                .frame(width: 44, height: 44)
+                .frame(width: 32, height: 32)
                 .background(Color(.systemGray5))
                 .foregroundColor(.primary)
-                .cornerRadius(8)
+                .cornerRadius(6)
                 .disabled(finalValue >= 100)
             }
-            .frame(maxWidth: .infinity)
         }
-        .padding()
+        .padding(8)
         .background(Color(.systemGray6))
         .cornerRadius(8)
     }
@@ -475,6 +475,7 @@ struct FactionStage: View {
     @State private var selectedChoice: String = ""
     @State private var skillAdvancesDistribution: [String: Int] = [:]
     @State private var remainingSkillAdvances: Int = 5
+    @State private var hasInitialized: Bool = false
     
     var selectedFaction: Faction? {
         return FactionDefinitions.getFaction(by: character.faction)
@@ -624,13 +625,13 @@ struct FactionStage: View {
     }
     
     private func initializeFactionSelections() {
-        guard let faction = selectedFaction else { return }
+        guard let faction = selectedFaction, !hasInitialized else { return }
         
-        // Initialize skill advances distribution
-        let existingAdvances = character.skillAdvances
+        // Initialize skill advances distribution to zero (fresh start each time)
         for skill in faction.skillAdvances {
-            skillAdvancesDistribution[skill] = existingAdvances[skill] ?? 0
+            skillAdvancesDistribution[skill] = 0
         }
+        hasInitialized = true
         updateRemainingSkillAdvances()
     }
     
@@ -638,18 +639,21 @@ struct FactionStage: View {
         selectedChoice = ""
         skillAdvancesDistribution = [:]
         remainingSkillAdvances = 5
+        hasInitialized = false
         if selectedFaction != nil {
             initializeFactionSelections()
         }
     }
     
     private func saveFactionSelectionsToCharacter() {
-        // Save skill advances to character
-        var currentAdvances = character.skillAdvances
+        // Don't duplicate - this will be handled properly when we implement it fully
+        // For now, just store the direct values to avoid accumulation
+        var currentAdvances: [String: Int] = [:]
         for (skill, advances) in skillAdvancesDistribution {
             currentAdvances[skill] = advances
         }
-        character.skillAdvances = currentAdvances
+        // Store faction-specific advances separately to avoid duplication
+        character.factionSkillAdvances = currentAdvances
         
         // TODO: Save characteristic bonus choice and other selections
     }
