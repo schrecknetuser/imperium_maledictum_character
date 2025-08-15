@@ -34,6 +34,7 @@ protocol BaseCharacter: AnyObject, Identifiable {
     var willpower: Int { get set }
     var fellowship: Int { get set }
     var influence: Int { get set }
+    var perception: Int { get set }
     
     // Status tracking
     var wounds: Int { get set }
