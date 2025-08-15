@@ -181,6 +181,132 @@ struct BasicInfoStage: View {
     }
 }
 
+struct FactionRoleStage: View {
+    @Binding var character: ImperiumCharacter
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Faction & Role")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Faction")
+                    .font(.headline)
+                
+                Picker("Select Faction", selection: $character.faction) {
+                    Text("Select a faction...").tag("")
+                    ForEach(ImperiumFactions.all, id: \.self) { faction in
+                        Text(faction).tag(faction)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Role")
+                    .font(.headline)
+                
+                let availableRoles = ImperiumRoles.roles(for: character.faction)
+                
+                if availableRoles.isEmpty {
+                    Text("Select a faction first")
+                        .foregroundColor(.secondary)
+                        .italic()
+                } else {
+                    Picker("Select Role", selection: $character.role) {
+                        Text("Select a role...").tag("")
+                        ForEach(availableRoles, id: \.self) { role in
+                            Text(role).tag(role)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            
+            if !character.faction.isEmpty && !character.role.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Background (Optional)")
+                        .font(.headline)
+                    TextField("Brief character background", text: $character.background, axis: .vertical)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .lineLimit(3...6)
+                }
+            }
+        }
+        .onChange(of: character.faction) { oldValue, newValue in
+            if oldValue != newValue {
+                character.role = ""
+            }
+        }
+    }
+}
+
+struct HomeworldStage: View {
+    @Binding var character: ImperiumCharacter
+    
+    private let homeworlds = [
+        "Hive World", "Forge World", "Agri World", "Civilised World", "Death World",
+        "Feral World", "Imperial World", "Shrine World", "Voidborn", "Noble Born"
+    ]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Homeworld")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Origin")
+                    .font(.headline)
+                
+                Picker("Select Homeworld", selection: $character.homeworld) {
+                    Text("Select origin...").tag("")
+                    ForEach(homeworlds, id: \.self) { world in
+                        Text(world).tag(world)
+                    }
+                }
+                .pickerStyle(MenuPickerStyle())
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Goal (Optional)")
+                    .font(.headline)
+                TextField("Character's primary goal", text: $character.goal, axis: .vertical)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .lineLimit(2...4)
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Nemesis (Optional)")
+                    .font(.headline)
+                TextField("Character's enemy or obstacle", text: $character.nemesis, axis: .vertical)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .lineLimit(2...4)
+            }
+        }
+    }
+}
+
+struct CharacteristicsStage: View {
+    @Binding var character: ImperiumCharacter
+    @State private var allocatedPoints: [String: Int] = [:]
+    @State private var remainingPoints: Int = 90
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Characteristics")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text("All characteristics start at 20. You have 90 points to allocate among them. Each point increases a characteristic by 5.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            HStack {
                 Text("Remaining Points:")
                     .font(.headline)
                 Spacer()
@@ -445,279 +571,124 @@ struct OriginStage: View {
         }
     }
 }
-struct FactionStage: View {
-    @Binding var character: ImperiumCharacter
-    @State private var selectedChoice: String = ""
-    
-    var selectedFaction: Faction? {
-        return FactionDefinitions.getFaction(by: character.faction)
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Faction")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("Choose your character's faction, which determines their training, resources, and connections.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Imperial Faction")
-                    .font(.headline)
-                
-                Picker("Select Faction", selection: $character.faction) {
-                    Text("Select faction...").tag("")
-                    ForEach(FactionDefinitions.allFactions, id: \.name) { faction in
-                        Text(faction.name).tag(faction.name)
-                    }
-                }
-                .pickerStyle(MenuPickerStyle())
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            
-            if let faction = selectedFaction {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(faction.description)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        Text("Characteristic Bonuses:")
-                            .font(.headline)
-                        
-                        Text("• +\(faction.mandatoryBonus.bonus) \(faction.mandatoryBonus.characteristic)")
-                            .font(.subheadline)
-                        
-                        Text("Choice of:")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            ForEach(faction.choiceBonus.indices, id: \.self) { index in
-                                let bonus = faction.choiceBonus[index]
-                                HStack {
-                                    Button(action: {
-                                        selectedChoice = bonus.characteristic
-                                    }) {
-                                        HStack {
-                                            Image(systemName: selectedChoice == bonus.characteristic ? "checkmark.circle.fill" : "circle")
-                                            Text("+\(bonus.bonus) \(bonus.characteristic)")
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                    .foregroundColor(selectedChoice == bonus.characteristic ? .blue : .primary)
-                                    
-                                    Spacer()
-                                }
-                            }
-                        }
-                        
-                        Text("Skills (5 advances to distribute):")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        Text(faction.skillAdvances.joined(separator: ", "))
-                            .font(.subheadline)
-                        
-                        Text("Influence: +1 with \(faction.influenceBonus)")
-                            .font(.subheadline)
-                        
-                        if !faction.talents.isEmpty {
-                            Text("Talents:")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                            
-                            ForEach(faction.talents, id: \.self) { talent in
-                                Text("• \(talent)")
-                                    .font(.subheadline)
-                            }
-                        }
-                        
-                        Text("Equipment:")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        ForEach(faction.equipment, id: \.self) { equipment in
-                            Text("• \(equipment)")
-                                .font(.subheadline)
-                        }
-                        
-                        Text("Starting Solars: \(faction.solars)")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                    }
-                }
-                .frame(maxHeight: 300)
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
-            }
-        }
-    }
-}
 
-struct RoleStage: View {
-    @Binding var character: ImperiumCharacter
-    
-    var selectedRole: Role? {
-        return RoleDefinitions.getRole(by: character.role)
-    }
+struct CharacteristicField: View {
+    let name: String
+    @Binding var value: Int
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Role")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("Choose your character's role, which determines their specialization and starting abilities.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Character Role")
-                    .font(.headline)
-                
-                Picker("Select Role", selection: $character.role) {
-                    Text("Select role...").tag("")
-                    ForEach(RoleDefinitions.allRoles, id: \.name) { role in
-                        Text(role.name).tag(role.name)
-                    }
-                }
-                .pickerStyle(MenuPickerStyle())
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            
-            if let role = selectedRole {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(role.description)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
-                        Text("Talent Choices (\(role.talentCount) from):")
-                            .font(.headline)
-                        
-                        ForEach(role.talentChoices, id: \.self) { talent in
-                            Text("• \(talent)")
-                                .font(.subheadline)
-                        }
-                        
-                        Text("Skill Advances (\(role.skillAdvanceCount) to distribute):")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        Text(role.skillAdvances.joined(separator: ", "))
-                            .font(.subheadline)
-                        
-                        Text("Specialization Advances (\(role.specializationAdvanceCount) to distribute):")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        Text(role.specializationAdvances.joined(separator: ", "))
-                            .font(.subheadline)
-                        
-                        if !role.weaponChoices.isEmpty {
-                            Text("Weapon Choices:")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                            
-                            ForEach(role.weaponChoices.indices, id: \.self) { index in
-                                Text("• Choice \(index + 1): \(role.weaponChoices[index].joined(separator: " or "))")
-                                    .font(.subheadline)
-                            }
-                        }
-                        
-                        Text("Equipment:")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        ForEach(role.equipment, id: \.self) { equipment in
-                            Text("• \(equipment)")
-                                .font(.subheadline)
-                        }
-                        
-                        if !role.equipmentChoices.isEmpty {
-                            Text("Equipment Choices:")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                            
-                            ForEach(role.equipmentChoices.indices, id: \.self) { index in
-                                Text("• Choice \(index + 1): \(role.equipmentChoices[index].joined(separator: " or "))")
-                                    .font(.subheadline)
-                            }
-                        }
-                    }
-                }
-                .frame(maxHeight: 400)
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
-            }
-        }
-    }
-}
-
-struct CompletionStage: View {
-    @Binding var character: ImperiumCharacter
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Character Creation Complete")
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text("Your character has been created! You can now review and modify their details in the character sheet.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Character Summary")
-                    .font(.headline)
-                
-                if !character.name.isEmpty {
-                    Text("Name: \(character.name)")
-                        .font(.subheadline)
-                }
-                
-                if !character.campaign.isEmpty {
-                    Text("Campaign: \(character.campaign)")
-                        .font(.subheadline)
-                }
-                
-                if !character.homeworld.isEmpty {
-                    Text("Origin: \(character.homeworld)")
-                        .font(.subheadline)
-                }
-                
-                if !character.faction.isEmpty {
-                    Text("Faction: \(character.faction)")
-                        .font(.subheadline)
-                }
-                
-                if !character.role.isEmpty {
-                    Text("Role: \(character.role)")
-                        .font(.subheadline)
-                }
-            }
-            .padding()
-            .background(Color(.systemGray6))
-            .cornerRadius(8)
-            
-            Text("The character sheet will allow you to:")
+        VStack(alignment: .leading, spacing: 8) {
+            Text(name)
                 .font(.headline)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("• Modify characteristics and skill advances")
-                Text("• Select specific talents from role choices")
-                Text("• Choose equipment from faction and role options")
-                Text("• Track reputation with factions")
-                Text("• Manage weapons and gear")
-                Text("• Record psychic powers (if applicable)")
+            HStack {
+                Button("-") {
+                    if value > 10 {
+                        value -= 5
+                    }
+                }
+                .buttonStyle(.bordered)
+                .disabled(value <= 10)
+                
+                Spacer()
+                
+                Text("\(value)")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .frame(minWidth: 40)
+                
+                Spacer()
+                
+                Button("+") {
+                    if value < 60 {
+                        value += 5
+                    }
+                }
+                .buttonStyle(.bordered)
+                .disabled(value >= 60)
             }
-            .font(.subheadline)
-            .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
+    }
+}
+
+struct SkillsTalentsStage: View {
+    @Binding var character: ImperiumCharacter
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Skills & Talents")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text("You can add skills and talents now or later from the character sheet.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Starting Skills")
+                    .font(.headline)
+                
+                Text("Skills will be determined by your faction and role. You can customize them in the character sheet.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Starting Talents")
+                    .font(.headline)
+                
+                Text("Talents will be determined by your background and role. You can add more in the character sheet.")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
+
+struct EquipmentStage: View {
+    @Binding var character: ImperiumCharacter
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Equipment")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text("Starting equipment is based on your role and faction. You can modify it in the character sheet.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Starting Wealth")
+                    .font(.headline)
+                
+                HStack {
+                    Text("Solars:")
+                    Spacer()
+                    TextField("0", value: $character.solars, format: .number)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .frame(width: 100)
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Basic Equipment")
+                    .font(.headline)
+                
+                Text("• Clothing appropriate to role\n• Basic personal items\n• Faction-specific gear")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            Text("You can add specific equipment items in the character sheet after creation.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .italic()
         }
     }
 }

@@ -291,17 +291,17 @@ class ImperiumCharacter: BaseCharacter {
     func canAdvanceStage() -> Bool {
         switch creationProgress {
         case 0: // Basic Info
-            return !name.isEmpty && !player.isEmpty
-        case 1: // Faction & Role
-            return !faction.isEmpty && !role.isEmpty
-        case 2: // Homeworld
+            return !name.isEmpty
+        case 1: // Characteristics
+            return true // Can proceed with default allocation
+        case 2: // Origin
             return !homeworld.isEmpty
-        case 3: // Characteristics
-            return true // Characteristics have defaults
-        case 4: // Skills & Talents
-            return true // Can skip or add later
-        case 5: // Equipment
-            return true // Can skip or add later
+        case 3: // Faction
+            return !faction.isEmpty
+        case 4: // Role
+            return !role.isEmpty
+        case 5: // Complete
+            return true
         default:
             return false
         }

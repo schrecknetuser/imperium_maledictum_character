@@ -102,11 +102,11 @@ struct CreationStages {
     
     static let stageNames = [
         "Basic Info",
-        "Faction & Role",
-        "Homeworld",
-        "Characteristics", 
-        "Skills & Talents",
-        "Equipment"
+        "Characteristics",
+        "Origin", 
+        "Faction",
+        "Role",
+        "Complete"
     ]
     
     static func stageName(for index: Int) -> String {
