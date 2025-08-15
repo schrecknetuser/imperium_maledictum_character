@@ -13,7 +13,7 @@ struct Characteristic: Codable {
     var advances: Int
     
     var derivedValue: Int {
-        return initialValue + (5 * advances)
+        return initialValue + advances
     }
     
     init(name: String, initialValue: Int = 20, advances: Int = 0) {

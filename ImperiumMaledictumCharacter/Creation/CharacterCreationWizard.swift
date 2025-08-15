@@ -625,11 +625,15 @@ struct FactionStage: View {
     }
     
     private func initializeFactionSelections() {
-        guard let faction = selectedFaction, !hasInitialized else { return }
+        guard let faction = selectedFaction else { return }
         
-        // Initialize skill advances distribution to zero (fresh start each time)
+        // Always reset to current character state when appearing
+        let existingAdvances = character.factionSkillAdvances
+        skillAdvancesDistribution = [:]
+        
+        // Initialize skill advances distribution from existing character data
         for skill in faction.skillAdvances {
-            skillAdvancesDistribution[skill] = 0
+            skillAdvancesDistribution[skill] = existingAdvances[skill] ?? 0
         }
         hasInitialized = true
         updateRemainingSkillAdvances()
@@ -983,7 +987,8 @@ struct RoleStage: View {
         selectedWeapons = Array(repeating: "", count: role.weaponChoices.count)
         selectedEquipment = Array(repeating: "", count: role.equipmentChoices.count)
         
-        // Initialize skill advances
+        // Initialize skill advances from existing character data
+        skillAdvancesDistribution = [:]
         let existingAdvances = character.skillAdvances
         for skill in role.skillAdvances {
             skillAdvancesDistribution[skill] = existingAdvances[skill] ?? 0
@@ -992,6 +997,7 @@ struct RoleStage: View {
         updateRemainingSkillAdvances()
         
         // Initialize specialization advances
+        specializationAdvancesDistribution = [:]
         for specialization in role.specializationAdvances {
             specializationAdvancesDistribution[specialization] = 0
         }
@@ -1000,6 +1006,29 @@ struct RoleStage: View {
         
         // Initialize selected talents from character
         selectedTalents = Set(character.talentNames.filter { role.talentChoices.contains($0) })
+        
+        // Initialize equipment selections from character data
+        let existingWeapons = character.weaponNames
+        let existingEquipment = character.equipmentNames
+        
+        // Try to match existing weapons/equipment to choices
+        for (index, choices) in role.weaponChoices.enumerated() {
+            for weapon in existingWeapons {
+                if choices.contains(weapon) {
+                    selectedWeapons[index] = weapon
+                    break
+                }
+            }
+        }
+        
+        for (index, choices) in role.equipmentChoices.enumerated() {
+            for equipment in existingEquipment {
+                if choices.contains(equipment) {
+                    selectedEquipment[index] = equipment
+                    break
+                }
+            }
+        }
     }
     
     private func resetRoleSelections() {
@@ -1017,24 +1046,48 @@ struct RoleStage: View {
     }
     
     private func saveRoleSelectionsToCharacter() {
-        // Save skill advances
+        // Save skill advances (replace, don't add to avoid duplication)
         var currentAdvances = character.skillAdvances
         for (skill, advances) in skillAdvancesDistribution {
-            currentAdvances[skill] = (currentAdvances[skill] ?? 0) + advances
+            currentAdvances[skill] = advances // Replace instead of adding
         }
         character.skillAdvances = currentAdvances
         
-        // Save selected talents
-        var currentTalents = character.talentNames
+        // Save selected talents (replace to avoid duplication)
+        var allTalents = character.talentNames
+        
+        // Remove any previously selected role talents to avoid duplication
+        if let role = selectedRole {
+            allTalents.removeAll { role.talentChoices.contains($0) }
+        }
+        
+        // Add currently selected talents
         for talent in selectedTalents {
-            if !currentTalents.contains(talent) {
-                currentTalents.append(talent)
+            if !allTalents.contains(talent) {
+                allTalents.append(talent)
             }
         }
-        character.talentNames = currentTalents
+        character.talentNames = allTalents
         
-        // TODO: Save weapon and equipment selections
-        // TODO: Save specialization advances
+        // Save weapon selections
+        var allWeapons = character.weaponNames
+        for weapon in selectedWeapons {
+            if !weapon.isEmpty && !allWeapons.contains(weapon) {
+                allWeapons.append(weapon)
+            }
+        }
+        character.weaponNames = allWeapons
+        
+        // Save equipment selections
+        var allEquipment = character.equipmentNames
+        for equipment in selectedEquipment {
+            if !equipment.isEmpty && !allEquipment.contains(equipment) {
+                allEquipment.append(equipment)
+            }
+        }
+        character.equipmentNames = allEquipment
+        
+        // TODO: Save specialization advances properly with new data model
     }
     
     private func skillBinding(for skill: String) -> Binding<Int> {

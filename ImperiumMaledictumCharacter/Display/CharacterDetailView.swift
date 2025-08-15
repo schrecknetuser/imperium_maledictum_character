@@ -442,46 +442,47 @@ struct CharacteristicsTab: View {
         
         if let imperium = imperiumCharacter {
             let skillAdvances = imperium.skillAdvances
+            let factionSkillAdvances = imperium.factionSkillAdvances
             
-            // Define skill-to-characteristic mapping
+            // Define skill-to-characteristic mapping using the game's actual skills
             let skillCharacteristicMap = [
+                "Athletics": "Str",
                 "Awareness": "Per",
-                "Athletics": "Str", 
-                "Ballistic Skill": "BS",
-                "Deceive": "Fel",
-                "Dodge": "Agi",
-                "Inquiry": "Fel",
-                "Intimidate": "Str",
-                "Investigation": "Int",
-                "Leadership": "Fel",
+                "Dexterity": "Agi",
+                "Discipline": "Wil",
+                "Fortitude": "Tgh",
+                "Intuition": "Per",
+                "Linguistics": "Int",
+                "Logic": "Int",
                 "Lore": "Int",
                 "Medicae": "Int",
                 "Melee": "WS",
-                "Navigate": "Int",
-                "Operate": "Agi",
-                "Pilot": "Agi",
+                "Navigation": "Int",
+                "Piloting": "Agi",
+                "Presence": "Wil",
                 "Psychic Mastery": "Wil",
                 "Ranged": "BS",
                 "Rapport": "Fel",
                 "Reflexes": "Agi",
                 "Stealth": "Agi",
-                "Survival": "Tgh",
-                "Tech": "Int",
-                "Weapon Skill": "WS"
+                "Tech": "Int"
             ]
             
-            for (skillName, advances) in skillAdvances.sorted(by: { $0.key < $1.key }) {
-                if advances > 0 {
-                    let characteristicAbbrev = skillCharacteristicMap[skillName] ?? "Int"
-                    let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
-                    
-                    result.append(SkillRowData(
-                        name: skillName,
-                        characteristicAbbreviation: characteristicAbbrev,
-                        advances: advances,
-                        totalValue: characteristicValue + (advances * 5)
-                    ))
-                }
+            // Display ALL skills, not just those with advances
+            for skillName in skillCharacteristicMap.keys.sorted() {
+                let skillAdvanceCount = skillAdvances[skillName] ?? 0
+                let factionAdvanceCount = factionSkillAdvances[skillName] ?? 0
+                let totalAdvances = skillAdvanceCount + factionAdvanceCount
+                
+                let characteristicAbbrev = skillCharacteristicMap[skillName] ?? "Int"
+                let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
+                
+                result.append(SkillRowData(
+                    name: skillName,
+                    characteristicAbbreviation: characteristicAbbrev,
+                    advances: totalAdvances,
+                    totalValue: characteristicValue + (totalAdvances * 5)
+                ))
             }
         }
         
