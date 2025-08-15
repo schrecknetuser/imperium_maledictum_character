@@ -473,6 +473,8 @@ struct OriginStage: View {
 struct FactionStage: View {
     @Binding var character: ImperiumCharacter
     @State private var selectedChoice: String = ""
+    @State private var skillAdvancesDistribution: [String: Int] = [:]
+    @State private var remainingSkillAdvances: Int = 5
     
     var selectedFaction: Faction? {
         return FactionDefinitions.getFaction(by: character.faction)
@@ -500,91 +502,236 @@ struct FactionStage: View {
                 }
                 .pickerStyle(MenuPickerStyle())
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .onChange(of: character.faction) { _ in
+                    resetFactionSelections()
+                }
             }
             
             if let faction = selectedFaction {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 16) {
                         Text(faction.description)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         
-                        Text("Characteristic Bonuses:")
-                            .font(.headline)
-                        
-                        Text("• +\(faction.mandatoryBonus.bonus) \(faction.mandatoryBonus.characteristic)")
-                            .font(.subheadline)
-                        
-                        Text("Choice of:")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            ForEach(faction.choiceBonus.indices, id: \.self) { index in
-                                let bonus = faction.choiceBonus[index]
-                                HStack {
-                                    Button(action: {
-                                        selectedChoice = bonus.characteristic
-                                    }) {
-                                        HStack {
-                                            Image(systemName: selectedChoice == bonus.characteristic ? "checkmark.circle.fill" : "circle")
-                                            Text("+\(bonus.bonus) \(bonus.characteristic)")
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                    .foregroundColor(selectedChoice == bonus.characteristic ? .blue : .primary)
-                                    
-                                    Spacer()
-                                }
-                            }
-                        }
-                        
-                        Text("Skills (5 advances to distribute):")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        Text(faction.skillAdvances.joined(separator: ", "))
-                            .font(.subheadline)
-                        
-                        Text("Influence: +1 with \(faction.influenceBonus)")
-                            .font(.subheadline)
-                        
-                        if !faction.talents.isEmpty {
-                            Text("Talents:")
+                        // Characteristic bonuses section
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Characteristic Bonuses:")
+                                .font(.headline)
+                            
+                            Text("• +\(faction.mandatoryBonus.bonus) \(faction.mandatoryBonus.characteristic)")
+                                .font(.subheadline)
+                            
+                            Text("Choice of:")
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                             
-                            ForEach(faction.talents, id: \.self) { talent in
-                                Text("• \(talent)")
-                                    .font(.subheadline)
+                            VStack(alignment: .leading, spacing: 4) {
+                                ForEach(faction.choiceBonus.indices, id: \.self) { index in
+                                    let bonus = faction.choiceBonus[index]
+                                    HStack {
+                                        Button(action: {
+                                            selectedChoice = bonus.characteristic
+                                        }) {
+                                            HStack {
+                                                Image(systemName: selectedChoice == bonus.characteristic ? "checkmark.circle.fill" : "circle")
+                                                Text("+\(bonus.bonus) \(bonus.characteristic)")
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                        .foregroundColor(selectedChoice == bonus.characteristic ? .blue : .primary)
+                                        
+                                        Spacer()
+                                    }
+                                }
                             }
                         }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
                         
-                        Text("Equipment:")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        ForEach(faction.equipment, id: \.self) { equipment in
-                            Text("• \(equipment)")
-                                .font(.subheadline)
+                        // Skill advances section
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Skills (5 advances to distribute):")
+                                    .font(.headline)
+                                Spacer()
+                                Text("\(remainingSkillAdvances) remaining")
+                                    .font(.subheadline)
+                                    .foregroundColor(remainingSkillAdvances < 0 ? .red : .secondary)
+                            }
+                            
+                            LazyVGrid(columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ], spacing: 12) {
+                                ForEach(faction.skillAdvances, id: \.self) { skill in
+                                    SkillAdvanceField(
+                                        skillName: skill,
+                                        advances: binding(for: skill),
+                                        onAdvancesChanged: updateRemainingSkillAdvances
+                                    )
+                                }
+                            }
                         }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
                         
-                        Text("Starting Solars: \(faction.solars)")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
+                        // Other faction benefits
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Influence: +1 with \(faction.influenceBonus)")
+                                .font(.subheadline)
+                            
+                            if !faction.talents.isEmpty {
+                                Text("Talents:")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                
+                                ForEach(faction.talents, id: \.self) { talent in
+                                    Text("• \(talent)")
+                                        .font(.subheadline)
+                                }
+                            }
+                            
+                            Text("Equipment:")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                            
+                            ForEach(faction.equipment, id: \.self) { equipment in
+                                Text("• \(equipment)")
+                                    .font(.subheadline)
+                            }
+                            
+                            Text("Starting Solars: \(faction.solars)")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
                     }
                 }
-                .frame(maxHeight: 300)
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
+                .frame(maxHeight: 400)
             }
         }
+        .onAppear {
+            initializeFactionSelections()
+        }
+        .onDisappear {
+            saveFactionSelectionsToCharacter()
+        }
+    }
+    
+    private func initializeFactionSelections() {
+        guard let faction = selectedFaction else { return }
+        
+        // Initialize skill advances distribution
+        let existingAdvances = character.skillAdvances
+        for skill in faction.skillAdvances {
+            skillAdvancesDistribution[skill] = existingAdvances[skill] ?? 0
+        }
+        updateRemainingSkillAdvances()
+    }
+    
+    private func resetFactionSelections() {
+        selectedChoice = ""
+        skillAdvancesDistribution = [:]
+        remainingSkillAdvances = 5
+        if selectedFaction != nil {
+            initializeFactionSelections()
+        }
+    }
+    
+    private func saveFactionSelectionsToCharacter() {
+        // Save skill advances to character
+        var currentAdvances = character.skillAdvances
+        for (skill, advances) in skillAdvancesDistribution {
+            currentAdvances[skill] = advances
+        }
+        character.skillAdvances = currentAdvances
+        
+        // TODO: Save characteristic bonus choice and other selections
+    }
+    
+    private func binding(for skill: String) -> Binding<Int> {
+        return Binding(
+            get: { skillAdvancesDistribution[skill] ?? 0 },
+            set: { newValue in
+                skillAdvancesDistribution[skill] = max(0, newValue)
+                updateRemainingSkillAdvances()
+            }
+        )
+    }
+    
+    private func updateRemainingSkillAdvances() {
+        let totalDistributed = skillAdvancesDistribution.values.reduce(0, +)
+        remainingSkillAdvances = 5 - totalDistributed
+    }
+}
+
+struct SkillAdvanceField: View {
+    let skillName: String
+    @Binding var advances: Int
+    let onAdvancesChanged: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(skillName)
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            
+            HStack(spacing: 8) {
+                Button(action: {
+                    if advances > 0 {
+                        advances -= 1
+                        onAdvancesChanged()
+                    }
+                }) {
+                    Image(systemName: "minus")
+                        .font(.caption)
+                }
+                .frame(width: 30, height: 30)
+                .background(Color(.systemGray5))
+                .foregroundColor(.primary)
+                .cornerRadius(6)
+                .disabled(advances <= 0)
+                
+                Text("\(advances)")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .frame(minWidth: 20)
+                
+                Button(action: {
+                    advances += 1
+                    onAdvancesChanged()
+                }) {
+                    Image(systemName: "plus")
+                        .font(.caption)
+                }
+                .frame(width: 30, height: 30)
+                .background(Color(.systemGray5))
+                .foregroundColor(.primary)
+                .cornerRadius(6)
+            }
+        }
+        .padding(8)
+        .background(Color(.systemGray6))
+        .cornerRadius(6)
     }
 }
 
 struct RoleStage: View {
     @Binding var character: ImperiumCharacter
+    @State private var selectedTalents: Set<String> = []
+    @State private var skillAdvancesDistribution: [String: Int] = [:]
+    @State private var remainingSkillAdvances: Int = 0
+    @State private var specializationAdvancesDistribution: [String: Int] = [:]
+    @State private var remainingSpecializationAdvances: Int = 0
+    @State private var selectedWeapons: [String] = []
+    @State private var selectedEquipment: [String] = []
     
     var selectedRole: Role? {
         return RoleDefinitions.getRole(by: character.role)
@@ -612,75 +759,355 @@ struct RoleStage: View {
                 }
                 .pickerStyle(MenuPickerStyle())
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .onChange(of: character.role) { _ in
+                    resetRoleSelections()
+                }
             }
             
             if let role = selectedRole {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 16) {
                         Text(role.description)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         
-                        Text("Talent Choices (\(role.talentCount) from):")
-                            .font(.headline)
+                        // Talent selection
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Talents (\(role.talentCount) to choose):")
+                                    .font(.headline)
+                                Spacer()
+                                Text("\(selectedTalents.count)/\(role.talentCount)")
+                                    .font(.subheadline)
+                                    .foregroundColor(selectedTalents.count > role.talentCount ? .red : .secondary)
+                            }
+                            
+                            LazyVGrid(columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ], spacing: 8) {
+                                ForEach(role.talentChoices, id: \.self) { talent in
+                                    TalentSelectionField(
+                                        talentName: talent,
+                                        isSelected: selectedTalents.contains(talent),
+                                        maxReached: selectedTalents.count >= role.talentCount,
+                                        onSelectionChanged: { isSelected in
+                                            if isSelected {
+                                                selectedTalents.insert(talent)
+                                            } else {
+                                                selectedTalents.remove(talent)
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
                         
-                        ForEach(role.talentChoices, id: \.self) { talent in
-                            Text("• \(talent)")
-                                .font(.subheadline)
+                        // Skill advances
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Skills (\(role.skillAdvanceCount) advances):")
+                                    .font(.headline)
+                                Spacer()
+                                Text("\(remainingSkillAdvances) remaining")
+                                    .font(.subheadline)
+                                    .foregroundColor(remainingSkillAdvances < 0 ? .red : .secondary)
+                            }
+                            
+                            LazyVGrid(columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ], spacing: 8) {
+                                ForEach(role.skillAdvances, id: \.self) { skill in
+                                    SkillAdvanceField(
+                                        skillName: skill,
+                                        advances: skillBinding(for: skill),
+                                        onAdvancesChanged: updateRemainingSkillAdvances
+                                    )
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        
+                        // Specialization advances
+                        if !role.specializationAdvances.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("Specializations (\(role.specializationAdvanceCount) advances):")
+                                        .font(.headline)
+                                    Spacer()
+                                    Text("\(remainingSpecializationAdvances) remaining")
+                                        .font(.subheadline)
+                                        .foregroundColor(remainingSpecializationAdvances < 0 ? .red : .secondary)
+                                }
+                                
+                                LazyVGrid(columns: [
+                                    GridItem(.flexible())
+                                ], spacing: 8) {
+                                    ForEach(role.specializationAdvances, id: \.self) { specialization in
+                                        SkillAdvanceField(
+                                            skillName: specialization,
+                                            advances: specializationBinding(for: specialization),
+                                            onAdvancesChanged: updateRemainingSpecializationAdvances
+                                        )
+                                    }
+                                }
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
                         }
                         
-                        Text("Skill Advances (\(role.skillAdvanceCount) to distribute):")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        Text(role.skillAdvances.joined(separator: ", "))
-                            .font(.subheadline)
-                        
-                        Text("Specialization Advances (\(role.specializationAdvanceCount) to distribute):")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        Text(role.specializationAdvances.joined(separator: ", "))
-                            .font(.subheadline)
-                        
+                        // Weapon choices
                         if !role.weaponChoices.isEmpty {
-                            Text("Weapon Choices:")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                            
-                            ForEach(role.weaponChoices.indices, id: \.self) { index in
-                                Text("• Choice \(index + 1): \(role.weaponChoices[index].joined(separator: " or "))")
-                                    .font(.subheadline)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Weapon Choices:")
+                                    .font(.headline)
+                                
+                                ForEach(role.weaponChoices.indices, id: \.self) { choiceIndex in
+                                    let weaponOptions = role.weaponChoices[choiceIndex]
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Choice \(choiceIndex + 1):")
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                        
+                                        HStack {
+                                            ForEach(weaponOptions, id: \.self) { weapon in
+                                                Button(action: {
+                                                    selectWeapon(weapon, forChoice: choiceIndex)
+                                                }) {
+                                                    HStack {
+                                                        Image(systemName: selectedWeapons.indices.contains(choiceIndex) && selectedWeapons[choiceIndex] == weapon ? "checkmark.circle.fill" : "circle")
+                                                        Text(weapon)
+                                                            .font(.caption)
+                                                    }
+                                                }
+                                                .buttonStyle(.plain)
+                                                .foregroundColor(selectedWeapons.indices.contains(choiceIndex) && selectedWeapons[choiceIndex] == weapon ? .blue : .primary)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 4)
+                                                .background(Color(.systemGray5))
+                                                .cornerRadius(4)
+                                            }
+                                        }
+                                    }
+                                }
                             }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
                         }
                         
-                        Text("Equipment:")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                        
-                        ForEach(role.equipment, id: \.self) { equipment in
-                            Text("• \(equipment)")
-                                .font(.subheadline)
-                        }
-                        
+                        // Equipment choices
                         if !role.equipmentChoices.isEmpty {
-                            Text("Equipment Choices:")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Equipment Choices:")
+                                    .font(.headline)
+                                
+                                ForEach(role.equipmentChoices.indices, id: \.self) { choiceIndex in
+                                    let equipmentOptions = role.equipmentChoices[choiceIndex]
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Choice \(choiceIndex + 1):")
+                                            .font(.subheadline)
+                                            .fontWeight(.semibold)
+                                        
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack {
+                                                ForEach(equipmentOptions, id: \.self) { equipment in
+                                                    Button(action: {
+                                                        selectEquipment(equipment, forChoice: choiceIndex)
+                                                    }) {
+                                                        HStack {
+                                                            Image(systemName: selectedEquipment.indices.contains(choiceIndex) && selectedEquipment[choiceIndex] == equipment ? "checkmark.circle.fill" : "circle")
+                                                            Text(equipment)
+                                                                .font(.caption)
+                                                                .lineLimit(1)
+                                                        }
+                                                    }
+                                                    .buttonStyle(.plain)
+                                                    .foregroundColor(selectedEquipment.indices.contains(choiceIndex) && selectedEquipment[choiceIndex] == equipment ? .blue : .primary)
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 4)
+                                                    .background(Color(.systemGray5))
+                                                    .cornerRadius(4)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        }
+                        
+                        // Granted equipment
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Granted Equipment:")
+                                .font(.headline)
                             
-                            ForEach(role.equipmentChoices.indices, id: \.self) { index in
-                                Text("• Choice \(index + 1): \(role.equipmentChoices[index].joined(separator: " or "))")
+                            ForEach(role.equipment, id: \.self) { equipment in
+                                Text("• \(equipment)")
                                     .font(.subheadline)
                             }
                         }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
                     }
                 }
-                .frame(maxHeight: 400)
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
+                .frame(maxHeight: 500)
             }
         }
+        .onAppear {
+            initializeRoleSelections()
+        }
+        .onDisappear {
+            saveRoleSelectionsToCharacter()
+        }
+    }
+    
+    private func initializeRoleSelections() {
+        guard let role = selectedRole else { return }
+        
+        // Initialize weapon choices array
+        selectedWeapons = Array(repeating: "", count: role.weaponChoices.count)
+        selectedEquipment = Array(repeating: "", count: role.equipmentChoices.count)
+        
+        // Initialize skill advances
+        let existingAdvances = character.skillAdvances
+        for skill in role.skillAdvances {
+            skillAdvancesDistribution[skill] = existingAdvances[skill] ?? 0
+        }
+        remainingSkillAdvances = role.skillAdvanceCount
+        updateRemainingSkillAdvances()
+        
+        // Initialize specialization advances
+        for specialization in role.specializationAdvances {
+            specializationAdvancesDistribution[specialization] = 0
+        }
+        remainingSpecializationAdvances = role.specializationAdvanceCount
+        updateRemainingSpecializationAdvances()
+        
+        // Initialize selected talents from character
+        selectedTalents = Set(character.talentNames.filter { role.talentChoices.contains($0) })
+    }
+    
+    private func resetRoleSelections() {
+        selectedTalents = []
+        skillAdvancesDistribution = [:]
+        specializationAdvancesDistribution = [:]
+        selectedWeapons = []
+        selectedEquipment = []
+        remainingSkillAdvances = 0
+        remainingSpecializationAdvances = 0
+        
+        if selectedRole != nil {
+            initializeRoleSelections()
+        }
+    }
+    
+    private func saveRoleSelectionsToCharacter() {
+        // Save skill advances
+        var currentAdvances = character.skillAdvances
+        for (skill, advances) in skillAdvancesDistribution {
+            currentAdvances[skill] = (currentAdvances[skill] ?? 0) + advances
+        }
+        character.skillAdvances = currentAdvances
+        
+        // Save selected talents
+        var currentTalents = character.talentNames
+        for talent in selectedTalents {
+            if !currentTalents.contains(talent) {
+                currentTalents.append(talent)
+            }
+        }
+        character.talentNames = currentTalents
+        
+        // TODO: Save weapon and equipment selections
+        // TODO: Save specialization advances
+    }
+    
+    private func skillBinding(for skill: String) -> Binding<Int> {
+        return Binding(
+            get: { skillAdvancesDistribution[skill] ?? 0 },
+            set: { newValue in
+                skillAdvancesDistribution[skill] = max(0, newValue)
+                updateRemainingSkillAdvances()
+            }
+        )
+    }
+    
+    private func specializationBinding(for specialization: String) -> Binding<Int> {
+        return Binding(
+            get: { specializationAdvancesDistribution[specialization] ?? 0 },
+            set: { newValue in
+                specializationAdvancesDistribution[specialization] = max(0, newValue)
+                updateRemainingSpecializationAdvances()
+            }
+        )
+    }
+    
+    private func updateRemainingSkillAdvances() {
+        guard let role = selectedRole else { return }
+        let totalDistributed = skillAdvancesDistribution.values.reduce(0, +)
+        remainingSkillAdvances = role.skillAdvanceCount - totalDistributed
+    }
+    
+    private func updateRemainingSpecializationAdvances() {
+        guard let role = selectedRole else { return }
+        let totalDistributed = specializationAdvancesDistribution.values.reduce(0, +)
+        remainingSpecializationAdvances = role.specializationAdvanceCount - totalDistributed
+    }
+    
+    private func selectWeapon(_ weapon: String, forChoice choiceIndex: Int) {
+        if selectedWeapons.indices.contains(choiceIndex) {
+            selectedWeapons[choiceIndex] = weapon
+        }
+    }
+    
+    private func selectEquipment(_ equipment: String, forChoice choiceIndex: Int) {
+        if selectedEquipment.indices.contains(choiceIndex) {
+            selectedEquipment[choiceIndex] = equipment
+        }
+    }
+}
+
+struct TalentSelectionField: View {
+    let talentName: String
+    let isSelected: Bool
+    let maxReached: Bool
+    let onSelectionChanged: (Bool) -> Void
+    
+    var body: some View {
+        Button(action: {
+            if isSelected {
+                onSelectionChanged(false)
+            } else if !maxReached {
+                onSelectionChanged(true)
+            }
+        }) {
+            HStack {
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(isSelected ? .blue : (maxReached ? .gray : .primary))
+                Text(talentName)
+                    .font(.caption)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                    .foregroundColor(isSelected ? .blue : (maxReached ? .gray : .primary))
+                Spacer()
+            }
+        }
+        .buttonStyle(.plain)
+        .padding(8)
+        .background(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
+        .cornerRadius(6)
+        .disabled(maxReached && !isSelected)
     }
 }
 
