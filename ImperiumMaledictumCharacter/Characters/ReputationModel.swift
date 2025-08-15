@@ -6,10 +6,8 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-class Reputation {
+struct Reputation: Codable {
     var faction: String
     var individual: String // Empty string if it's general faction reputation
     var value: Int

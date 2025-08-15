@@ -6,10 +6,8 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-class Characteristic {
+struct Characteristic: Codable {
     var name: String
     var initialValue: Int
     var advances: Int
