@@ -29,10 +29,15 @@ class ImperiumCharacter: BaseCharacter {
     var characteristicsData: String = "" // JSON data for characteristics
     var skillsAdvancesData: String = "" // JSON data for skill advances
     var factionSkillAdvancesData: String = "" // JSON data for faction-specific skill advances
+    var specializationAdvancesData: String = "" // JSON data for specialization advances
     var talentNamesData: String = "" // JSON array of talent names
     var equipmentNamesData: String = "" // JSON array of equipment names  
     var weaponNamesData: String = "" // JSON array of weapon names
     var reputationData: String = "" // JSON data for reputation
+    
+    // Bonus tracking to prevent double application
+    var appliedOriginBonuses: String = "" // JSON string tracking which origin bonuses have been applied
+    var appliedFactionBonuses: String = "" // JSON string tracking which faction bonuses have been applied
     
     // Legacy characteristic properties for backward compatibility
     var weaponSkill: Int = 25
@@ -116,10 +121,14 @@ class ImperiumCharacter: BaseCharacter {
         // Initialize new data structures
         characteristicsData = ""
         skillsAdvancesData = ""
+        factionSkillAdvancesData = ""
+        specializationAdvancesData = ""
         talentNamesData = ""
         equipmentNamesData = ""
         weaponNamesData = ""
         reputationData = ""
+        appliedOriginBonuses = ""
+        appliedFactionBonuses = ""
         
         creationProgress = 0
         isArchived = false
@@ -253,6 +262,22 @@ class ImperiumCharacter: BaseCharacter {
         }
     }
     
+    var specializationAdvances: [String: Int] {
+        get {
+            guard let data = specializationAdvancesData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String: Int].self, from: data) else {
+                return [:]
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                specializationAdvancesData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
     var talentNames: [String] {
         get {
             guard let data = talentNamesData.data(using: .utf8),
@@ -312,6 +337,38 @@ class ImperiumCharacter: BaseCharacter {
         set {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 reputationData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
+    var appliedOriginBonusesTracker: [String: Bool] {
+        get {
+            guard let data = appliedOriginBonuses.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String: Bool].self, from: data) else {
+                return [:]
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                appliedOriginBonuses = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
+    var appliedFactionBonusesTracker: [String: Bool] {
+        get {
+            guard let data = appliedFactionBonuses.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String: Bool].self, from: data) else {
+                return [:]
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                appliedFactionBonuses = String(data: encoded, encoding: .utf8) ?? ""
             }
             lastModified = Date()
         }

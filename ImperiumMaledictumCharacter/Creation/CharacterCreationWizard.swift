@@ -414,6 +414,9 @@ struct OriginStage: View {
                 }
                 .pickerStyle(MenuPickerStyle())
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .onChange(of: character.homeworld) { _ in
+                    applyOriginBonuses()
+                }
             }
             
             if let origin = selectedOrigin {
@@ -438,6 +441,7 @@ struct OriginStage: View {
                             HStack {
                                 Button(action: {
                                     selectedChoice = bonus.characteristic
+                                    applyOriginBonuses()
                                 }) {
                                     HStack {
                                         Image(systemName: selectedChoice == bonus.characteristic ? "checkmark.circle.fill" : "circle")
@@ -468,6 +472,87 @@ struct OriginStage: View {
                 .cornerRadius(8)
             }
         }
+        .onAppear {
+            initializeOriginSelections()
+        }
+        .onDisappear {
+            saveOriginSelectionsToCharacter()
+        }
+    }
+    
+    private func initializeOriginSelections() {
+        // Initialize from existing character data if available
+        // This helps maintain state when navigating back and forth
+    }
+    
+    private func applyOriginBonuses() {
+        guard let origin = selectedOrigin else { return }
+        
+        let originKey = origin.name
+        var appliedBonuses = character.appliedOriginBonusesTracker
+        
+        // Check if we've already applied bonuses for this origin
+        if appliedBonuses[originKey] == true {
+            return
+        }
+        
+        var characteristics = character.characteristics
+        
+        // Apply mandatory bonus - add directly to initialValue
+        if let characteristic = characteristics[origin.mandatoryBonus.characteristic] {
+            characteristics[origin.mandatoryBonus.characteristic] = Characteristic(
+                name: characteristic.name,
+                initialValue: characteristic.initialValue + origin.mandatoryBonus.bonus,
+                advances: characteristic.advances
+            )
+        } else {
+            characteristics[origin.mandatoryBonus.characteristic] = Characteristic(
+                name: origin.mandatoryBonus.characteristic,
+                initialValue: 20 + origin.mandatoryBonus.bonus,
+                advances: 0
+            )
+        }
+        
+        // Apply choice bonus if selected - add directly to initialValue
+        if !selectedChoice.isEmpty {
+            if let characteristic = characteristics[selectedChoice] {
+                let bonusAmount = origin.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
+                characteristics[selectedChoice] = Characteristic(
+                    name: characteristic.name,
+                    initialValue: characteristic.initialValue + bonusAmount,
+                    advances: characteristic.advances
+                )
+            } else {
+                let bonusAmount = origin.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
+                characteristics[selectedChoice] = Characteristic(
+                    name: selectedChoice,
+                    initialValue: 20 + bonusAmount,
+                    advances: 0
+                )
+            }
+        }
+        
+        character.characteristics = characteristics
+        
+        // Mark this origin as having bonuses applied
+        appliedBonuses[originKey] = true
+        character.appliedOriginBonusesTracker = appliedBonuses
+    }
+    
+    private func saveOriginSelectionsToCharacter() {
+        guard let origin = selectedOrigin else { return }
+        
+        // Apply bonuses one final time to ensure they're saved
+        applyOriginBonuses()
+        
+        // Add granted equipment
+        var allEquipment = character.equipmentNames
+        for equipment in origin.grantedEquipment {
+            if !allEquipment.contains(equipment) {
+                allEquipment.append(equipment)
+            }
+        }
+        character.equipmentNames = allEquipment
     }
 }
 struct FactionStage: View {
@@ -505,6 +590,7 @@ struct FactionStage: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .onChange(of: character.faction) { _ in
                     resetFactionSelections()
+                    applyFactionBonuses()
                 }
             }
             
@@ -533,6 +619,7 @@ struct FactionStage: View {
                                     HStack {
                                         Button(action: {
                                             selectedChoice = bonus.characteristic
+                                            applyFactionBonuses()
                                         }) {
                                             HStack {
                                                 Image(systemName: selectedChoice == bonus.characteristic ? "checkmark.circle.fill" : "circle")
@@ -650,6 +737,8 @@ struct FactionStage: View {
     }
     
     private func saveFactionSelectionsToCharacter() {
+        guard let faction = selectedFaction else { return }
+        
         // Don't duplicate - this will be handled properly when we implement it fully
         // For now, just store the direct values to avoid accumulation
         var currentAdvances: [String: Int] = [:]
@@ -659,7 +748,83 @@ struct FactionStage: View {
         // Store faction-specific advances separately to avoid duplication
         character.factionSkillAdvances = currentAdvances
         
-        // TODO: Save characteristic bonus choice and other selections
+        // Apply characteristic bonuses
+        applyFactionBonuses()
+        
+        // Add faction talents
+        var allTalents = character.talentNames
+        for talent in faction.talents {
+            if !allTalents.contains(talent) {
+                allTalents.append(talent)
+            }
+        }
+        character.talentNames = allTalents
+        
+        // Add faction equipment
+        var allEquipment = character.equipmentNames
+        for equipment in faction.equipment {
+            if !allEquipment.contains(equipment) {
+                allEquipment.append(equipment)
+            }
+        }
+        character.equipmentNames = allEquipment
+        
+        // Set starting solars
+        character.solars = faction.solars
+    }
+    
+    private func applyFactionBonuses() {
+        guard let faction = selectedFaction else { return }
+        
+        let factionKey = faction.name
+        var appliedBonuses = character.appliedFactionBonusesTracker
+        
+        // Check if we've already applied bonuses for this faction
+        if appliedBonuses[factionKey] == true {
+            return
+        }
+        
+        var characteristics = character.characteristics
+        
+        // Apply mandatory bonus
+        if let characteristic = characteristics[faction.mandatoryBonus.characteristic] {
+            characteristics[faction.mandatoryBonus.characteristic] = Characteristic(
+                name: characteristic.name,
+                initialValue: characteristic.initialValue + faction.mandatoryBonus.bonus,
+                advances: characteristic.advances
+            )
+        } else {
+            characteristics[faction.mandatoryBonus.characteristic] = Characteristic(
+                name: faction.mandatoryBonus.characteristic,
+                initialValue: 20 + faction.mandatoryBonus.bonus,
+                advances: 0
+            )
+        }
+        
+        // Apply choice bonus if selected
+        if !selectedChoice.isEmpty {
+            if let characteristic = characteristics[selectedChoice] {
+                let bonusAmount = faction.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
+                characteristics[selectedChoice] = Characteristic(
+                    name: characteristic.name,
+                    initialValue: characteristic.initialValue + bonusAmount,
+                    advances: characteristic.advances
+                )
+            } else {
+                let bonusAmount = faction.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
+                characteristics[selectedChoice] = Characteristic(
+                    name: selectedChoice,
+                    initialValue: 20 + bonusAmount,
+                    advances: 0
+                )
+            }
+        }
+        
+        character.characteristics = characteristics
+        
+        // Mark this faction as having bonuses applied
+        appliedBonuses[factionKey] = true
+        character.appliedFactionBonusesTracker = appliedBonuses
     }
     
     private func binding(for skill: String) -> Binding<Int> {
@@ -1046,6 +1211,8 @@ struct RoleStage: View {
     }
     
     private func saveRoleSelectionsToCharacter() {
+        guard let role = selectedRole else { return }
+        
         // Save skill advances (replace, don't add to avoid duplication)
         var currentAdvances = character.skillAdvances
         for (skill, advances) in skillAdvancesDistribution {
@@ -1053,13 +1220,14 @@ struct RoleStage: View {
         }
         character.skillAdvances = currentAdvances
         
+        // Save specialization advances
+        character.specializationAdvances = specializationAdvancesDistribution
+        
         // Save selected talents (replace to avoid duplication)
         var allTalents = character.talentNames
         
         // Remove any previously selected role talents to avoid duplication
-        if let role = selectedRole {
-            allTalents.removeAll { role.talentChoices.contains($0) }
-        }
+        allTalents.removeAll { role.talentChoices.contains($0) }
         
         // Add currently selected talents
         for talent in selectedTalents {
@@ -1078,16 +1246,22 @@ struct RoleStage: View {
         }
         character.weaponNames = allWeapons
         
-        // Save equipment selections
+        // Save equipment selections  
         var allEquipment = character.equipmentNames
         for equipment in selectedEquipment {
             if !equipment.isEmpty && !allEquipment.contains(equipment) {
                 allEquipment.append(equipment)
             }
         }
-        character.equipmentNames = allEquipment
         
-        // TODO: Save specialization advances properly with new data model
+        // Add granted equipment from role
+        for equipment in role.equipment {
+            if !allEquipment.contains(equipment) {
+                allEquipment.append(equipment)
+            }
+        }
+        
+        character.equipmentNames = allEquipment
     }
     
     private func skillBinding(for skill: String) -> Binding<Int> {

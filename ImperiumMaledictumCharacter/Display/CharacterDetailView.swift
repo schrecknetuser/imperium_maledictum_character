@@ -490,8 +490,50 @@ struct CharacteristicsTab: View {
     }
     
     private func getSpecializationsList() -> [SpecializationRowData] {
-        // For now, return empty array as we need to implement specializations tracking
-        return []
+        var result: [SpecializationRowData] = []
+        
+        if let imperium = imperiumCharacter {
+            let specializationAdvances = imperium.specializationAdvances
+            
+            for (specializationName, advances) in specializationAdvances {
+                if advances > 0 {
+                    // Parse specialization name to extract skill name
+                    // Format examples: "Fear (Discipline)", "Forbidden (Lore)", "Any (Psychic Mastery)"
+                    var skillName = "Unknown"
+                    if let parenRange = specializationName.range(of: "(") {
+                        let afterParen = specializationName[parenRange.upperBound...]
+                        if let closeParenRange = afterParen.range(of: ")") {
+                            skillName = String(afterParen[..<closeParenRange.lowerBound])
+                        }
+                    }
+                    
+                    // Calculate total value (skill characteristic + specialization advances * 5)
+                    let skillCharacteristicMap = [
+                        "Discipline": "Wil",
+                        "Lore": "Int",
+                        "Psychic Mastery": "Wil",
+                        "Awareness": "Per",
+                        "Linguistics": "Int"
+                    ]
+                    
+                    let characteristicAbbrev = skillCharacteristicMap[skillName] ?? "Int"
+                    let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
+                    let skillAdvanceCount = imperium.skillAdvances[skillName] ?? 0
+                    let factionAdvanceCount = imperium.factionSkillAdvances[skillName] ?? 0
+                    let totalSkillValue = characteristicValue + ((skillAdvanceCount + factionAdvanceCount) * 5)
+                    let specializationTotalValue = totalSkillValue + (advances * 5)
+                    
+                    result.append(SpecializationRowData(
+                        name: specializationName,
+                        skillName: skillName,
+                        advances: advances,
+                        totalValue: specializationTotalValue
+                    ))
+                }
+            }
+        }
+        
+        return result.sorted { $0.name < $1.name }
     }
     
     private func getCharacteristicValue(for abbreviation: String, from character: ImperiumCharacter) -> Int {
