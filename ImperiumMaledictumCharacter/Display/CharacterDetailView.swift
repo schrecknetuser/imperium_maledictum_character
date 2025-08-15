@@ -667,6 +667,58 @@ struct TalentsTab: View {
 
 // MARK: - Equipment Tab
 
+struct EquipmentDisplayItem {
+    let baseName: String
+    let modifications: [String]
+    let traits: [String]
+    
+    init(from fullName: String) {
+        var working = fullName
+        var modifications: [String] = []
+        var traits: [String] = []
+        
+        // Extract modifications (typically in parentheses)
+        let modificationPattern = #"\(([^)]+)\)"#
+        if let regex = try? NSRegularExpression(pattern: modificationPattern) {
+            let matches = regex.matches(in: working, range: NSRange(working.startIndex..., in: working))
+            for match in matches.reversed() {
+                if let range = Range(match.range(at: 1), in: working) {
+                    let modification = String(working[range])
+                    modifications.append(modification)
+                }
+                if let fullRange = Range(match.range, in: working) {
+                    working.removeSubrange(fullRange)
+                }
+            }
+        }
+        
+        // Common traits that should be separated
+        let knownTraits = ["Shoddy", "Ugly", "Bulky", "Lightweight", "Master Crafted", "Ornamental", "Durable"]
+        for trait in knownTraits {
+            if working.contains(trait) {
+                traits.append(trait)
+                working = working.replacingOccurrences(of: trait, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+        
+        self.baseName = working.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.modifications = modifications
+        self.traits = traits
+    }
+    
+    var displayText: String {
+        var result = baseName
+        if !modifications.isEmpty {
+            result += " (" + modifications.joined(separator: ", ") + ")"
+        }
+        return result
+    }
+    
+    var traitsText: String {
+        return traits.isEmpty ? "" : traits.joined(separator: ", ")
+    }
+}
+
 struct EquipmentTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
@@ -681,7 +733,17 @@ struct EquipmentTab: View {
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
                         ForEach(imperium.equipmentNames, id: \.self) { item in
-                            Text(item)
+                            let equipmentItem = EquipmentDisplayItem(from: item)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(equipmentItem.displayText)
+                                    .font(.body)
+                                if !equipmentItem.traitsText.isEmpty {
+                                    Text(equipmentItem.traitsText)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .italic()
+                                }
+                            }
                         }
                         
                         if imperium.equipmentNames.isEmpty {
@@ -693,7 +755,17 @@ struct EquipmentTab: View {
                     
                     Section("Weapons") {
                         ForEach(imperium.weaponNames, id: \.self) { weapon in
-                            Text(weapon)
+                            let weaponItem = EquipmentDisplayItem(from: weapon)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(weaponItem.displayText)
+                                    .font(.body)
+                                if !weaponItem.traitsText.isEmpty {
+                                    Text(weaponItem.traitsText)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .italic()
+                                }
+                            }
                         }
                         
                         if imperium.weaponNames.isEmpty {

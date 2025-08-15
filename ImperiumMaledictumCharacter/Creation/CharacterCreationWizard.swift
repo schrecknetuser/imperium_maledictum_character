@@ -251,6 +251,12 @@ struct CharacteristicsStage: View {
                     onPointsChanged: updateRemainingPoints
                 )
                 CharacteristicAllocationField(
+                    name: CharacteristicNames.perception,
+                    baseValue: 20,
+                    allocatedPoints: binding(for: CharacteristicNames.perception),
+                    onPointsChanged: updateRemainingPoints
+                )
+                CharacteristicAllocationField(
                     name: CharacteristicNames.willpower,
                     baseValue: 20,
                     allocatedPoints: binding(for: CharacteristicNames.willpower),
@@ -260,12 +266,6 @@ struct CharacteristicsStage: View {
                     name: CharacteristicNames.fellowship,
                     baseValue: 20,
                     allocatedPoints: binding(for: CharacteristicNames.fellowship),
-                    onPointsChanged: updateRemainingPoints
-                )
-                CharacteristicAllocationField(
-                    name: CharacteristicNames.perception,
-                    baseValue: 20,
-                    allocatedPoints: binding(for: CharacteristicNames.perception),
                     onPointsChanged: updateRemainingPoints
                 )
             }
@@ -896,6 +896,66 @@ struct SkillAdvanceField: View {
     }
 }
 
+struct AnySpecializationField: View {
+    let skillName: String
+    @Binding var advances: Int
+    @Binding var customSpecialization: String
+    let onAdvancesChanged: () -> Void
+    let onSpecializationChanged: (String) -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(skillName)
+                .font(.subheadline)
+                .fontWeight(.medium)
+            
+            TextField("Enter specialization name", text: $customSpecialization)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .onChange(of: customSpecialization) { newValue in
+                    onSpecializationChanged(newValue)
+                }
+            
+            HStack(spacing: 8) {
+                Button(action: {
+                    if advances > 0 {
+                        advances -= 1
+                        onAdvancesChanged()
+                    }
+                }) {
+                    Image(systemName: "minus")
+                        .font(.caption)
+                }
+                .frame(width: 30, height: 30)
+                .background(Color(.systemGray5))
+                .foregroundColor(.primary)
+                .cornerRadius(6)
+                .disabled(advances <= 0 || customSpecialization.isEmpty)
+                
+                Text("\(advances)")
+                    .font(.title3)
+                    .fontWeight(.semibold)
+                    .frame(minWidth: 20)
+                
+                Button(action: {
+                    advances += 1
+                    onAdvancesChanged()
+                }) {
+                    Image(systemName: "plus")
+                        .font(.caption)
+                }
+                .frame(width: 30, height: 30)
+                .background(Color(.systemGray5))
+                .foregroundColor(.primary)
+                .cornerRadius(6)
+                .disabled(customSpecialization.isEmpty)
+            }
+        }
+        .padding(8)
+        .background(Color(.systemGray6))
+        .cornerRadius(6)
+    }
+}
+
 struct RoleStage: View {
     @Binding var character: ImperiumCharacter
     @State private var selectedTalents: Set<String> = []
@@ -903,6 +963,7 @@ struct RoleStage: View {
     @State private var remainingSkillAdvances: Int = 0
     @State private var specializationAdvancesDistribution: [String: Int] = [:]
     @State private var remainingSpecializationAdvances: Int = 0
+    @State private var customSpecializations: [String: String] = [:] // Maps "Any (Skill)" to custom name
     @State private var selectedWeapons: [String] = []
     @State private var selectedEquipment: [String] = []
     
@@ -950,9 +1011,9 @@ struct RoleStage: View {
                                 Text("Talents (\(role.talentCount) to choose):")
                                     .font(.headline)
                                 Spacer()
-                                Text("\(selectedTalents.count)/\(role.talentCount)")
+                                Text("\(selectedTalents.count)/\(availableTalentSelections())")
                                     .font(.subheadline)
-                                    .foregroundColor(selectedTalents.count > role.talentCount ? .red : .secondary)
+                                    .foregroundColor(selectedTalents.count > availableTalentSelections() ? .red : .secondary)
                             }
                             
                             LazyVGrid(columns: [
@@ -963,7 +1024,8 @@ struct RoleStage: View {
                                     TalentSelectionField(
                                         talentName: talent,
                                         isSelected: selectedTalents.contains(talent),
-                                        maxReached: selectedTalents.count >= role.talentCount,
+                                        maxReached: availableTalentSelections() <= 0,
+                                        alreadyOwned: character.talentNames.contains(talent),
                                         onSelectionChanged: { isSelected in
                                             if isSelected {
                                                 selectedTalents.insert(talent)
@@ -1020,14 +1082,27 @@ struct RoleStage: View {
                                 }
                                 
                                 LazyVGrid(columns: [
+                                    GridItem(.flexible()),
                                     GridItem(.flexible())
                                 ], spacing: 8) {
                                     ForEach(role.specializationAdvances, id: \.self) { specialization in
-                                        SkillAdvanceField(
-                                            skillName: specialization,
-                                            advances: specializationBinding(for: specialization),
-                                            onAdvancesChanged: updateRemainingSpecializationAdvances
-                                        )
+                                        if specialization.hasPrefix("Any (") {
+                                            AnySpecializationField(
+                                                skillName: specialization,
+                                                advances: specializationBinding(for: specialization),
+                                                customSpecialization: customSpecializationBinding(for: specialization),
+                                                onAdvancesChanged: updateRemainingSpecializationAdvances,
+                                                onSpecializationChanged: { newName in
+                                                    updateCustomSpecialization(specialization, newName: newName)
+                                                }
+                                            )
+                                        } else {
+                                            SkillAdvanceField(
+                                                skillName: specialization,
+                                                advances: specializationBinding(for: specialization),
+                                                onAdvancesChanged: updateRemainingSpecializationAdvances
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -1145,6 +1220,29 @@ struct RoleStage: View {
         }
     }
     
+    private func customSpecializationBinding(for specialization: String) -> Binding<String> {
+        return Binding(
+            get: { customSpecializations[specialization] ?? "" },
+            set: { newValue in
+                customSpecializations[specialization] = newValue
+            }
+        )
+    }
+    
+    private func updateCustomSpecialization(_ anySpecialization: String, newName: String) {
+        customSpecializations[anySpecialization] = newName
+    }
+    
+    private func availableTalentSelections() -> Int {
+        guard let role = selectedRole else { return 0 }
+        
+        // Count how many talents from role choices the character already owns
+        let alreadyOwnedCount = role.talentChoices.filter { character.talentNames.contains($0) }.count
+        
+        // Available selections = total role talent count - already owned
+        return max(0, role.talentCount - alreadyOwnedCount)
+    }
+    
     private func initializeRoleSelections() {
         guard let role = selectedRole else { return }
         
@@ -1200,6 +1298,7 @@ struct RoleStage: View {
         selectedTalents = []
         skillAdvancesDistribution = [:]
         specializationAdvancesDistribution = [:]
+        customSpecializations = [:]
         selectedWeapons = []
         selectedEquipment = []
         remainingSkillAdvances = 0
@@ -1220,8 +1319,25 @@ struct RoleStage: View {
         }
         character.skillAdvances = currentAdvances
         
-        // Save specialization advances
-        character.specializationAdvances = specializationAdvancesDistribution
+        // Save specialization advances with custom names for "Any" specializations
+        var finalSpecializationAdvances = character.specializationAdvances
+        for (specialization, advances) in specializationAdvancesDistribution {
+            if specialization.hasPrefix("Any (") && advances > 0 {
+                // Use custom name if provided
+                if let customName = customSpecializations[specialization], !customName.isEmpty {
+                    let skillName = String(specialization.dropFirst(4).dropLast(1)) // Extract skill from "Any (Skill)"
+                    let finalSpecName = "\(customName) (\(skillName))"
+                    finalSpecializationAdvances[finalSpecName] = advances
+                } else {
+                    // Don't save if no custom name provided
+                    continue
+                }
+            } else {
+                // Regular specialization
+                finalSpecializationAdvances[specialization] = advances
+            }
+        }
+        character.specializationAdvances = finalSpecializationAdvances
         
         // Save selected talents (replace to avoid duplication)
         var allTalents = character.talentNames
@@ -1313,32 +1429,42 @@ struct TalentSelectionField: View {
     let talentName: String
     let isSelected: Bool
     let maxReached: Bool
+    let alreadyOwned: Bool
     let onSelectionChanged: (Bool) -> Void
     
     var body: some View {
         Button(action: {
-            if isSelected {
-                onSelectionChanged(false)
-            } else if !maxReached {
-                onSelectionChanged(true)
+            if !alreadyOwned {
+                if isSelected {
+                    onSelectionChanged(false)
+                } else if !maxReached {
+                    onSelectionChanged(true)
+                }
             }
         }) {
             HStack {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .foregroundColor(isSelected ? .blue : (maxReached ? .gray : .primary))
+                Image(systemName: (isSelected || alreadyOwned) ? "checkmark.circle.fill" : "circle")
+                    .foregroundColor(alreadyOwned ? .gray : (isSelected ? .blue : (maxReached ? .gray : .primary)))
                 Text(talentName)
                     .font(.caption)
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
-                    .foregroundColor(isSelected ? .blue : (maxReached ? .gray : .primary))
+                    .foregroundColor(alreadyOwned ? .gray : (isSelected ? .blue : (maxReached ? .gray : .primary)))
+                    .strikethrough(alreadyOwned)
                 Spacer()
+                if alreadyOwned {
+                    Text("Owned")
+                        .font(.caption2)
+                        .foregroundColor(.gray)
+                        .italic()
+                }
             }
         }
         .buttonStyle(.plain)
         .padding(8)
-        .background(isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6))
+        .background(alreadyOwned ? Color.gray.opacity(0.1) : (isSelected ? Color.blue.opacity(0.1) : Color(.systemGray6)))
         .cornerRadius(6)
-        .disabled(maxReached && !isSelected)
+        .disabled(alreadyOwned || (maxReached && !isSelected))
     }
 }
 
