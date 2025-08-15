@@ -97,7 +97,6 @@ class ImperiumCharacter: BaseCharacter {
         fellowship = 20
         influence = 20 // Keep influence as legacy system
         perception = 20
-        perception = 20
         
         // Reset derived stats
         wounds = 0

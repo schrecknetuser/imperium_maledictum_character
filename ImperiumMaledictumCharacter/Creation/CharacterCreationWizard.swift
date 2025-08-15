@@ -181,6 +181,22 @@ struct BasicInfoStage: View {
     }
 }
 
+struct CharacteristicsStage: View {
+    @Binding var character: ImperiumCharacter
+    @State private var allocatedPoints: [String: Int] = [:]
+    @State private var remainingPoints: Int = 90
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Characteristics")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text("Allocate 90 points among your characteristics. Each characteristic starts at 20 and each point increases it by 5. Maximum of 100 per characteristic.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            HStack {
                 Text("Remaining Points:")
                     .font(.headline)
                 Spacer()
