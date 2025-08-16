@@ -1087,6 +1087,19 @@ struct RoleStage: View {
         return RoleDefinitions.getRole(by: character.role)
     }
     
+    var allFactionTalents: [String] {
+        let faction = FactionDefinitions.getFaction(by: character.faction)
+        var talents = faction?.talents ?? []
+        
+        // Add talents from selected faction talent choice
+        if !character.selectedFactionTalentChoice.isEmpty,
+           let selectedChoice = faction?.talentChoices.first(where: { $0.name == character.selectedFactionTalentChoice }) {
+            talents.append(contentsOf: selectedChoice.talents)
+        }
+        
+        return talents
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Role")
@@ -1137,15 +1150,6 @@ struct RoleStage: View {
                                 GridItem(.flexible())
                             ], spacing: 8) {
                                 ForEach(role.talentChoices, id: \.self) { talent in
-                                    let faction = FactionDefinitions.getFaction(by: character.faction)
-                                    var allFactionTalents = faction?.talents ?? []
-                                    
-                                    // Add talents from selected faction talent choice
-                                    if !character.selectedFactionTalentChoice.isEmpty,
-                                       let selectedChoice = faction?.talentChoices.first(where: { $0.name == character.selectedFactionTalentChoice }) {
-                                        allFactionTalents.append(contentsOf: selectedChoice.talents)
-                                    }
-                                    
                                     let isOwnedFromFactionOrAutoGranted = allFactionTalents.contains(talent) || autoGrantedRoleTalents.contains(talent)
                                     
                                     TalentSelectionField(
