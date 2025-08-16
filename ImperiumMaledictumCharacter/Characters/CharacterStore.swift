@@ -79,6 +79,29 @@ class CharacterStore: ObservableObject {
         }
     }
     
+    func deleteCharacter(_ character: any BaseCharacter) {
+        guard let context = modelContext else { return }
+        
+        // Find the character in the array and remove it
+        if let index = characters.firstIndex(where: { $0.character.id == character.id }) {
+            let characterToDelete = characters[index]
+            
+            // Remove from SwiftData
+            if let imperiumChar = characterToDelete.character as? ImperiumCharacter {
+                context.delete(imperiumChar)
+            }
+            
+            // Remove from local array
+            characters.remove(at: index)
+            
+            do {
+                try context.save()
+            } catch {
+                print("Failed to delete character: \(error)")
+            }
+        }
+    }
+    
     func archiveCharacter(_ character: any BaseCharacter) {
         character.isArchived = true
         saveChanges()
