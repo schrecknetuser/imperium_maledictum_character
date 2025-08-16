@@ -950,6 +950,7 @@ struct SkillAdvanceField: View {
                 .fontWeight(.medium)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity, alignment: .leading)
             
             HStack(spacing: 8) {
                 Button(action: {
@@ -984,10 +985,12 @@ struct SkillAdvanceField: View {
                 .foregroundColor(.primary)
                 .cornerRadius(6)
             }
+            .frame(maxWidth: .infinity)
         }
         .padding(8)
         .background(Color(.systemGray6))
         .cornerRadius(6)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -1137,7 +1140,7 @@ struct RoleStage: View {
                                         talentName: talent,
                                         isSelected: selectedTalents.contains(talent),
                                         maxReached: selectedTalents.count >= role.talentCount,
-                                        alreadyOwned: character.talentNames.contains(talent),
+                                        alreadyOwned: character.talentNames.contains(talent) && !selectedTalents.contains(talent),
                                         onSelectionChanged: { isSelected in
                                             if isSelected {
                                                 selectedTalents.insert(talent)
@@ -1369,12 +1372,26 @@ struct RoleStage: View {
         remainingSpecializationAdvances = role.specializationAdvanceCount
         updateRemainingSpecializationAdvances()
         
-        // Initialize selected talents from character
-        // Exclude faction-granted talents from the count to avoid reducing available selections
+        // Get all faction-granted talents (including from talent choices)
         let faction = FactionDefinitions.getFaction(by: character.faction)
-        let factionTalents = faction?.talents ?? []
+        var allFactionTalents = faction?.talents ?? []
+        
+        // Add talents from selected faction talent choice
+        if !character.selectedFactionTalentChoice.isEmpty,
+           let selectedChoice = faction?.talentChoices.first(where: { $0.name == character.selectedFactionTalentChoice }) {
+            allFactionTalents.append(contentsOf: selectedChoice.talents)
+        }
+        
+        // Auto-grant Psyker talent for Mystic role if character doesn't have it
+        if role.name == "Mystic" && !character.talentNames.contains("Psyker") {
+            var updatedTalents = character.talentNames
+            updatedTalents.append("Psyker")
+            character.talentNames = updatedTalents
+        }
+        
+        // Initialize selected talents from character, excluding ALL faction-granted talents
         selectedTalents = Set(character.talentNames.filter { 
-            role.talentChoices.contains($0) && !factionTalents.contains($0) 
+            role.talentChoices.contains($0) && !allFactionTalents.contains($0) 
         })
         
         // Initialize equipment selections from character data

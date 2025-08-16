@@ -239,7 +239,7 @@ struct RoleDefinitions {
         ),
         Role(
             name: "Mystic",
-            talentChoices: ["Condemn The Witch", "Fated", "Forbidden Knowledge", "Mental Fortress", "Sanctioned Psyker"],
+            talentChoices: ["Condemn The Witch", "Fated", "Forbidden Knowledge", "Mental Fortress", "Psyker", "Sanctioned Psyker"],
             talentCount: 2,
             skillAdvances: ["Awareness", "Discipline", "Intuition", "Lore", "Navigation", "Psychic Mastery"],
             skillAdvanceCount: 3,
