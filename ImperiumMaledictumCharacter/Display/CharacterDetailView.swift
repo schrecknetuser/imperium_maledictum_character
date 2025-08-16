@@ -495,25 +495,41 @@ struct CharacteristicsTab: View {
         if let imperium = imperiumCharacter {
             let specializationAdvances = imperium.specializationAdvances
             
+            // Create reverse mapping from specialization name to skill
+            var specializationToSkillMap: [String: String] = [:]
+            for (skillName, specializations) in SkillSpecializations.specializations {
+                for specialization in specializations {
+                    specializationToSkillMap[specialization] = skillName
+                }
+            }
+            
             for (specializationName, advances) in specializationAdvances {
                 if advances > 0 {
-                    // Parse specialization name to extract skill name
-                    // Format examples: "Fear (Discipline)", "Forbidden (Lore)", "Any (Psychic Mastery)"
-                    var skillName = "Unknown"
-                    if let parenRange = specializationName.range(of: "(") {
-                        let afterParen = specializationName[parenRange.upperBound...]
-                        if let closeParenRange = afterParen.range(of: ")") {
-                            skillName = String(afterParen[..<closeParenRange.lowerBound])
-                        }
-                    }
+                    // Find skill name by lookup in specializations map
+                    let skillName = specializationToSkillMap[specializationName] ?? "Unknown"
                     
                     // Calculate total value (skill characteristic + specialization advances * 5)
                     let skillCharacteristicMap = [
+                        "Athletics": "Str",
+                        "Awareness": "Per", 
+                        "Dexterity": "Agi",
                         "Discipline": "Wil",
+                        "Fortitude": "Tgh",
+                        "Intuition": "Per",
+                        "Linguistics": "Int",
+                        "Logic": "Int",
                         "Lore": "Int",
+                        "Medicae": "Int",
+                        "Melee": "WS",
+                        "Navigation": "Int",
+                        "Piloting": "Agi",
+                        "Presence": "Wil",
                         "Psychic Mastery": "Wil",
-                        "Awareness": "Per",
-                        "Linguistics": "Int"
+                        "Ranged": "BS",
+                        "Rapport": "Fel",
+                        "Reflexes": "Agi",
+                        "Stealth": "Agi",
+                        "Tech": "Int"
                     ]
                     
                     let characteristicAbbrev = skillCharacteristicMap[skillName] ?? "Int"
@@ -673,7 +689,7 @@ struct EquipmentDisplayItem {
     let traits: [String]
     
     init(from fullName: String) {
-        var working = fullName
+        var working = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
         var modifications: [String] = []
         var traits: [String] = []
         
@@ -688,6 +704,7 @@ struct EquipmentDisplayItem {
                 }
                 if let fullRange = Range(match.range, in: working) {
                     working.removeSubrange(fullRange)
+                    working = working.trimmingCharacters(in: .whitespacesAndNewlines)
                 }
             }
         }
@@ -697,7 +714,10 @@ struct EquipmentDisplayItem {
         for trait in knownTraits {
             if working.contains(trait) {
                 traits.append(trait)
-                working = working.replacingOccurrences(of: trait, with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+                working = working.replacingOccurrences(of: trait, with: "")
+                working = working.trimmingCharacters(in: .whitespacesAndNewlines)
+                // Clean up multiple spaces
+                working = working.replacingOccurrences(of: "  ", with: " ")
             }
         }
         
@@ -715,7 +735,7 @@ struct EquipmentDisplayItem {
     }
     
     var traitsText: String {
-        return traits.isEmpty ? "" : traits.joined(separator: ", ")
+        return traits.isEmpty ? "" : "Traits: " + traits.joined(separator: ", ")
     }
 }
 

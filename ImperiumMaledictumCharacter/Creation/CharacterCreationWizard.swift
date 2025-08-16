@@ -903,17 +903,34 @@ struct AnySpecializationField: View {
     let onAdvancesChanged: () -> Void
     let onSpecializationChanged: (String) -> Void
     
+    private var extractedSkillName: String {
+        // Extract skill name from "Any (Skill)" format
+        if skillName.hasPrefix("Any (") && skillName.hasSuffix(")") {
+            return String(skillName.dropFirst(5).dropLast(1))
+        }
+        return skillName
+    }
+    
+    private var availableSpecializations: [String] {
+        return SkillSpecializations.getSpecializations(for: extractedSkillName)
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(skillName)
+            Text("Any (\(extractedSkillName))")
                 .font(.subheadline)
                 .fontWeight(.medium)
             
-            TextField("Enter specialization name", text: $customSpecialization)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .onChange(of: customSpecialization) { newValue in
-                    onSpecializationChanged(newValue)
+            Picker("Select specialization", selection: $customSpecialization) {
+                Text("Select specialization...").tag("")
+                ForEach(availableSpecializations, id: \.self) { specialization in
+                    Text(specialization).tag(specialization)
                 }
+            }
+            .pickerStyle(MenuPickerStyle())
+            .onChange(of: customSpecialization) { newValue in
+                onSpecializationChanged(newValue)
+            }
             
             HStack(spacing: 8) {
                 Button(action: {
@@ -1236,11 +1253,9 @@ struct RoleStage: View {
     private func availableTalentSelections() -> Int {
         guard let role = selectedRole else { return 0 }
         
-        // Count how many talents from role choices the character already owns
-        let alreadyOwnedCount = role.talentChoices.filter { character.talentNames.contains($0) }.count
-        
-        // Available selections = total role talent count - already owned
-        return max(0, role.talentCount - alreadyOwnedCount)
+        // Available selections = total role talent count - currently selected in UI
+        // Faction-granted talents don't reduce the number of role talents you can select
+        return max(0, role.talentCount - selectedTalents.count)
     }
     
     private func initializeRoleSelections() {
@@ -1325,9 +1340,8 @@ struct RoleStage: View {
             if specialization.hasPrefix("Any (") && advances > 0 {
                 // Use custom name if provided
                 if let customName = customSpecializations[specialization], !customName.isEmpty {
-                    let skillName = String(specialization.dropFirst(4).dropLast(1)) // Extract skill from "Any (Skill)"
-                    let finalSpecName = "\(customName) (\(skillName))"
-                    finalSpecializationAdvances[finalSpecName] = advances
+                    // Save specialization without skill name in brackets for clean display
+                    finalSpecializationAdvances[customName] = advances
                 } else {
                     // Don't save if no custom name provided
                     continue
