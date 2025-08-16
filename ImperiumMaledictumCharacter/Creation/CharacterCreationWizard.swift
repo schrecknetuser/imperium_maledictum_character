@@ -1074,6 +1074,7 @@ struct AnySpecializationField: View {
 struct RoleStage: View {
     @Binding var character: ImperiumCharacter
     @State private var selectedTalents: Set<String> = []
+    @State private var autoGrantedRoleTalents: Set<String> = []
     @State private var skillAdvancesDistribution: [String: Int] = [:]
     @State private var remainingSkillAdvances: Int = 0
     @State private var specializationAdvancesDistribution: [String: Int] = [:]
@@ -1136,11 +1137,22 @@ struct RoleStage: View {
                                 GridItem(.flexible())
                             ], spacing: 8) {
                                 ForEach(role.talentChoices, id: \.self) { talent in
+                                    let faction = FactionDefinitions.getFaction(by: character.faction)
+                                    var allFactionTalents = faction?.talents ?? []
+                                    
+                                    // Add talents from selected faction talent choice
+                                    if !character.selectedFactionTalentChoice.isEmpty,
+                                       let selectedChoice = faction?.talentChoices.first(where: { $0.name == character.selectedFactionTalentChoice }) {
+                                        allFactionTalents.append(contentsOf: selectedChoice.talents)
+                                    }
+                                    
+                                    let isOwnedFromFactionOrAutoGranted = allFactionTalents.contains(talent) || autoGrantedRoleTalents.contains(talent)
+                                    
                                     TalentSelectionField(
                                         talentName: talent,
                                         isSelected: selectedTalents.contains(talent),
                                         maxReached: selectedTalents.count >= role.talentCount,
-                                        alreadyOwned: character.talentNames.contains(talent) && !selectedTalents.contains(talent),
+                                        alreadyOwned: isOwnedFromFactionOrAutoGranted,
                                         onSelectionChanged: { isSelected in
                                             if isSelected {
                                                 selectedTalents.insert(talent)
@@ -1382,16 +1394,19 @@ struct RoleStage: View {
             allFactionTalents.append(contentsOf: selectedChoice.talents)
         }
         
-        // Auto-grant Psyker talent for Mystic role if character doesn't have it
+        // Get auto-granted role talents (like Psyker for Mystic)
+        var autoGrantedRoleTalentsList: [String] = []
         if role.name == "Mystic" && !character.talentNames.contains("Psyker") {
+            autoGrantedRoleTalentsList.append("Psyker")
             var updatedTalents = character.talentNames
             updatedTalents.append("Psyker")
             character.talentNames = updatedTalents
         }
+        autoGrantedRoleTalents = Set(autoGrantedRoleTalentsList)
         
-        // Initialize selected talents from character, excluding ALL faction-granted talents
+        // Initialize selected talents from character, excluding faction-granted AND auto-granted role talents
         selectedTalents = Set(character.talentNames.filter { 
-            role.talentChoices.contains($0) && !allFactionTalents.contains($0) 
+            role.talentChoices.contains($0) && !allFactionTalents.contains($0) && !autoGrantedRoleTalentsList.contains($0)
         })
         
         // Initialize equipment selections from character data
@@ -1420,6 +1435,7 @@ struct RoleStage: View {
     
     private func resetRoleSelections() {
         selectedTalents = []
+        autoGrantedRoleTalents = []
         skillAdvancesDistribution = [:]
         specializationAdvancesDistribution = [:]
         customSpecializations = [:]
