@@ -693,6 +693,22 @@ struct EquipmentDisplayItem {
         var modifications: [String] = []
         var traits: [String] = []
         
+        // Known traits that should be separated (order matters for longest-first matching)
+        let knownTraits = ["Master Crafted", "Mono-Edge", "Shoddy", "Ugly", "Bulky", "Lightweight", "Ornamental", "Durable", "Razor Sharp", "Well Balanced", "Power Field"]
+        
+        // Extract traits first (before parentheses)
+        for trait in knownTraits {
+            if working.lowercased().contains(trait.lowercased()) {
+                traits.append(trait)
+                // Remove trait from working string (case insensitive)
+                let regex = try! NSRegularExpression(pattern: "\\b" + NSRegularExpression.escapedPattern(for: trait) + "\\b", options: .caseInsensitive)
+                working = regex.stringByReplacingMatches(in: working, options: [], range: NSRange(location: 0, length: working.count), withTemplate: "")
+                working = working.trimmingCharacters(in: .whitespacesAndNewlines)
+                // Clean up multiple spaces
+                working = working.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
+            }
+        }
+        
         // Extract modifications (typically in parentheses)
         let modificationPattern = #"\(([^)]+)\)"#
         if let regex = try? NSRegularExpression(pattern: modificationPattern) {
@@ -706,18 +722,6 @@ struct EquipmentDisplayItem {
                     working.removeSubrange(fullRange)
                     working = working.trimmingCharacters(in: .whitespacesAndNewlines)
                 }
-            }
-        }
-        
-        // Common traits that should be separated
-        let knownTraits = ["Shoddy", "Ugly", "Bulky", "Lightweight", "Master Crafted", "Ornamental", "Durable"]
-        for trait in knownTraits {
-            if working.contains(trait) {
-                traits.append(trait)
-                working = working.replacingOccurrences(of: trait, with: "")
-                working = working.trimmingCharacters(in: .whitespacesAndNewlines)
-                // Clean up multiple spaces
-                working = working.replacingOccurrences(of: "  ", with: " ")
             }
         }
         
