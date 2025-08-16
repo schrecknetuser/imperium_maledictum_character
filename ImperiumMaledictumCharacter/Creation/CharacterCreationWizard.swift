@@ -1485,8 +1485,15 @@ struct RoleStage: View {
         // Save selected talents (replace to avoid duplication)
         var allTalents = character.talentNames
         
-        // Remove any previously selected role talents to avoid duplication, but preserve auto-granted role talents
-        allTalents.removeAll { role.talentChoices.contains($0) && !autoGrantedRoleTalents.contains($0) }
+        // Get faction-granted talents to preserve them
+        let factionGrantedTalents = Set(allFactionTalents)
+        
+        // Remove any previously selected role talents to avoid duplication, but preserve auto-granted role talents and faction-granted talents
+        allTalents.removeAll { talent in
+            role.talentChoices.contains(talent) && 
+            !autoGrantedRoleTalents.contains(talent) && 
+            !factionGrantedTalents.contains(talent)
+        }
         
         // Add currently selected talents
         for talent in selectedTalents {
