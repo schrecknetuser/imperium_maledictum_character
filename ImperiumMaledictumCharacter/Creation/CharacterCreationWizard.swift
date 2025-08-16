@@ -1296,7 +1296,8 @@ struct RoleStage: View {
         
         // Initialize selected talents from character
         // Exclude faction-granted talents from the count to avoid reducing available selections
-        let factionTalents = selectedFaction?.talents ?? []
+        let faction = FactionDefinitions.getFaction(by: character.faction)
+        let factionTalents = faction?.talents ?? []
         selectedTalents = Set(character.talentNames.filter { 
             role.talentChoices.contains($0) && !factionTalents.contains($0) 
         })
