@@ -569,27 +569,7 @@ struct CharacteristicsTab: View {
     }
 }
 
-struct CharacteristicRowData {
-    let abbreviation: String
-    let name: String
-    let baseValue: Int
-    let advances: Int
-    let totalValue: Int
-}
-
-struct SkillRowData {
-    let name: String
-    let characteristicAbbreviation: String
-    let advances: Int
-    let totalValue: Int
-}
-
-struct SpecializationRowData {
-    let name: String
-    let skillName: String
-    let advances: Int
-    let totalValue: Int
-}
+// MARK: - Data structures moved to CharacterBase.swift to avoid duplication
 
 struct CharacteristicDisplay: View {
     let name: String
