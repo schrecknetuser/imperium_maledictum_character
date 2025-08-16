@@ -1040,9 +1040,9 @@ struct RoleStage: View {
                                 Text("Talents (\(role.talentCount) to choose):")
                                     .font(.headline)
                                 Spacer()
-                                Text("\(selectedTalents.count)/\(availableTalentSelections())")
+                                Text("\(selectedTalents.count)/\(role.talentCount)")
                                     .font(.subheadline)
-                                    .foregroundColor(selectedTalents.count > availableTalentSelections() ? .red : .secondary)
+                                    .foregroundColor(selectedTalents.count > role.talentCount ? .red : .secondary)
                             }
                             
                             LazyVGrid(columns: [
@@ -1053,7 +1053,7 @@ struct RoleStage: View {
                                     TalentSelectionField(
                                         talentName: talent,
                                         isSelected: selectedTalents.contains(talent),
-                                        maxReached: availableTalentSelections() <= 0,
+                                        maxReached: selectedTalents.count >= role.talentCount,
                                         alreadyOwned: character.talentNames.contains(talent),
                                         onSelectionChanged: { isSelected in
                                             if isSelected {
@@ -1260,14 +1260,6 @@ struct RoleStage: View {
     
     private func updateCustomSpecialization(_ anySpecialization: String, newName: String) {
         customSpecializations[anySpecialization] = newName
-    }
-    
-    private func availableTalentSelections() -> Int {
-        guard let role = selectedRole else { return 0 }
-        
-        // Available selections = total role talent count - currently selected in UI
-        // Faction-granted talents don't reduce the number of role talents you can select
-        return max(0, role.talentCount - selectedTalents.count)
     }
     
     private func initializeRoleSelections() {

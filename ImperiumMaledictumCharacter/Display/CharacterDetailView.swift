@@ -676,27 +676,16 @@ struct EquipmentDisplayItem {
         // Known traits that should be separated (order matters for longest-first matching)
         let knownTraits = ["Master Crafted", "Mono-Edge", "Shoddy", "Ugly", "Bulky", "Lightweight", "Ornamental", "Durable", "Razor Sharp", "Well Balanced", "Power Field"]
         
-        // Extract traits first (before parentheses)
-        for trait in knownTraits {
-            if working.lowercased().contains(trait.lowercased()) {
-                traits.append(trait)
-                // Remove trait from working string (case insensitive)
-                let regex = try! NSRegularExpression(pattern: "\\b" + NSRegularExpression.escapedPattern(for: trait) + "\\b", options: .caseInsensitive)
-                working = regex.stringByReplacingMatches(in: working, options: [], range: NSRange(location: 0, length: working.count), withTemplate: "")
-                working = working.trimmingCharacters(in: .whitespacesAndNewlines)
-                // Clean up multiple spaces
-                working = working.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
-            }
-        }
-        
-        // Extract modifications (typically in parentheses)
+        // First, extract content from parentheses
         let modificationPattern = #"\(([^)]+)\)"#
+        var parenthesesContent: [String] = []
+        
         if let regex = try? NSRegularExpression(pattern: modificationPattern) {
             let matches = regex.matches(in: working, range: NSRange(working.startIndex..., in: working))
             for match in matches.reversed() {
                 if let range = Range(match.range(at: 1), in: working) {
-                    let modification = String(working[range])
-                    modifications.append(modification)
+                    let content = String(working[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    parenthesesContent.append(content)
                 }
                 if let fullRange = Range(match.range, in: working) {
                     working.removeSubrange(fullRange)
@@ -704,6 +693,33 @@ struct EquipmentDisplayItem {
                 }
             }
         }
+        
+        // Now extract traits from both the main name and parentheses content
+        for trait in knownTraits {
+            // Check main name
+            if working.lowercased().contains(trait.lowercased()) {
+                traits.append(trait)
+                let regex = try! NSRegularExpression(pattern: "\\b" + NSRegularExpression.escapedPattern(for: trait) + "\\b", options: .caseInsensitive)
+                working = regex.stringByReplacingMatches(in: working, options: [], range: NSRange(location: 0, length: working.count), withTemplate: "")
+                working = working.trimmingCharacters(in: .whitespacesAndNewlines)
+                working = working.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
+            }
+            
+            // Check parentheses content and separate traits from other modifications
+            parenthesesContent = parenthesesContent.compactMap { content in
+                if content.lowercased() == trait.lowercased() {
+                    if !traits.contains(trait) {
+                        traits.append(trait)
+                    }
+                    return nil // Remove this content as it's now a trait
+                } else {
+                    return content
+                }
+            }
+        }
+        
+        // Remaining parentheses content are modifications
+        modifications = parenthesesContent.filter { !$0.isEmpty }
         
         self.baseName = working.trimmingCharacters(in: .whitespacesAndNewlines)
         self.modifications = modifications
