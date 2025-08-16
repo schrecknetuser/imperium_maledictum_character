@@ -63,6 +63,12 @@ struct CharacterListView: View {
     @State private var showingCreationWizard = false
     @State private var characterToResume: IdentifiableCharacter? = nil
     @State private var expandedCampaigns: [String: Bool] = [:]
+    @State private var showingDeleteConfirmation = false
+    @State private var characterToDelete: any BaseCharacter = ImperiumCharacter() {
+        didSet {
+            showingDeleteConfirmation = true
+        }
+    }
     
     var body: some View {
         List {
@@ -79,6 +85,14 @@ struct CharacterListView: View {
                             CharacterRow(character: character)
                         }
                         .foregroundColor(.primary)
+                        .swipeActions(edge: .trailing) {
+                            Button {
+                                characterToDelete = character
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            .tint(.red)
+                        }
                     }
                     .onDelete { offsets in
                         let indicesToDelete = IndexSet(offsets.compactMap { offset in
@@ -111,6 +125,13 @@ struct CharacterListView: View {
                             CharacterRow(character: character)
                         }
                         .swipeActions(edge: .trailing) {
+                            Button {
+                                characterToDelete = character
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            .tint(.red)
+                            
                             Button {
                                 store.archiveCharacter(character)
                             } label: {
@@ -149,6 +170,13 @@ struct CharacterListView: View {
                         }
                         .swipeActions(edge: .trailing) {
                             Button {
+                                characterToDelete = character
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            .tint(.red)
+                            
+                            Button {
                                 store.unarchiveCharacter(character)
                             } label: {
                                 Label("Unarchive", systemImage: "archivebox.fill")
@@ -175,6 +203,14 @@ struct CharacterListView: View {
         }
         .fullScreenCover(item: $characterToResume) { identifiable in
             CharacterCreationWizard(store: store, existingCharacter: identifiable.character)
+        }
+        .alert("Delete Character", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                store.deleteCharacter(characterToDelete)
+            }
+        } message: {
+            Text("Are you sure you want to delete '\(characterToDelete.name.isEmpty ? "Unnamed Character" : characterToDelete.name)'? This action cannot be undone.")
         }
     }
     

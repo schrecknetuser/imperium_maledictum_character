@@ -34,6 +34,7 @@ protocol BaseCharacter: AnyObject, Identifiable {
     var willpower: Int { get set }
     var fellowship: Int { get set }
     var influence: Int { get set }
+    var perception: Int { get set }
     
     // Status tracking
     var wounds: Int { get set }
@@ -102,11 +103,11 @@ struct CreationStages {
     
     static let stageNames = [
         "Basic Info",
-        "Faction & Role",
-        "Homeworld",
-        "Characteristics", 
-        "Skills & Talents",
-        "Equipment"
+        "Characteristics",
+        "Origin", 
+        "Faction",
+        "Role",
+        "Complete"
     ]
     
     static func stageName(for index: Int) -> String {
@@ -151,4 +152,27 @@ struct ImperiumRoles {
     static func roles(for faction: String) -> [String] {
         return rolesByFaction[faction] ?? []
     }
+}
+
+// MARK: - Display Data Structures
+struct CharacteristicRowData {
+    let abbreviation: String
+    let name: String
+    let baseValue: Int
+    let advances: Int
+    let totalValue: Int
+}
+
+struct SkillRowData {
+    let name: String
+    let characteristicAbbreviation: String
+    let advances: Int
+    let totalValue: Int
+}
+
+struct SpecializationRowData {
+    let name: String
+    let skillName: String
+    let advances: Int
+    let totalValue: Int
 }
