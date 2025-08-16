@@ -128,7 +128,16 @@ struct CharacterCreationWizard: View {
         case 2: // Origin
             return !character.homeworld.isEmpty
         case 3: // Faction
-            return !character.faction.isEmpty
+            if character.faction.isEmpty {
+                return false
+            }
+            // Check if a talent choice is required and selected
+            if let faction = FactionDefinitions.getFaction(by: character.faction) {
+                if !faction.talentChoices.isEmpty && character.selectedFactionTalentChoice.isEmpty {
+                    return false
+                }
+            }
+            return true
         case 4: // Role
             return !character.role.isEmpty
         case 5: // Complete
@@ -139,10 +148,23 @@ struct CharacterCreationWizard: View {
     }
     
     private func canCompleteCreation() -> Bool {
-        return !character.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        let basicRequirementsPass = !character.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
                !character.faction.isEmpty &&
                !character.role.isEmpty &&
                !character.homeworld.isEmpty
+        
+        if !basicRequirementsPass {
+            return false
+        }
+        
+        // Check if a talent choice is required and selected for the faction
+        if let faction = FactionDefinitions.getFaction(by: character.faction) {
+            if !faction.talentChoices.isEmpty && character.selectedFactionTalentChoice.isEmpty {
+                return false
+            }
+        }
+        
+        return true
     }
     
     private func completeCreation() {
@@ -694,6 +716,40 @@ struct FactionStage: View {
                                 }
                             }
                             
+                            if !faction.talentChoices.isEmpty {
+                                Text("Talent Choice (select one):")
+                                    .font(.subheadline)
+                                    .fontWeight(.semibold)
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    ForEach(faction.talentChoices.indices, id: \.self) { index in
+                                        let choice = faction.talentChoices[index]
+                                        Button(action: {
+                                            character.selectedFactionTalentChoice = choice.name
+                                        }) {
+                                            HStack(alignment: .top, spacing: 8) {
+                                                Image(systemName: character.selectedFactionTalentChoice == choice.name ? "checkmark.circle.fill" : "circle")
+                                                    .foregroundColor(character.selectedFactionTalentChoice == choice.name ? .blue : .gray)
+                                                
+                                                VStack(alignment: .leading, spacing: 2) {
+                                                    Text(choice.name)
+                                                        .font(.subheadline)
+                                                        .fontWeight(.medium)
+                                                    
+                                                    Text(choice.talents.joined(separator: ", "))
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
+                                                }
+                                                
+                                                Spacer()
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                        .foregroundColor(character.selectedFactionTalentChoice == choice.name ? .blue : .primary)
+                                    }
+                                }
+                            }
+                            
                             Text("Equipment:")
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
@@ -734,6 +790,18 @@ struct FactionStage: View {
         for skill in faction.skillAdvances {
             skillAdvancesDistribution[skill] = existingAdvances[skill] ?? 0
         }
+        
+        // Initialize talent choice from existing character data if it's valid for this faction
+        if !faction.talentChoices.isEmpty {
+            let validChoiceNames = faction.talentChoices.map { $0.name }
+            if validChoiceNames.contains(character.selectedFactionTalentChoice) {
+                // Keep the existing choice if it's valid
+            } else {
+                // Reset if invalid or empty
+                character.selectedFactionTalentChoice = ""
+            }
+        }
+        
         hasInitialized = true
         updateRemainingSkillAdvances()
     }
@@ -743,6 +811,7 @@ struct FactionStage: View {
         skillAdvancesDistribution = [:]
         remainingSkillAdvances = 5
         hasInitialized = false
+        character.selectedFactionTalentChoice = ""
         if selectedFaction != nil {
             initializeFactionSelections()
         }
@@ -765,11 +834,25 @@ struct FactionStage: View {
         
         // Add faction talents
         var allTalents = character.talentNames
+        
+        // Add automatic faction talents
         for talent in faction.talents {
             if !allTalents.contains(talent) {
                 allTalents.append(talent)
             }
         }
+        
+        // Add talents from selected choice
+        if !character.selectedFactionTalentChoice.isEmpty {
+            if let selectedChoice = faction.talentChoices.first(where: { $0.name == character.selectedFactionTalentChoice }) {
+                for talent in selectedChoice.talents {
+                    if !allTalents.contains(talent) {
+                        allTalents.append(talent)
+                    }
+                }
+            }
+        }
+        
         character.talentNames = allTalents
         
         // Add faction equipment

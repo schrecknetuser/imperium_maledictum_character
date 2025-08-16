@@ -24,6 +24,7 @@ class ImperiumCharacter: BaseCharacter {
     var background: String = ""
     var goal: String = ""
     var nemesis: String = ""
+    var selectedFactionTalentChoice: String = "" // Index or name of selected faction talent choice
     
     // Core characteristics - using new data model approach 
     var characteristicsData: String = "" // JSON data for characteristics

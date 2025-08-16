@@ -7,24 +7,36 @@
 
 import Foundation
 
+struct TalentChoice {
+    var name: String
+    var talents: [String]
+    
+    init(name: String, talents: [String]) {
+        self.name = name
+        self.talents = talents
+    }
+}
+
 struct Faction {
     var name: String
     var mandatoryBonus: CharacteristicBonus
     var choiceBonus: [CharacteristicBonus]
     var skillAdvances: [String] // Skills to distribute 5 advances among
     var influenceBonus: String // Faction to gain +1 influence with
-    var talents: [String] // Granted talents
+    var talents: [String] // Automatically granted talents
+    var talentChoices: [TalentChoice] // Choice-based talents (user must select one)
     var equipment: [String] // Granted equipment
     var solars: Int // Starting solars
     var description: String
     
-    init(name: String, mandatoryBonus: CharacteristicBonus, choiceBonus: [CharacteristicBonus], skillAdvances: [String], influenceBonus: String, talents: [String], equipment: [String], solars: Int, description: String = "") {
+    init(name: String, mandatoryBonus: CharacteristicBonus, choiceBonus: [CharacteristicBonus], skillAdvances: [String], influenceBonus: String, talents: [String] = [], talentChoices: [TalentChoice] = [], equipment: [String], solars: Int, description: String = "") {
         self.name = name
         self.mandatoryBonus = mandatoryBonus
         self.choiceBonus = choiceBonus
         self.skillAdvances = skillAdvances
         self.influenceBonus = influenceBonus
         self.talents = talents
+        self.talentChoices = talentChoices
         self.equipment = equipment
         self.solars = solars
         self.description = description
@@ -72,7 +84,12 @@ struct FactionDefinitions {
             ],
             skillAdvances: ["Awareness", "Discipline", "Intuition", "Linguistics", "Psychic Mastery"],
             influenceBonus: "Adeptus Astra Telepathica",
-            talents: ["Psyker", "Sanctioned Psyker"], // Or Blank, or Condemn the Witch + Mental Fortress
+            talents: [],
+            talentChoices: [
+                TalentChoice(name: "Sanctioned Psyker", talents: ["Psyker", "Sanctioned Psyker"]),
+                TalentChoice(name: "Blank", talents: ["Blank"]),
+                TalentChoice(name: "Witch Hunter", talents: ["Condemn The Witch", "Mental Fortress"])
+            ],
             equipment: ["Knife (Mono-Edge)", "Robes", "Instrument of Divination"],
             solars: 500,
             description: "The organization responsible for training and regulating psykers"
