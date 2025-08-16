@@ -1485,8 +1485,8 @@ struct RoleStage: View {
         // Save selected talents (replace to avoid duplication)
         var allTalents = character.talentNames
         
-        // Remove any previously selected role talents to avoid duplication
-        allTalents.removeAll { role.talentChoices.contains($0) }
+        // Remove any previously selected role talents to avoid duplication, but preserve auto-granted role talents
+        allTalents.removeAll { role.talentChoices.contains($0) && !autoGrantedRoleTalents.contains($0) }
         
         // Add currently selected talents
         for talent in selectedTalents {
