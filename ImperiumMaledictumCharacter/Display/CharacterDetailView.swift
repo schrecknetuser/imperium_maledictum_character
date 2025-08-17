@@ -65,7 +65,9 @@ struct CharacterDetailView: View {
                 if isEditMode {
                     Button("Done") {
                         // Save all changes
-                        character.lastModified = Date()
+                        if let imperium = character as? ImperiumCharacter {
+                            imperium.lastModified = Date()
+                        }
                         store.saveChanges()
                         isEditMode = false
                     }
