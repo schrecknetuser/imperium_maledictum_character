@@ -92,6 +92,16 @@ struct OverviewTab: View {
         return character as? ImperiumCharacter
     }
     
+    var imperiumCharacterBinding: Binding<ImperiumCharacter>? {
+        guard let imperium = character as? ImperiumCharacter else { return nil }
+        return Binding(
+            get: { imperium },
+            set: { newValue in
+                character = newValue
+            }
+        )
+    }
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -283,13 +293,13 @@ struct OverviewTab: View {
             .padding(.bottom, 20)
         }
         .sheet(isPresented: $showingStatusPopup) {
-            if let imperium = imperiumCharacter {
-                StatusPopupView(character: imperium, store: store)
+            if let binding = imperiumCharacterBinding {
+                StatusPopupView(character: binding, store: store)
             }
         }
         .sheet(isPresented: $showingInjuriesPopup) {
-            if let imperium = imperiumCharacter {
-                InjuriesPopupView(character: imperium, store: store)
+            if let binding = imperiumCharacterBinding {
+                InjuriesPopupView(character: binding, store: store)
             }
         }
     }
@@ -1072,7 +1082,7 @@ struct EditCharacterSheet: View {
 // MARK: - Status Popup View
 
 struct StatusPopupView: View {
-    var character: ImperiumCharacter
+    @Binding var character: ImperiumCharacter
     var store: CharacterStore
     @Environment(\.dismiss) private var dismiss
     
@@ -1387,7 +1397,7 @@ struct StatusPopupView: View {
 // MARK: - Injuries Popup View
 
 struct InjuriesPopupView: View {
-    var character: ImperiumCharacter
+    @Binding var character: ImperiumCharacter
     var store: CharacterStore
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTab = 0
