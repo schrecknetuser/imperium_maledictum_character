@@ -38,6 +38,9 @@ class ImperiumCharacter: BaseCharacter {
     var bodyInjuries: String = "" // JSON array of body injuries
     var legInjuries: String = "" // JSON array of leg injuries
     
+    // Conditions
+    var conditionsData: String = "" // JSON array of active conditions
+    
     // Core characteristics - using new data model approach 
     var characteristicsData: String = "" // JSON data for characteristics
     var skillsAdvancesData: String = "" // JSON data for skill advances
@@ -117,6 +120,7 @@ class ImperiumCharacter: BaseCharacter {
         armInjuries = ""
         bodyInjuries = ""
         legInjuries = ""
+        conditionsData = ""
         
         // Reset characteristics to base values (new system uses 20 as base)
         weaponSkill = 20
@@ -531,6 +535,24 @@ class ImperiumCharacter: BaseCharacter {
         set {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 legInjuries = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
+    // MARK: - Condition Management
+    
+    var conditionsList: [Condition] {
+        get {
+            guard let data = conditionsData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([Condition].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                conditionsData = String(data: encoded, encoding: .utf8) ?? ""
             }
             lastModified = Date()
         }
