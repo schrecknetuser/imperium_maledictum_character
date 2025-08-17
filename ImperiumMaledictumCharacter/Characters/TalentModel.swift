@@ -11,11 +11,11 @@ import SwiftData
 @Model
 class Talent {
     var name: String
-    var description: String
+    var talentDescription: String
     
-    init(name: String, description: String = "") {
+    init(name: String, talentDescription: String = "") {
         self.name = name
-        self.description = description
+        self.talentDescription = talentDescription
     }
 }
 

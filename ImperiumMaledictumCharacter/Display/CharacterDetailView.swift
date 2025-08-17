@@ -21,7 +21,7 @@ struct CharacterDetailView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            OverviewTab(character: character)
+            OverviewTab(character: $character, store: store)
                 .tabItem {
                     Image(systemName: "person.circle")
                     Text("Overview")
@@ -83,10 +83,23 @@ struct CharacterDetailView: View {
 // MARK: - Overview Tab
 
 struct OverviewTab: View {
-    let character: any BaseCharacter
+    @Binding var character: any BaseCharacter
+    @ObservedObject var store: CharacterStore
+    @State private var showingStatusPopup = false
+    @State private var showingInjuriesPopup = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
+    }
+    
+    var imperiumCharacterBinding: Binding<ImperiumCharacter>? {
+        guard character is ImperiumCharacter else { return nil }
+        return Binding(
+            get: { character as! ImperiumCharacter },
+            set: { newValue in
+                character = newValue
+            }
+        )
     }
     
     var body: some View {
@@ -114,6 +127,12 @@ struct OverviewTab: View {
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
+                            
+                            if let imperium = imperiumCharacter, !imperium.homeworld.isEmpty {
+                                Text(imperium.homeworld)
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                         
                         Spacer()
@@ -129,34 +148,41 @@ struct OverviewTab: View {
                 .background(Color(.systemGray6))
                 .cornerRadius(12)
                 
-                // Status Overview
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Status")
-                        .font(.headline)
-                    
-                    HStack(spacing: 20) {
-                        StatusBox(title: "Wounds", current: character.wounds, maximum: character.maxWounds, color: .red)
-                        StatusBox(title: "Corruption", current: character.corruption, maximum: 100, color: .purple)
+                // Character Goals and Description
+                if let imperium = imperiumCharacter {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Character Information")
+                            .font(.headline)
                         
-                        if let imperium = imperiumCharacter {
-                            StatusBox(title: "Stress", current: imperium.stress, maximum: 100, color: .orange)
-                            StatusBox(title: "Fate", current: imperium.fate, maximum: 10, color: .blue)
+                        if !imperium.shortTermGoal.isEmpty {
+                            DetailRow(title: "Short-term Goal", value: imperium.shortTermGoal)
+                        }
+                        
+                        if !imperium.longTermGoal.isEmpty {
+                            DetailRow(title: "Long-term Goal", value: imperium.longTermGoal)
+                        }
+                        
+                        if !imperium.characterDescription.isEmpty {
+                            DetailRow(title: "Description", value: imperium.characterDescription)
+                        }
+                        
+                        if imperium.shortTermGoal.isEmpty && imperium.longTermGoal.isEmpty && imperium.characterDescription.isEmpty {
+                            Text("No character information provided")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .italic()
                         }
                     }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
                 }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(12)
                 
                 // Character Details
                 if let imperium = imperiumCharacter {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Details")
+                        Text("Background Details")
                             .font(.headline)
-                        
-                        if !imperium.homeworld.isEmpty {
-                            DetailRow(title: "Homeworld", value: imperium.homeworld)
-                        }
                         
                         if !imperium.background.isEmpty {
                             DetailRow(title: "Background", value: imperium.background)
@@ -173,6 +199,56 @@ struct OverviewTab: View {
                         if imperium.solars > 0 {
                             DetailRow(title: "Wealth", value: "\(imperium.solars) Solars")
                         }
+                        
+                        if imperium.background.isEmpty && imperium.goal.isEmpty && imperium.nemesis.isEmpty && imperium.solars == 0 {
+                            Text("No background details provided")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
+                
+                // Experience Block
+                if let imperium = imperiumCharacter {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Experience")
+                            .font(.headline)
+                        
+                        HStack(spacing: 20) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Total XP")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("\(imperium.totalExperience)")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Spent XP")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("\(imperium.spentExperience)")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Available XP")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("\(imperium.availableExperience)")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.green)
+                            }
+                            
+                            Spacer()
+                        }
                     }
                     .padding()
                     .background(Color(.systemGray6))
@@ -180,6 +256,47 @@ struct OverviewTab: View {
                 }
             }
             .padding()
+        }
+        .overlay(alignment: .bottomTrailing) {
+            VStack(spacing: 12) {
+                // Injuries Button
+                Button {
+                    showingInjuriesPopup = true
+                } label: {
+                    Image(systemName: "bandage")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Color.red)
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
+                
+                // Status Button
+                Button {
+                    showingStatusPopup = true
+                } label: {
+                    Image(systemName: "heart.text.square")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Color.blue)
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
+            }
+            .padding(.trailing, 20)
+            .padding(.bottom, 20)
+        }
+        .sheet(isPresented: $showingStatusPopup) {
+            if let binding = imperiumCharacterBinding {
+                StatusPopupView(character: binding, store: store)
+            }
+        }
+        .sheet(isPresented: $showingInjuriesPopup) {
+            if let binding = imperiumCharacterBinding {
+                InjuriesPopupView(character: binding, store: store)
+            }
         }
     }
 }
@@ -840,6 +957,10 @@ struct EditCharacterSheet: View {
     @ObservedObject var store: CharacterStore
     @Environment(\.dismiss) private var dismiss
     
+    var imperiumCharacter: ImperiumCharacter? {
+        return character as? ImperiumCharacter
+    }
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -852,6 +973,39 @@ struct EditCharacterSheet: View {
                 Section("Faction & Role") {
                     TextField("Faction", text: $character.faction)
                     TextField("Role", text: $character.role)
+                    
+                    if let imperium = imperiumCharacter {
+                        let homeworldBinding = Binding<String>(
+                            get: { imperium.homeworld },
+                            set: { imperium.homeworld = $0 }
+                        )
+                        TextField("Homeworld", text: homeworldBinding)
+                    }
+                }
+                
+                if let imperium = imperiumCharacter {
+                    Section("Character Information") {
+                        let shortTermGoalBinding = Binding<String>(
+                            get: { imperium.shortTermGoal },
+                            set: { imperium.shortTermGoal = $0 }
+                        )
+                        TextField("Short-term Goal", text: shortTermGoalBinding, axis: .vertical)
+                            .lineLimit(2...4)
+                        
+                        let longTermGoalBinding = Binding<String>(
+                            get: { imperium.longTermGoal },
+                            set: { imperium.longTermGoal = $0 }
+                        )
+                        TextField("Long-term Goal", text: longTermGoalBinding, axis: .vertical)
+                            .lineLimit(2...4)
+                        
+                        let descriptionBinding = Binding<String>(
+                            get: { imperium.characterDescription },
+                            set: { imperium.characterDescription = $0 }
+                        )
+                        TextField("Character Description", text: descriptionBinding, axis: .vertical)
+                            .lineLimit(3...6)
+                    }
                 }
                 
                 Section("Status") {
@@ -862,9 +1016,14 @@ struct EditCharacterSheet: View {
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .frame(width: 60)
                         Text("/")
-                        TextField("Max", value: $character.maxWounds, format: .number)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 60)
+                        if let imperium = imperiumCharacter {
+                            Text("\(imperium.calculateMaxWounds())")
+                                .frame(width: 60)
+                        } else {
+                            TextField("Max", value: $character.maxWounds, format: .number)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(width: 60)
+                        }
                     }
                     
                     HStack {
@@ -873,6 +1032,26 @@ struct EditCharacterSheet: View {
                         TextField("Corruption", value: $character.corruption, format: .number)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .frame(width: 80)
+                        
+                        if let imperium = imperiumCharacter {
+                            Text("/ 100 (Threshold: \(imperium.calculateCorruptionThreshold()))")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    if let imperium = imperiumCharacter {
+                        HStack {
+                            Text("Critical Wounds")
+                            Spacer()
+                            let criticalWoundsBinding = Binding<Int>(
+                                get: { imperium.criticalWounds },
+                                set: { imperium.criticalWounds = $0 }
+                            )
+                            TextField("Count", value: criticalWoundsBinding, format: .number)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(width: 60)
+                        }
                     }
                 }
             }
@@ -888,6 +1067,538 @@ struct EditCharacterSheet: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         store.saveChanges()
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Status Popup View
+
+struct StatusPopupView: View {
+    @Binding var character: ImperiumCharacter
+    var store: CharacterStore
+    @Environment(\.dismiss) private var dismiss
+    
+    // Local state to force UI updates
+    @State private var wounds: Int = 0
+    @State private var corruption: Int = 0
+    @State private var fate: Int = 0
+    @State private var spentFate: Int = 0
+    @State private var totalExperience: Int = 0
+    @State private var spentExperience: Int = 0
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Character Status") {
+                    // Wounds
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Wounds")
+                            .font(.headline)
+                        
+                        HStack {
+                            Button(action: {
+                                if wounds > 0 {
+                                    wounds -= 1
+                                    updateCharacter()
+                                }
+                            }) {
+                                Image(systemName: "minus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .disabled(wounds <= 0)
+                            
+                            Spacer()
+                            
+                            Text("\(wounds)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                if wounds < character.calculateMaxWounds() {
+                                    wounds += 1
+                                    updateCharacter()
+                                }
+                            }) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .disabled(wounds >= character.calculateMaxWounds())
+                        }
+                        
+                        Text("Wounds Threshold: \(character.calculateMaxWounds())")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    // Corruption
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Corruption")
+                            .font(.headline)
+                        
+                        HStack {
+                            Button(action: {
+                                if corruption > 0 {
+                                    corruption -= 1
+                                    updateCharacter()
+                                }
+                            }) {
+                                Image(systemName: "minus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.purple)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .disabled(corruption <= 0)
+                            
+                            Spacer()
+                            
+                            Text("\(corruption)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                corruption += 1
+                                updateCharacter()
+                            }) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.purple)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        
+                        Text("Corruption Threshold: \(character.calculateCorruptionThreshold())")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    // Critical Wounds (automatic count)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Critical Wounds")
+                            .font(.headline)
+                        
+                        HStack {
+                            Spacer()
+                            
+                            Text("\(character.countActiveCriticalWounds())")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                        }
+                        
+                        Text("Critical Wounds Threshold: \(character.calculateCriticalWoundsThreshold())")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Section("Fate Points") {
+                    // Fate
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Fate")
+                            .font(.headline)
+                        
+                        HStack {
+                            Button(action: {
+                                if fate > 0 {
+                                    fate -= 1
+                                    // Adjust spent fate if it exceeds current fate
+                                    if spentFate > fate {
+                                        spentFate = fate
+                                    }
+                                    updateCharacter()
+                                }
+                            }) {
+                                Image(systemName: "minus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.yellow)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .disabled(fate <= 0)
+                            
+                            Spacer()
+                            
+                            Text("\(fate)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                fate += 1
+                                updateCharacter()
+                            }) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.yellow)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    
+                    // Spent Fate
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Spent Fate")
+                            .font(.headline)
+                        
+                        HStack {
+                            Button(action: {
+                                if spentFate > 0 {
+                                    spentFate -= 1
+                                    updateCharacter()
+                                }
+                            }) {
+                                Image(systemName: "minus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.orange)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .disabled(spentFate <= 0)
+                            
+                            Spacer()
+                            
+                            Text("\(spentFate)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                if spentFate < fate {
+                                    spentFate += 1
+                                    updateCharacter()
+                                }
+                            }) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.orange)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .disabled(spentFate >= fate)
+                        }
+                        
+                        Text("Available: \(fate - spentFate)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Section("Experience") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Total Experience")
+                            .font(.headline)
+                        
+                        TextField("Total Experience", value: $totalExperience, formatter: NumberFormatter())
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .keyboardType(.numberPad)
+                            .onChange(of: totalExperience) { _ in
+                                if totalExperience < 0 {
+                                    totalExperience = 0
+                                }
+                                updateCharacter()
+                            }
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Spent Experience")
+                            .font(.headline)
+                        
+                        TextField("Spent Experience", value: $spentExperience, formatter: NumberFormatter())
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .keyboardType(.numberPad)
+                            .onChange(of: spentExperience) { _ in
+                                if spentExperience < 0 {
+                                    spentExperience = 0
+                                }
+                                updateCharacter()
+                            }
+                    }
+                }
+            }
+            .navigationTitle("Character Status")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        character.lastModified = Date()
+                        dismiss()
+                    }
+                }
+            }
+            .onAppear {
+                // Initialize state from character
+                wounds = character.wounds
+                corruption = character.corruption
+                fate = character.fate
+                spentFate = character.spentFate
+                totalExperience = character.totalExperience
+                spentExperience = character.spentExperience
+            }
+        }
+    }
+    
+    private func updateCharacter() {
+        character.wounds = wounds
+        character.corruption = corruption
+        character.fate = fate
+        character.spentFate = spentFate
+        character.totalExperience = totalExperience
+        character.spentExperience = spentExperience
+        character.lastModified = Date()
+        store.saveChanges()
+    }
+}
+
+// MARK: - Injuries Popup View
+
+struct InjuriesPopupView: View {
+    @Binding var character: ImperiumCharacter
+    var store: CharacterStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedTab = 0
+    
+    var body: some View {
+        NavigationStack {
+            TabView(selection: $selectedTab) {
+                InjuryListView(
+                    title: "Head Injuries",
+                    injuries: character.headInjuriesList,
+                    availableWounds: CriticalWoundDefinitions.headWounds,
+                    onAdd: { wound in
+                        var current = character.headInjuriesList
+                        current.append(wound)
+                        character.headInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
+                    },
+                    onRemove: { indices in
+                        var current = character.headInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.headInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
+                    }
+                )
+                .tabItem {
+                    Image(systemName: "brain.head.profile")
+                    Text("Head")
+                }
+                .tag(0)
+                
+                InjuryListView(
+                    title: "Arm Injuries",
+                    injuries: character.armInjuriesList,
+                    availableWounds: CriticalWoundDefinitions.armWounds,
+                    onAdd: { wound in
+                        var current = character.armInjuriesList
+                        current.append(wound)
+                        character.armInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
+                    },
+                    onRemove: { indices in
+                        var current = character.armInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.armInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
+                    }
+                )
+                .tabItem {
+                    Image(systemName: "hand.raised")
+                    Text("Arm")
+                }
+                .tag(1)
+                
+                InjuryListView(
+                    title: "Body Injuries",
+                    injuries: character.bodyInjuriesList,
+                    availableWounds: CriticalWoundDefinitions.bodyWounds,
+                    onAdd: { wound in
+                        var current = character.bodyInjuriesList
+                        current.append(wound)
+                        character.bodyInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
+                    },
+                    onRemove: { indices in
+                        var current = character.bodyInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.bodyInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
+                    }
+                )
+                .tabItem {
+                    Image(systemName: "person")
+                    Text("Body")
+                }
+                .tag(2)
+                
+                InjuryListView(
+                    title: "Leg Injuries",
+                    injuries: character.legInjuriesList,
+                    availableWounds: CriticalWoundDefinitions.legWounds,
+                    onAdd: { wound in
+                        var current = character.legInjuriesList
+                        current.append(wound)
+                        character.legInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
+                    },
+                    onRemove: { indices in
+                        var current = character.legInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.legInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
+                    }
+                )
+                .tabItem {
+                    Image(systemName: "figure.walk")
+                    Text("Leg")
+                }
+                .tag(3)
+            }
+            .navigationTitle("Critical Injuries")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        character.lastModified = Date()
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Injury List View
+
+struct InjuryListView: View {
+    let title: String
+    let injuries: [CriticalWound]
+    let availableWounds: [CriticalWound]
+    let onAdd: (CriticalWound) -> Void
+    let onRemove: (IndexSet) -> Void
+    
+    @State private var showingAddSheet = false
+    
+    var body: some View {
+        List {
+            Section {
+                ForEach(injuries) { injury in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(injury.name)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text(injury.description)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Treatment:")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                            Text(injury.treatment)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .onDelete(perform: onRemove)
+            } header: {
+                HStack {
+                    Text(title)
+                    Spacer()
+                    Button("Add Injury") {
+                        showingAddSheet = true
+                    }
+                    .font(.caption)
+                }
+            }
+            
+            if injuries.isEmpty {
+                Text("No \(title.lowercased()) recorded")
+                    .foregroundColor(.secondary)
+                    .italic()
+            }
+        }
+        .sheet(isPresented: $showingAddSheet) {
+            AddInjurySheet(
+                availableWounds: availableWounds,
+                onAdd: onAdd
+            )
+        }
+    }
+}
+
+// MARK: - Add Injury Sheet
+
+struct AddInjurySheet: View {
+    let availableWounds: [CriticalWound]
+    let onAdd: (CriticalWound) -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(availableWounds) { wound in
+                    Button {
+                        onAdd(wound)
+                        dismiss()
+                    } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(wound.name)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            Text(wound.description)
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Treatment:")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                Text(wound.treatment)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .navigationTitle("Add Critical Wound")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
                         dismiss()
                     }
                 }

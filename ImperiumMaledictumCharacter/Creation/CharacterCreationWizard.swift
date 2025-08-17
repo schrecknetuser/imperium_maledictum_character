@@ -193,7 +193,7 @@ struct BasicInfoStage: View {
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                Text("Enter your character's name and the campaign they will be part of.")
+                Text("Enter your character's basic information. Only the character name is required to proceed.")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 
@@ -209,6 +209,30 @@ struct BasicInfoStage: View {
                         .font(.headline)
                     TextField("Enter campaign name (optional)", text: $character.campaign)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
+                }
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Short-term Goal")
+                        .font(.headline)
+                    TextField("What does your character want to achieve soon? (optional)", text: $character.shortTermGoal, axis: .vertical)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .lineLimit(2...4)
+                }
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Long-term Goal")
+                        .font(.headline)
+                    TextField("What are your character's ultimate aspirations? (optional)", text: $character.longTermGoal, axis: .vertical)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .lineLimit(2...4)
+                }
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Character Description")
+                        .font(.headline)
+                    TextField("Describe your character's appearance, personality, background... (optional)", text: $character.characterDescription, axis: .vertical)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .lineLimit(3...6)
                 }
             }
         }
