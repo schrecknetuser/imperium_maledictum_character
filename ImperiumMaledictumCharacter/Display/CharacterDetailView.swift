@@ -1086,6 +1086,14 @@ struct StatusPopupView: View {
     var store: CharacterStore
     @Environment(\.dismiss) private var dismiss
     
+    // Local state to force UI updates
+    @State private var wounds: Int = 0
+    @State private var corruption: Int = 0
+    @State private var fate: Int = 0
+    @State private var spentFate: Int = 0
+    @State private var totalExperience: Int = 0
+    @State private var spentExperience: Int = 0
+    
     var body: some View {
         NavigationStack {
             Form {
@@ -1097,38 +1105,36 @@ struct StatusPopupView: View {
                         
                         HStack {
                             Button {
-                                if character.wounds > 0 {
-                                    character.wounds -= 1
-                                    character.lastModified = Date()
-                                    store.saveChanges()
+                                if wounds > 0 {
+                                    wounds -= 1
+                                    updateCharacter()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
                                     .font(.title2)
                                     .foregroundColor(.red)
                             }
-                            .disabled(character.wounds <= 0)
+                            .disabled(wounds <= 0)
                             
                             Spacer()
                             
-                            Text("\(character.wounds)")
+                            Text("\(wounds)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
                             Spacer()
                             
                             Button {
-                                if character.wounds < character.calculateMaxWounds() {
-                                    character.wounds += 1
-                                    character.lastModified = Date()
-                                    store.saveChanges()
+                                if wounds < character.calculateMaxWounds() {
+                                    wounds += 1
+                                    updateCharacter()
                                 }
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
                                     .foregroundColor(.red)
                             }
-                            .disabled(character.wounds >= character.calculateMaxWounds())
+                            .disabled(wounds >= character.calculateMaxWounds())
                         }
                         
                         Text("Wounds Threshold: \(character.calculateMaxWounds())")
@@ -1143,30 +1149,28 @@ struct StatusPopupView: View {
                         
                         HStack {
                             Button {
-                                if character.corruption > 0 {
-                                    character.corruption -= 1
-                                    character.lastModified = Date()
-                                    store.saveChanges()
+                                if corruption > 0 {
+                                    corruption -= 1
+                                    updateCharacter()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
                                     .font(.title2)
                                     .foregroundColor(.purple)
                             }
-                            .disabled(character.corruption <= 0)
+                            .disabled(corruption <= 0)
                             
                             Spacer()
                             
-                            Text("\(character.corruption)")
+                            Text("\(corruption)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
                             Spacer()
                             
                             Button {
-                                character.corruption += 1
-                                character.lastModified = Date()
-                                store.saveChanges()
+                                corruption += 1
+                                updateCharacter()
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
@@ -1208,34 +1212,32 @@ struct StatusPopupView: View {
                         
                         HStack {
                             Button {
-                                if character.fate > 0 {
-                                    character.fate -= 1
+                                if fate > 0 {
+                                    fate -= 1
                                     // Adjust spent fate if it exceeds current fate
-                                    if character.spentFate > character.fate {
-                                        character.spentFate = character.fate
+                                    if spentFate > fate {
+                                        spentFate = fate
                                     }
-                                    character.lastModified = Date()
-                                    store.saveChanges()
+                                    updateCharacter()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
                                     .font(.title2)
                                     .foregroundColor(.yellow)
                             }
-                            .disabled(character.fate <= 0)
+                            .disabled(fate <= 0)
                             
                             Spacer()
                             
-                            Text("\(character.fate)")
+                            Text("\(fate)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
                             Spacer()
                             
                             Button {
-                                character.fate += 1
-                                character.lastModified = Date()
-                                store.saveChanges()
+                                fate += 1
+                                updateCharacter()
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
@@ -1251,41 +1253,39 @@ struct StatusPopupView: View {
                         
                         HStack {
                             Button {
-                                if character.spentFate > 0 {
-                                    character.spentFate -= 1
-                                    character.lastModified = Date()
-                                    store.saveChanges()
+                                if spentFate > 0 {
+                                    spentFate -= 1
+                                    updateCharacter()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
                                     .font(.title2)
                                     .foregroundColor(.orange)
                             }
-                            .disabled(character.spentFate <= 0)
+                            .disabled(spentFate <= 0)
                             
                             Spacer()
                             
-                            Text("\(character.spentFate)")
+                            Text("\(spentFate)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
                             Spacer()
                             
                             Button {
-                                if character.spentFate < character.fate {
-                                    character.spentFate += 1
-                                    character.lastModified = Date()
-                                    store.saveChanges()
+                                if spentFate < fate {
+                                    spentFate += 1
+                                    updateCharacter()
                                 }
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
                                     .foregroundColor(.orange)
                             }
-                            .disabled(character.spentFate >= character.fate)
+                            .disabled(spentFate >= fate)
                         }
                         
-                        Text("Available: \(character.fate - character.spentFate)")
+                        Text("Available: \(fate - spentFate)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -1298,34 +1298,32 @@ struct StatusPopupView: View {
                         
                         HStack {
                             Button {
-                                if character.totalExperience > 0 {
-                                    character.totalExperience -= 1
+                                if totalExperience > 0 {
+                                    totalExperience -= 1
                                     // Adjust spent experience if it exceeds total
-                                    if character.spentExperience > character.totalExperience {
-                                        character.spentExperience = character.totalExperience
+                                    if spentExperience > totalExperience {
+                                        spentExperience = totalExperience
                                     }
-                                    character.lastModified = Date()
-                                    store.saveChanges()
+                                    updateCharacter()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
                                     .font(.title2)
                                     .foregroundColor(.blue)
                             }
-                            .disabled(character.totalExperience <= 0)
+                            .disabled(totalExperience <= 0)
                             
                             Spacer()
                             
-                            Text("\(character.totalExperience)")
+                            Text("\(totalExperience)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
                             Spacer()
                             
                             Button {
-                                character.totalExperience += 1
-                                character.lastModified = Date()
-                                store.saveChanges()
+                                totalExperience += 1
+                                updateCharacter()
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
@@ -1340,41 +1338,39 @@ struct StatusPopupView: View {
                         
                         HStack {
                             Button {
-                                if character.spentExperience > 0 {
-                                    character.spentExperience -= 1
-                                    character.lastModified = Date()
-                                    store.saveChanges()
+                                if spentExperience > 0 {
+                                    spentExperience -= 1
+                                    updateCharacter()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
                                     .font(.title2)
                                     .foregroundColor(.gray)
                             }
-                            .disabled(character.spentExperience <= 0)
+                            .disabled(spentExperience <= 0)
                             
                             Spacer()
                             
-                            Text("\(character.spentExperience)")
+                            Text("\(spentExperience)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
                             Spacer()
                             
                             Button {
-                                if character.spentExperience < character.totalExperience {
-                                    character.spentExperience += 1
-                                    character.lastModified = Date()
-                                    store.saveChanges()
+                                if spentExperience < totalExperience {
+                                    spentExperience += 1
+                                    updateCharacter()
                                 }
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
                                     .foregroundColor(.gray)
                             }
-                            .disabled(character.spentExperience >= character.totalExperience)
+                            .disabled(spentExperience >= totalExperience)
                         }
                         
-                        Text("Available: \(character.availableExperience)")
+                        Text("Available: \(totalExperience - spentExperience)")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -1390,7 +1386,27 @@ struct StatusPopupView: View {
                     }
                 }
             }
+            .onAppear {
+                // Initialize state from character
+                wounds = character.wounds
+                corruption = character.corruption
+                fate = character.fate
+                spentFate = character.spentFate
+                totalExperience = character.totalExperience
+                spentExperience = character.spentExperience
+            }
         }
+    }
+    
+    private func updateCharacter() {
+        character.wounds = wounds
+        character.corruption = corruption
+        character.fate = fate
+        character.spentFate = spentFate
+        character.totalExperience = totalExperience
+        character.spentExperience = spentExperience
+        character.lastModified = Date()
+        store.saveChanges()
     }
 }
 
