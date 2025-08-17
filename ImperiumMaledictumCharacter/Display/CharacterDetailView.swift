@@ -284,28 +284,12 @@ struct OverviewTab: View {
         }
         .sheet(isPresented: $showingStatusPopup) {
             if let imperium = imperiumCharacter {
-                let imperiumBinding = Binding<ImperiumCharacter>(
-                    get: { imperium },
-                    set: { newValue in
-                        // Update the character in place
-                        character = newValue
-                        store.saveChanges()
-                    }
-                )
-                StatusPopupView(character: imperiumBinding)
+                StatusPopupView(character: imperium, store: store)
             }
         }
         .sheet(isPresented: $showingInjuriesPopup) {
             if let imperium = imperiumCharacter {
-                let imperiumBinding = Binding<ImperiumCharacter>(
-                    get: { imperium },
-                    set: { newValue in
-                        // Update the character in place
-                        character = newValue
-                        store.saveChanges()
-                    }
-                )
-                InjuriesPopupView(character: imperiumBinding)
+                InjuriesPopupView(character: imperium, store: store)
             }
         }
     }
@@ -1088,7 +1072,8 @@ struct EditCharacterSheet: View {
 // MARK: - Status Popup View
 
 struct StatusPopupView: View {
-    @Binding var character: ImperiumCharacter
+    var character: ImperiumCharacter
+    var store: CharacterStore
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -1104,6 +1089,8 @@ struct StatusPopupView: View {
                             Button {
                                 if character.wounds > 0 {
                                     character.wounds -= 1
+                                    character.lastModified = Date()
+                                    store.saveChanges()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
@@ -1123,6 +1110,8 @@ struct StatusPopupView: View {
                             Button {
                                 if character.wounds < character.calculateMaxWounds() {
                                     character.wounds += 1
+                                    character.lastModified = Date()
+                                    store.saveChanges()
                                 }
                             } label: {
                                 Image(systemName: "plus.circle")
@@ -1146,6 +1135,8 @@ struct StatusPopupView: View {
                             Button {
                                 if character.corruption > 0 {
                                     character.corruption -= 1
+                                    character.lastModified = Date()
+                                    store.saveChanges()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
@@ -1164,6 +1155,8 @@ struct StatusPopupView: View {
                             
                             Button {
                                 character.corruption += 1
+                                character.lastModified = Date()
+                                store.saveChanges()
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
@@ -1191,7 +1184,7 @@ struct StatusPopupView: View {
                             Spacer()
                         }
                         
-                        Text("Automatically counted from active injuries")
+                        Text("Critical Wounds Threshold: \(character.calculateCriticalWoundsThreshold())")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -1211,6 +1204,8 @@ struct StatusPopupView: View {
                                     if character.spentFate > character.fate {
                                         character.spentFate = character.fate
                                     }
+                                    character.lastModified = Date()
+                                    store.saveChanges()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
@@ -1229,6 +1224,8 @@ struct StatusPopupView: View {
                             
                             Button {
                                 character.fate += 1
+                                character.lastModified = Date()
+                                store.saveChanges()
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
@@ -1246,6 +1243,8 @@ struct StatusPopupView: View {
                             Button {
                                 if character.spentFate > 0 {
                                     character.spentFate -= 1
+                                    character.lastModified = Date()
+                                    store.saveChanges()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
@@ -1265,6 +1264,8 @@ struct StatusPopupView: View {
                             Button {
                                 if character.spentFate < character.fate {
                                     character.spentFate += 1
+                                    character.lastModified = Date()
+                                    store.saveChanges()
                                 }
                             } label: {
                                 Image(systemName: "plus.circle")
@@ -1293,6 +1294,8 @@ struct StatusPopupView: View {
                                     if character.spentExperience > character.totalExperience {
                                         character.spentExperience = character.totalExperience
                                     }
+                                    character.lastModified = Date()
+                                    store.saveChanges()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
@@ -1311,6 +1314,8 @@ struct StatusPopupView: View {
                             
                             Button {
                                 character.totalExperience += 1
+                                character.lastModified = Date()
+                                store.saveChanges()
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
@@ -1327,6 +1332,8 @@ struct StatusPopupView: View {
                             Button {
                                 if character.spentExperience > 0 {
                                     character.spentExperience -= 1
+                                    character.lastModified = Date()
+                                    store.saveChanges()
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
@@ -1346,6 +1353,8 @@ struct StatusPopupView: View {
                             Button {
                                 if character.spentExperience < character.totalExperience {
                                     character.spentExperience += 1
+                                    character.lastModified = Date()
+                                    store.saveChanges()
                                 }
                             } label: {
                                 Image(systemName: "plus.circle")
@@ -1378,7 +1387,8 @@ struct StatusPopupView: View {
 // MARK: - Injuries Popup View
 
 struct InjuriesPopupView: View {
-    @Binding var character: ImperiumCharacter
+    var character: ImperiumCharacter
+    var store: CharacterStore
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTab = 0
     
@@ -1393,6 +1403,8 @@ struct InjuriesPopupView: View {
                         var current = character.headInjuriesList
                         current.append(wound)
                         character.headInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
                     },
                     onRemove: { indices in
                         var current = character.headInjuriesList
@@ -1400,6 +1412,8 @@ struct InjuriesPopupView: View {
                             current.remove(at: index)
                         }
                         character.headInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
                     }
                 )
                 .tabItem {
@@ -1416,6 +1430,8 @@ struct InjuriesPopupView: View {
                         var current = character.armInjuriesList
                         current.append(wound)
                         character.armInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
                     },
                     onRemove: { indices in
                         var current = character.armInjuriesList
@@ -1423,6 +1439,8 @@ struct InjuriesPopupView: View {
                             current.remove(at: index)
                         }
                         character.armInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
                     }
                 )
                 .tabItem {
@@ -1439,6 +1457,8 @@ struct InjuriesPopupView: View {
                         var current = character.bodyInjuriesList
                         current.append(wound)
                         character.bodyInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
                     },
                     onRemove: { indices in
                         var current = character.bodyInjuriesList
@@ -1446,6 +1466,8 @@ struct InjuriesPopupView: View {
                             current.remove(at: index)
                         }
                         character.bodyInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
                     }
                 )
                 .tabItem {
@@ -1462,6 +1484,8 @@ struct InjuriesPopupView: View {
                         var current = character.legInjuriesList
                         current.append(wound)
                         character.legInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
                     },
                     onRemove: { indices in
                         var current = character.legInjuriesList
@@ -1469,6 +1493,8 @@ struct InjuriesPopupView: View {
                             current.remove(at: index)
                         }
                         character.legInjuriesList = current
+                        character.lastModified = Date()
+                        store.saveChanges()
                     }
                 )
                 .tabItem {

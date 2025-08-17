@@ -185,6 +185,11 @@ class ImperiumCharacter: BaseCharacter {
         return willpowerComponent + toughnessComponent
     }
     
+    func calculateCriticalWoundsThreshold() -> Int {
+        // Critical wounds threshold: (toughness - toughness%10)/10
+        return (toughness - toughness % 10) / 10
+    }
+    
     var availableExperience: Int {
         return totalExperience - spentExperience
     }
