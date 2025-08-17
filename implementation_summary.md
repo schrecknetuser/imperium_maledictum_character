@@ -42,6 +42,17 @@ Added comprehensive experience point tracking:
 - **Add/remove functionality** for each injury type
 - **Detailed injury information** displayed in expandable format
 
+### 6. Conditions System
+- **Floating action button** (orange circle with exclamation triangle icon) opens conditions popup
+- **20 predefined conditions** from the Imperium Maledictum rulebook:
+  - Ablaze (Minor/Major), Bleeding (Minor/Major), Blinded, Deafened
+  - Fatigued (Minor/Major), Frightened (Minor/Major), Incapacitated
+  - Overburdened, Poisoned (Minor/Major), Prone, Restrained (Minor/Major)
+  - Stunned (Minor/Major), Unconscious
+- **Selectable from predefined list** with full descriptions matching the rulebook
+- **Add/remove functionality** for managing active conditions
+- **Condition details** displayed with name as header and description as text
+
 ## 🔧 Technical Implementation
 
 ### New Model Fields
@@ -65,6 +76,9 @@ var headInjuries: String = ""
 var armInjuries: String = ""
 var bodyInjuries: String = ""
 var legInjuries: String = ""
+
+// Conditions (JSON stored)
+var conditionsData: String = ""
 ```
 
 ### New Calculation Methods
@@ -88,7 +102,11 @@ func calculateCorruptionThreshold() -> Int {
 - `InjuriesPopupView`: Tabbed interface for managing critical wounds
 - `InjuryListView`: Individual injury category management
 - `AddInjurySheet`: Selection interface for adding new injuries
+- `ConditionsPopupView`: Interface for managing active conditions
+- `ConditionRowView`: Individual condition display component
+- `AddConditionSheet`: Selection interface for adding new conditions
 - `CriticalWoundModel.swift`: Complete definitions for all wound types
+- `ConditionModel.swift`: Complete definitions for all condition types
 
 ## 📱 User Interface Changes
 
@@ -98,10 +116,12 @@ func calculateCorruptionThreshold() -> Int {
 3. **Character Info**: Limited → Rich description fields
 4. **Experience**: None → Full tracking system
 5. **Injuries**: None → Comprehensive wound management
+6. **Conditions**: None → Full conditions management system
 
 ### Floating Action Buttons
-- **Status Button** (blue): Quick access to wounds, corruption, experience
+- **Conditions Button** (orange): Manage active character conditions
 - **Injuries Button** (red): Manage critical wounds by body part
+- **Status Button** (blue): Quick access to wounds, corruption, experience
 
 ### Enhanced Character Creation
 Stage 1 now includes all character information fields, making character creation more comprehensive from the start.
