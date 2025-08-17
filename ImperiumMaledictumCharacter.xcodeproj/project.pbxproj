@@ -16,6 +16,15 @@
 		1A000014 /* CharacterStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000013 /* CharacterStore.swift */; };
 		1A000016 /* CharacterCreationWizard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000015 /* CharacterCreationWizard.swift */; };
 		1A000018 /* CharacterDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000017 /* CharacterDetailView.swift */; };
+		CE94F7502E4FE646008F9F08 /* CharacteristicModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7482E4FE646008F9F08 /* CharacteristicModel.swift */; };
+		CE94F7512E4FE646008F9F08 /* ReputationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74C2E4FE646008F9F08 /* ReputationModel.swift */; };
+		CE94F7522E4FE646008F9F08 /* FactionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74A2E4FE646008F9F08 /* FactionModel.swift */; };
+		CE94F7532E4FE646008F9F08 /* EquipmentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7492E4FE646008F9F08 /* EquipmentModel.swift */; };
+		CE94F7542E4FE646008F9F08 /* WeaponModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74F2E4FE646008F9F08 /* WeaponModel.swift */; };
+		CE94F7552E4FE646008F9F08 /* OriginModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74B2E4FE646008F9F08 /* OriginModel.swift */; };
+		CE94F7562E4FE646008F9F08 /* TalentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74E2E4FE646008F9F08 /* TalentModel.swift */; };
+		CE94F7572E4FE646008F9F08 /* SkillModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74D2E4FE646008F9F08 /* SkillModel.swift */; };
+		CE94F7592E515FB4008F9F08 /* CriticalWoundModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7582E515FB4008F9F08 /* CriticalWoundModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +38,15 @@
 		1A000015 /* CharacterCreationWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterCreationWizard.swift; sourceTree = "<group>"; };
 		1A000017 /* CharacterDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterDetailView.swift; sourceTree = "<group>"; };
 		1AFFFFFF /* ImperiumMaledictumCharacter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImperiumMaledictumCharacter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE94F7482E4FE646008F9F08 /* CharacteristicModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacteristicModel.swift; sourceTree = "<group>"; };
+		CE94F7492E4FE646008F9F08 /* EquipmentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentModel.swift; sourceTree = "<group>"; };
+		CE94F74A2E4FE646008F9F08 /* FactionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactionModel.swift; sourceTree = "<group>"; };
+		CE94F74B2E4FE646008F9F08 /* OriginModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginModel.swift; sourceTree = "<group>"; };
+		CE94F74C2E4FE646008F9F08 /* ReputationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReputationModel.swift; sourceTree = "<group>"; };
+		CE94F74D2E4FE646008F9F08 /* SkillModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillModel.swift; sourceTree = "<group>"; };
+		CE94F74E2E4FE646008F9F08 /* TalentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalentModel.swift; sourceTree = "<group>"; };
+		CE94F74F2E4FE646008F9F08 /* WeaponModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeaponModel.swift; sourceTree = "<group>"; };
+		CE94F7582E515FB4008F9F08 /* CriticalWoundModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CriticalWoundModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,7 +60,50 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1AFFFFF6 = {
+		1A000006 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				1A000007 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		1A00000E /* Characters */ = {
+			isa = PBXGroup;
+			children = (
+				CE94F7582E515FB4008F9F08 /* CriticalWoundModel.swift */,
+				CE94F7482E4FE646008F9F08 /* CharacteristicModel.swift */,
+				CE94F7492E4FE646008F9F08 /* EquipmentModel.swift */,
+				CE94F74A2E4FE646008F9F08 /* FactionModel.swift */,
+				CE94F74B2E4FE646008F9F08 /* OriginModel.swift */,
+				CE94F74C2E4FE646008F9F08 /* ReputationModel.swift */,
+				CE94F74D2E4FE646008F9F08 /* SkillModel.swift */,
+				CE94F74E2E4FE646008F9F08 /* TalentModel.swift */,
+				CE94F74F2E4FE646008F9F08 /* WeaponModel.swift */,
+				1A00000F /* CharacterBase.swift */,
+				1A000011 /* ImperiumCharacter.swift */,
+				1A000013 /* CharacterStore.swift */,
+			);
+			path = Characters;
+			sourceTree = "<group>";
+		};
+		1A000019 /* Creation */ = {
+			isa = PBXGroup;
+			children = (
+				1A000015 /* CharacterCreationWizard.swift */,
+			);
+			path = Creation;
+			sourceTree = "<group>";
+		};
+		1A00001A /* Display */ = {
+			isa = PBXGroup;
+			children = (
+				1A000017 /* CharacterDetailView.swift */,
+			);
+			path = Display;
+			sourceTree = "<group>";
+		};
+		1AFFFFF6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				1AFFFFFF /* ImperiumMaledictumCharacter.app */,
@@ -70,40 +131,6 @@
 				1A000006 /* Preview Content */,
 			);
 			path = ImperiumMaledictumCharacter;
-			sourceTree = "<group>";
-		};
-		1A000006 /* Preview Content */ = {
-			isa = PBXGroup;
-			children = (
-				1A000007 /* Preview Assets.xcassets */,
-			);
-			path = "Preview Content";
-			sourceTree = "<group>";
-		};
-		1A00000E /* Characters */ = {
-			isa = PBXGroup;
-			children = (
-				1A00000F /* CharacterBase.swift */,
-				1A000011 /* ImperiumCharacter.swift */,
-				1A000013 /* CharacterStore.swift */,
-			);
-			path = Characters;
-			sourceTree = "<group>";
-		};
-		1A000019 /* Creation */ = {
-			isa = PBXGroup;
-			children = (
-				1A000015 /* CharacterCreationWizard.swift */,
-			);
-			path = Creation;
-			sourceTree = "<group>";
-		};
-		1A00001A /* Display */ = {
-			isa = PBXGroup;
-			children = (
-				1A000017 /* CharacterDetailView.swift */,
-			);
-			path = Display;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -147,6 +174,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 1AFFFFF7;
 			productRefGroup = 1AFFFFF6 /* Products */;
@@ -175,10 +203,19 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE94F7502E4FE646008F9F08 /* CharacteristicModel.swift in Sources */,
+				CE94F7512E4FE646008F9F08 /* ReputationModel.swift in Sources */,
+				CE94F7522E4FE646008F9F08 /* FactionModel.swift in Sources */,
+				CE94F7532E4FE646008F9F08 /* EquipmentModel.swift in Sources */,
+				CE94F7542E4FE646008F9F08 /* WeaponModel.swift in Sources */,
+				CE94F7552E4FE646008F9F08 /* OriginModel.swift in Sources */,
+				CE94F7562E4FE646008F9F08 /* TalentModel.swift in Sources */,
+				CE94F7572E4FE646008F9F08 /* SkillModel.swift in Sources */,
 				1A000003 /* ContentView.swift in Sources */,
 				1A000010 /* CharacterBase.swift in Sources */,
 				1A000012 /* ImperiumCharacter.swift in Sources */,
 				1A000014 /* CharacterStore.swift in Sources */,
+				CE94F7592E515FB4008F9F08 /* CriticalWoundModel.swift in Sources */,
 				1A000016 /* CharacterCreationWizard.swift in Sources */,
 				1A000018 /* CharacterDetailView.swift in Sources */,
 				1A000001 /* ImperiumMaledictumCharacterApp.swift in Sources */,
@@ -366,20 +403,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1AFFFFFA /* Build configuration list for PBXProject "ImperiumMaledictumCharacter" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				1A000009 /* Debug */,
-				1A00000A /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		1A00000B /* Build configuration list for PBXNativeTarget "ImperiumMaledictumCharacter" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1A00000C /* Debug */,
 				1A00000D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1AFFFFFA /* Build configuration list for PBXProject "ImperiumMaledictumCharacter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1A000009 /* Debug */,
+				1A00000A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

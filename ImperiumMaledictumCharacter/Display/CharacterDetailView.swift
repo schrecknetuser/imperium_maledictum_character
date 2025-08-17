@@ -249,10 +249,6 @@ struct OverviewTab: View {
                             
                             Spacer()
                         }
-                        
-                        Text("Experience points represent your character's growth and development through adventures.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
                     }
                     .padding()
                     .background(Color(.systemGray6))

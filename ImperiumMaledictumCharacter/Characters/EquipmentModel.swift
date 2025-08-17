@@ -11,7 +11,7 @@ import SwiftData
 @Model
 class Equipment {
     var name: String
-    var description: String
+    var equipmentDescription: String
     var encumbrance: Int
     var cost: Int
     var availability: String
@@ -64,9 +64,9 @@ class Equipment {
         }
     }
     
-    init(name: String, description: String = "", encumbrance: Int = 0, cost: Int = 0, availability: String = "Common") {
+    init(name: String, equipmentDescription: String = "", encumbrance: Int = 0, cost: Int = 0, availability: String = "Common") {
         self.name = name
-        self.description = description
+        self.equipmentDescription = equipmentDescription
         self.encumbrance = encumbrance
         self.cost = cost
         self.availability = availability
@@ -78,16 +78,16 @@ class Equipment {
 
 struct EquipmentTrait: Codable {
     var name: String
-    var description: String
+    var traitDescription: String
     var parameter: String
     
     var displayName: String {
         return parameter.isEmpty ? name : "\(name) (\(parameter))"
     }
     
-    init(name: String, description: String = "", parameter: String = "") {
+    init(name: String, traitDescription: String = "", parameter: String = "") {
         self.name = name
-        self.description = description
+        self.traitDescription = traitDescription
         self.parameter = parameter
     }
 }
