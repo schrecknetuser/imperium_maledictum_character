@@ -93,9 +93,9 @@ struct OverviewTab: View {
     }
     
     var imperiumCharacterBinding: Binding<ImperiumCharacter>? {
-        guard let imperium = character as? ImperiumCharacter else { return nil }
+        guard character is ImperiumCharacter else { return nil }
         return Binding(
-            get: { imperium },
+            get: { character as! ImperiumCharacter },
             set: { newValue in
                 character = newValue
             }
