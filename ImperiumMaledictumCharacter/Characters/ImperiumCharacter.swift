@@ -26,6 +26,18 @@ class ImperiumCharacter: BaseCharacter {
     var nemesis: String = ""
     var selectedFactionTalentChoice: String = "" // Index or name of selected faction talent choice
     
+    // Additional character description fields
+    var shortTermGoal: String = ""
+    var longTermGoal: String = ""
+    var characterDescription: String = ""
+    
+    // Critical wounds and injuries
+    var criticalWounds: Int = 0
+    var headInjuries: String = "" // JSON array of head injuries
+    var armInjuries: String = "" // JSON array of arm injuries  
+    var bodyInjuries: String = "" // JSON array of body injuries
+    var legInjuries: String = "" // JSON array of leg injuries
+    
     // Core characteristics - using new data model approach 
     var characteristicsData: String = "" // JSON data for characteristics
     var skillsAdvancesData: String = "" // JSON data for skill advances
@@ -92,6 +104,14 @@ class ImperiumCharacter: BaseCharacter {
         background = ""
         goal = ""
         nemesis = ""
+        shortTermGoal = ""
+        longTermGoal = ""
+        characterDescription = ""
+        criticalWounds = 0
+        headInjuries = ""
+        armInjuries = ""
+        bodyInjuries = ""
+        legInjuries = ""
         
         // Reset characteristics to base values (new system uses 20 as base)
         weaponSkill = 20
@@ -143,8 +163,18 @@ class ImperiumCharacter: BaseCharacter {
     }
     
     private func calculateMaxWounds() -> Int {
-        // Basic wounds calculation based on Toughness and Willpower
-        return (toughness + willpower) / 10 + 10
+        // New formula: (current_strength - current_strength%10)/10 + (current_willpower-current_willpower%10)/10 + 2*(current_toughness - current_toughness%10)/10
+        let strengthComponent = (strength - strength % 10) / 10
+        let willpowerComponent = (willpower - willpower % 10) / 10
+        let toughnessComponent = 2 * ((toughness - toughness % 10) / 10)
+        return strengthComponent + willpowerComponent + toughnessComponent
+    }
+    
+    func calculateCorruptionThreshold() -> Int {
+        // Corruption threshold: (current_willpower-current_willpower%10)/10 + (current_toughness - current_toughness%10)/10
+        let willpowerComponent = (willpower - willpower % 10) / 10
+        let toughnessComponent = (toughness - toughness % 10) / 10
+        return willpowerComponent + toughnessComponent
     }
     
     // Convenience methods for skills, talents, etc.
@@ -411,6 +441,72 @@ class ImperiumCharacter: BaseCharacter {
             return true
         default:
             return false
+        }
+    }
+    
+    // MARK: - Injury Management
+    
+    var headInjuriesList: [CriticalWound] {
+        get {
+            guard let data = headInjuries.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([CriticalWound].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                headInjuries = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
+    var armInjuriesList: [CriticalWound] {
+        get {
+            guard let data = armInjuries.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([CriticalWound].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                armInjuries = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
+    var bodyInjuriesList: [CriticalWound] {
+        get {
+            guard let data = bodyInjuries.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([CriticalWound].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                bodyInjuries = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
+    var legInjuriesList: [CriticalWound] {
+        get {
+            guard let data = legInjuries.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([CriticalWound].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                legInjuries = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
         }
     }
 }
