@@ -964,6 +964,7 @@ struct TalentsTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
     @Binding var isEditMode: Bool
+    @State private var showingAddTalentSheet = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -974,10 +975,38 @@ struct TalentsTab: View {
             List {
                 if let imperium = imperiumCharacter {
                     ForEach(imperium.talentNames, id: \.self) { talent in
-                        Text(talent)
+                        HStack {
+                            Text(talent)
+                            Spacer()
+                            
+                            if isEditMode {
+                                Button(action: {
+                                    removeTalent(talent)
+                                }) {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        }
                     }
                     
-                    if imperium.talentNames.isEmpty {
+                    if isEditMode {
+                        Button(action: {
+                            showingAddTalentSheet = true
+                        }) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundColor(.blue)
+                                Text("Add Talent")
+                                    .foregroundColor(.blue)
+                                Spacer()
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    
+                    if imperium.talentNames.isEmpty && !isEditMode {
                         Text("No talents selected")
                             .foregroundColor(.secondary)
                             .italic()
@@ -990,6 +1019,75 @@ struct TalentsTab: View {
             .navigationTitle("Talents")
             .navigationBarTitleDisplayMode(.inline)
         }
+        .sheet(isPresented: $showingAddTalentSheet) {
+            if let imperium = imperiumCharacter {
+                AddTalentSheet(character: imperium, store: store)
+            }
+        }
+    }
+    
+    private func removeTalent(_ talent: String) {
+        guard let imperium = imperiumCharacter else { return }
+        var talents = imperium.talentNames
+        talents.removeAll { $0 == talent }
+        imperium.talentNames = talents
+        imperium.lastModified = Date()
+        store.saveChanges()
+    }
+}
+
+struct AddTalentSheet: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    @Environment(\.dismiss) private var dismiss
+    
+    var availableTalents: [String] {
+        TalentDefinitions.allTalents.filter { talent in
+            !character.talentNames.contains(talent)
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            List(availableTalents, id: \.self) { talent in
+                Button(action: {
+                    addTalent(talent)
+                }) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(talent)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        if let description = TalentDefinitions.talents[talent] {
+                            Text(description)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.leading)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            .navigationTitle("Add Talent")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func addTalent(_ talent: String) {
+        var talents = character.talentNames
+        talents.append(talent)
+        character.talentNames = talents
+        character.lastModified = Date()
+        store.saveChanges()
+        dismiss()
     }
 }
 
@@ -1075,6 +1173,8 @@ struct EquipmentTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
     @Binding var isEditMode: Bool
+    @State private var showingAddEquipmentSheet = false
+    @State private var showingAddWeaponSheet = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -1087,19 +1187,48 @@ struct EquipmentTab: View {
                     Section("Equipment") {
                         ForEach(imperium.equipmentNames, id: \.self) { item in
                             let equipmentItem = EquipmentDisplayItem(from: item)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(equipmentItem.displayText)
-                                    .font(.body)
-                                if !equipmentItem.traitsText.isEmpty {
-                                    Text(equipmentItem.traitsText)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .italic()
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(equipmentItem.displayText)
+                                        .font(.body)
+                                    if !equipmentItem.traitsText.isEmpty {
+                                        Text(equipmentItem.traitsText)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .italic()
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                if isEditMode {
+                                    Button(action: {
+                                        removeEquipment(item)
+                                    }) {
+                                        Image(systemName: "minus.circle.fill")
+                                            .foregroundColor(.red)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
                         }
                         
-                        if imperium.equipmentNames.isEmpty {
+                        if isEditMode {
+                            Button(action: {
+                                showingAddEquipmentSheet = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundColor(.blue)
+                                    Text("Add Equipment")
+                                        .foregroundColor(.blue)
+                                    Spacer()
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        
+                        if imperium.equipmentNames.isEmpty && !isEditMode {
                             Text("No equipment")
                                 .foregroundColor(.secondary)
                                 .italic()
@@ -1109,19 +1238,48 @@ struct EquipmentTab: View {
                     Section("Weapons") {
                         ForEach(imperium.weaponNames, id: \.self) { weapon in
                             let weaponItem = EquipmentDisplayItem(from: weapon)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(weaponItem.displayText)
-                                    .font(.body)
-                                if !weaponItem.traitsText.isEmpty {
-                                    Text(weaponItem.traitsText)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .italic()
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(weaponItem.displayText)
+                                        .font(.body)
+                                    if !weaponItem.traitsText.isEmpty {
+                                        Text(weaponItem.traitsText)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .italic()
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                                if isEditMode {
+                                    Button(action: {
+                                        removeWeapon(weapon)
+                                    }) {
+                                        Image(systemName: "minus.circle.fill")
+                                            .foregroundColor(.red)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                             }
                         }
                         
-                        if imperium.weaponNames.isEmpty {
+                        if isEditMode {
+                            Button(action: {
+                                showingAddWeaponSheet = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundColor(.blue)
+                                    Text("Add Weapon")
+                                        .foregroundColor(.blue)
+                                    Spacer()
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        
+                        if imperium.weaponNames.isEmpty && !isEditMode {
                             Text("No weapons")
                                 .foregroundColor(.secondary)
                                 .italic()
@@ -1135,6 +1293,122 @@ struct EquipmentTab: View {
             .navigationTitle("Equipment")
             .navigationBarTitleDisplayMode(.inline)
         }
+        .sheet(isPresented: $showingAddEquipmentSheet) {
+            if let imperium = imperiumCharacter {
+                AddEquipmentSheet(character: imperium, store: store, isWeapon: false)
+            }
+        }
+        .sheet(isPresented: $showingAddWeaponSheet) {
+            if let imperium = imperiumCharacter {
+                AddEquipmentSheet(character: imperium, store: store, isWeapon: true)
+            }
+        }
+    }
+    
+    private func removeEquipment(_ equipment: String) {
+        guard let imperium = imperiumCharacter else { return }
+        var equipmentList = imperium.equipmentNames
+        equipmentList.removeAll { $0 == equipment }
+        imperium.equipmentNames = equipmentList
+        imperium.lastModified = Date()
+        store.saveChanges()
+    }
+    
+    private func removeWeapon(_ weapon: String) {
+        guard let imperium = imperiumCharacter else { return }
+        var weaponList = imperium.weaponNames
+        weaponList.removeAll { $0 == weapon }
+        imperium.weaponNames = weaponList
+        imperium.lastModified = Date()
+        store.saveChanges()
+    }
+}
+
+struct AddEquipmentSheet: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    let isWeapon: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var itemName = ""
+    @State private var traits = ""
+    @State private var modifications = ""
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("\(isWeapon ? "Weapon" : "Equipment") Details") {
+                    TextField(isWeapon ? "Weapon Name" : "Equipment Name", text: $itemName)
+                    
+                    TextField("Traits (comma separated)", text: $traits, axis: .vertical)
+                        .lineLimit(2...4)
+                    
+                    if isWeapon {
+                        TextField("Modifications (comma separated)", text: $modifications, axis: .vertical)
+                            .lineLimit(2...4)
+                    }
+                }
+                
+                Section {
+                    Text("Enter the name of the \(isWeapon ? "weapon" : "equipment") and any traits or modifications it has. Separate multiple traits or modifications with commas.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .navigationTitle("Add \(isWeapon ? "Weapon" : "Equipment")")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add") {
+                        addItem()
+                    }
+                    .disabled(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+    
+    private func addItem() {
+        let trimmedName = itemName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+        
+        var fullName = trimmedName
+        
+        // Add modifications for weapons
+        if isWeapon && !modifications.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let modificationsList = modifications.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            if !modificationsList.isEmpty {
+                fullName += " (" + modificationsList.joined(separator: ", ") + ")"
+            }
+        }
+        
+        // Add traits
+        if !traits.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let traitsList = traits.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            if !traitsList.isEmpty {
+                fullName += " " + traitsList.joined(separator: " ")
+            }
+        }
+        
+        if isWeapon {
+            var weaponList = character.weaponNames
+            weaponList.append(fullName)
+            character.weaponNames = weaponList
+        } else {
+            var equipmentList = character.equipmentNames
+            equipmentList.append(fullName)
+            character.equipmentNames = equipmentList
+        }
+        
+        character.lastModified = Date()
+        store.saveChanges()
+        dismiss()
     }
 }
 
