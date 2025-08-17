@@ -21,7 +21,7 @@ struct CharacterDetailView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            OverviewTab(character: character)
+            OverviewTab(character: $character, store: store)
                 .tabItem {
                     Image(systemName: "person.circle")
                     Text("Overview")
@@ -83,7 +83,8 @@ struct CharacterDetailView: View {
 // MARK: - Overview Tab
 
 struct OverviewTab: View {
-    let character: any BaseCharacter
+    @Binding var character: any BaseCharacter
+    @ObservedObject var store: CharacterStore
     @State private var showingStatusPopup = false
     @State private var showingInjuriesPopup = false
     
@@ -283,12 +284,28 @@ struct OverviewTab: View {
         }
         .sheet(isPresented: $showingStatusPopup) {
             if let imperium = imperiumCharacter {
-                StatusPopupView(character: .constant(imperium))
+                let imperiumBinding = Binding<ImperiumCharacter>(
+                    get: { imperium },
+                    set: { newValue in
+                        // Update the character in place
+                        character = newValue
+                        store.saveChanges()
+                    }
+                )
+                StatusPopupView(character: imperiumBinding)
             }
         }
         .sheet(isPresented: $showingInjuriesPopup) {
             if let imperium = imperiumCharacter {
-                InjuriesPopupView(character: .constant(imperium))
+                let imperiumBinding = Binding<ImperiumCharacter>(
+                    get: { imperium },
+                    set: { newValue in
+                        // Update the character in place
+                        character = newValue
+                        store.saveChanges()
+                    }
+                )
+                InjuriesPopupView(character: imperiumBinding)
             }
         }
     }
@@ -1097,7 +1114,7 @@ struct StatusPopupView: View {
                             
                             Spacer()
                             
-                            Text("\(character.wounds) / \(character.calculateMaxWounds())")
+                            Text("\(character.wounds)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
@@ -1115,7 +1132,7 @@ struct StatusPopupView: View {
                             .disabled(character.wounds >= character.calculateMaxWounds())
                         }
                         
-                        Text("Max Wounds: \(character.calculateMaxWounds())")
+                        Text("Wounds Threshold: \(character.calculateMaxWounds())")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -1139,22 +1156,19 @@ struct StatusPopupView: View {
                             
                             Spacer()
                             
-                            Text("\(character.corruption) / 100")
+                            Text("\(character.corruption)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
                             Spacer()
                             
                             Button {
-                                if character.corruption < 100 {
-                                    character.corruption += 1
-                                }
+                                character.corruption += 1
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
                                     .foregroundColor(.purple)
                             }
-                            .disabled(character.corruption >= 100)
                         }
                         
                         Text("Corruption Threshold: \(character.calculateCorruptionThreshold())")
@@ -1162,53 +1176,107 @@ struct StatusPopupView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    // Critical Wounds
+                    // Critical Wounds (automatic count)
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Critical Wounds")
                             .font(.headline)
                         
                         HStack {
+                            Spacer()
+                            
+                            Text("\(character.countActiveCriticalWounds())")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                        }
+                        
+                        Text("Automatically counted from active injuries")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Section("Fate Points") {
+                    // Fate
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Fate")
+                            .font(.headline)
+                        
+                        HStack {
                             Button {
-                                if character.criticalWounds > 0 {
-                                    character.criticalWounds -= 1
+                                if character.fate > 0 {
+                                    character.fate -= 1
+                                    // Adjust spent fate if it exceeds current fate
+                                    if character.spentFate > character.fate {
+                                        character.spentFate = character.fate
+                                    }
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")
                                     .font(.title2)
-                                    .foregroundColor(.orange)
+                                    .foregroundColor(.yellow)
                             }
-                            .disabled(character.criticalWounds <= 0)
+                            .disabled(character.fate <= 0)
                             
                             Spacer()
                             
-                            Text("\(character.criticalWounds)")
+                            Text("\(character.fate)")
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
                             Spacer()
                             
                             Button {
-                                character.criticalWounds += 1
+                                character.fate += 1
+                            } label: {
+                                Image(systemName: "plus.circle")
+                                    .font(.title2)
+                                    .foregroundColor(.yellow)
+                            }
+                        }
+                    }
+                    
+                    // Spent Fate
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Spent Fate")
+                            .font(.headline)
+                        
+                        HStack {
+                            Button {
+                                if character.spentFate > 0 {
+                                    character.spentFate -= 1
+                                }
+                            } label: {
+                                Image(systemName: "minus.circle")
+                                    .font(.title2)
+                                    .foregroundColor(.orange)
+                            }
+                            .disabled(character.spentFate <= 0)
+                            
+                            Spacer()
+                            
+                            Text("\(character.spentFate)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                            
+                            Button {
+                                if character.spentFate < character.fate {
+                                    character.spentFate += 1
+                                }
                             } label: {
                                 Image(systemName: "plus.circle")
                                     .font(.title2)
                                     .foregroundColor(.orange)
                             }
+                            .disabled(character.spentFate >= character.fate)
                         }
-                    }
-                }
-                
-                Section("Other Stats") {
-                    HStack {
-                        Text("Stress")
-                        Spacer()
-                        Text("\(character.stress) / 100")
-                    }
-                    
-                    HStack {
-                        Text("Fate")
-                        Spacer()
-                        Text("\(character.fate)")
+                        
+                        Text("Available: \(character.fate - character.spentFate)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
                 
@@ -1221,6 +1289,10 @@ struct StatusPopupView: View {
                             Button {
                                 if character.totalExperience > 0 {
                                     character.totalExperience -= 1
+                                    // Adjust spent experience if it exceeds total
+                                    if character.spentExperience > character.totalExperience {
+                                        character.spentExperience = character.totalExperience
+                                    }
                                 }
                             } label: {
                                 Image(systemName: "minus.circle")

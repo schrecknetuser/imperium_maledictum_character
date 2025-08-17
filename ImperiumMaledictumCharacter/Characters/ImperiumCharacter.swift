@@ -70,6 +70,7 @@ class ImperiumCharacter: BaseCharacter {
     var corruption: Int = 0
     var stress: Int = 0
     var fate: Int = 3
+    var spentFate: Int = 0
     var solars: Int = 0
     
     // Experience tracking
@@ -135,6 +136,7 @@ class ImperiumCharacter: BaseCharacter {
         corruption = 0
         stress = 0
         fate = 3
+        spentFate = 0
         solars = 0
         totalExperience = 0
         spentExperience = 0
@@ -185,6 +187,15 @@ class ImperiumCharacter: BaseCharacter {
     
     var availableExperience: Int {
         return totalExperience - spentExperience
+    }
+    
+    // Method to count active critical wounds (those that don't have "None" or "None." as treatment)
+    func countActiveCriticalWounds() -> Int {
+        let allInjuries = headInjuriesList + armInjuriesList + bodyInjuriesList + legInjuriesList
+        return allInjuries.filter { injury in
+            let treatment = injury.treatment.trimmingCharacters(in: .whitespacesAndNewlines)
+            return treatment.lowercased() != "none" && treatment.lowercased() != "none."
+        }.count
     }
     
     // Convenience methods for skills, talents, etc.
