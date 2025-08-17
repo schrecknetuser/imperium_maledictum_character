@@ -1421,7 +1421,7 @@ struct EquipmentTab: View {
             details.append("Flaws: " + equipment.flaws.joined(separator: ", "))
         }
         
-        return details.joined(separator: " • ")
+        return details.joined(separator: "\n")
     }
     
     private func buildWeaponDetails(_ weapon: Weapon) -> String {
@@ -1443,7 +1443,7 @@ struct EquipmentTab: View {
             details.append("Flaws: " + weapon.flaws.joined(separator: ", "))
         }
         
-        return details.joined(separator: " • ")
+        return details.joined(separator: "\n")
     }
     
     private func editEquipment(_ equipment: Equipment) {
@@ -1511,6 +1511,47 @@ struct ComprehensiveEquipmentSheet: View {
         self.isWeapon = isWeapon
         self.editingEquipment = editingEquipment
         self.editingWeapon = editingWeapon
+        
+        // Initialize state variables immediately
+        if let equipment = editingEquipment {
+            _itemName = State(initialValue: equipment.name)
+            _itemDescription = State(initialValue: equipment.equipmentDescription)
+            _encumbrance = State(initialValue: equipment.encumbrance)
+            _cost = State(initialValue: equipment.cost)
+            _availability = State(initialValue: equipment.availability)
+            _selectedQualities = State(initialValue: Set(equipment.qualities))
+            _selectedFlaws = State(initialValue: Set(equipment.flaws))
+            _selectedTraits = State(initialValue: Set(equipment.traits.map { $0.name }))
+        } else if let weapon = editingWeapon {
+            _itemName = State(initialValue: weapon.name)
+            _specialization = State(initialValue: weapon.specialization)
+            _damage = State(initialValue: weapon.damage)
+            _range = State(initialValue: weapon.range)
+            _magazine = State(initialValue: weapon.magazine)
+            _encumbrance = State(initialValue: weapon.encumbrance)
+            _cost = State(initialValue: weapon.cost)
+            _availability = State(initialValue: weapon.availability)
+            _selectedQualities = State(initialValue: Set(weapon.qualities))
+            _selectedFlaws = State(initialValue: Set(weapon.flaws))
+            _selectedWeaponTraits = State(initialValue: Set(weapon.weaponTraits.map { $0.name }))
+            _selectedModifications = State(initialValue: Set(weapon.modifications))
+        } else {
+            // Default values for new items
+            _itemName = State(initialValue: "")
+            _itemDescription = State(initialValue: "")
+            _encumbrance = State(initialValue: 0)
+            _cost = State(initialValue: 0)
+            _availability = State(initialValue: AvailabilityLevels.common)
+            _selectedQualities = State(initialValue: [])
+            _selectedFlaws = State(initialValue: [])
+            _selectedTraits = State(initialValue: [])
+            _specialization = State(initialValue: WeaponSpecializations.none)
+            _damage = State(initialValue: "")
+            _range = State(initialValue: WeaponRanges.short)
+            _magazine = State(initialValue: 0)
+            _selectedWeaponTraits = State(initialValue: [])
+            _selectedModifications = State(initialValue: [])
+        }
     }
     
     var body: some View {
@@ -1556,7 +1597,10 @@ struct ComprehensiveEquipmentSheet: View {
                     HStack {
                         Text("Cost")
                         Spacer()
-                        Stepper("\(cost)", value: $cost, in: 0...99999)
+                        TextField("Cost", value: $cost, format: .number)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .frame(width: 100)
+                            .keyboardType(.numberPad)
                     }
                     
                     Picker("Availability", selection: $availability) {
@@ -1695,35 +1739,6 @@ struct ComprehensiveEquipmentSheet: View {
                     .disabled(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
-            .onAppear {
-                loadExistingData()
-            }
-        }
-    }
-    
-    private func loadExistingData() {
-        if let equipment = editingEquipment {
-            itemName = equipment.name
-            itemDescription = equipment.equipmentDescription
-            encumbrance = equipment.encumbrance
-            cost = equipment.cost
-            availability = equipment.availability
-            selectedQualities = Set(equipment.qualities)
-            selectedFlaws = Set(equipment.flaws)
-            selectedTraits = Set(equipment.traits.map { $0.name })
-        } else if let weapon = editingWeapon {
-            itemName = weapon.name
-            specialization = weapon.specialization
-            damage = weapon.damage
-            range = weapon.range
-            magazine = weapon.magazine
-            encumbrance = weapon.encumbrance
-            cost = weapon.cost
-            availability = weapon.availability
-            selectedQualities = Set(weapon.qualities)
-            selectedFlaws = Set(weapon.flaws)
-            selectedWeaponTraits = Set(weapon.weaponTraits.map { $0.name })
-            selectedModifications = Set(weapon.modifications)
         }
     }
     

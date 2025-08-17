@@ -81,7 +81,7 @@ class Weapon: Codable {
         }
     }
     
-    init(name: String, specialization: String = "", damage: String = "", range: String = "Short", magazine: Int = 0, encumbrance: Int = 0, availability: String = "Common", cost: Int = 0) {
+    init(name: String, specialization: String = WeaponSpecializations.none, damage: String = "", range: String = "Short", magazine: Int = 0, encumbrance: Int = 0, availability: String = "Common", cost: Int = 0) {
         self.name = name
         self.specialization = specialization
         self.damage = damage
