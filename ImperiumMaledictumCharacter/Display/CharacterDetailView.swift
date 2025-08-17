@@ -1714,7 +1714,7 @@ struct ConditionRowView: View {
                 .foregroundColor(.primary)
             
             Text(condition.description)
-                .font(.body)
+                .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.leading)
         }
@@ -1744,7 +1744,7 @@ struct AddConditionSheet: View {
                             .foregroundColor(.primary)
                         
                         Text(condition.description)
-                            .font(.body)
+                            .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.leading)
                     }
