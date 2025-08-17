@@ -480,6 +480,7 @@ struct CharacteristicsTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
     @Binding var isEditMode: Bool
+    @State private var showingAddSpecializationSheet = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -693,7 +694,7 @@ struct CharacteristicsTab: View {
                         // Add new specialization button in edit mode
                         if isEditMode {
                             Button(action: {
-                                // TODO: Add new specialization
+                                showingAddSpecializationSheet = true
                             }) {
                                 HStack {
                                     Image(systemName: "plus")
@@ -714,6 +715,11 @@ struct CharacteristicsTab: View {
                 }
             }
             .padding()
+        }
+        .sheet(isPresented: $showingAddSpecializationSheet) {
+            if let imperium = imperiumCharacter {
+                AddSpecializationSheet(character: imperium, store: store)
+            }
         }
     }
     
@@ -957,6 +963,100 @@ struct CharacteristicDisplay: View {
 }
 
 // MARK: - Skills Tab
+
+// MARK: - Add Specialization Sheet
+
+struct AddSpecializationSheet: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var selectedSkill = ""
+    @State private var selectedSpecialization = ""
+    
+    var availableSkills: [String] {
+        SkillSpecializations.specializations.keys.sorted()
+    }
+    
+    var availableSpecializations: [String] {
+        guard !selectedSkill.isEmpty,
+              let skillSpecializations = SkillSpecializations.specializations[selectedSkill] else {
+            return []
+        }
+        
+        // Filter out specializations that already have advances > 0
+        let currentSpecializations = character.specializationAdvances
+        return skillSpecializations.filter { specialization in
+            (currentSpecializations[specialization] ?? 0) == 0
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Select Skill") {
+                    Picker("Skill", selection: $selectedSkill) {
+                        Text("Choose a skill...").tag("")
+                        ForEach(availableSkills, id: \.self) { skill in
+                            Text(skill).tag(skill)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: selectedSkill) { _ in
+                        selectedSpecialization = ""
+                    }
+                }
+                
+                if !selectedSkill.isEmpty {
+                    Section("Select Specialization") {
+                        Picker("Specialization", selection: $selectedSpecialization) {
+                            Text("Choose a specialization...").tag("")
+                            ForEach(availableSpecializations, id: \.self) { specialization in
+                                Text(specialization).tag(specialization)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                }
+                
+                if !availableSpecializations.isEmpty && availableSpecializations.count == 0 {
+                    Section {
+                        Text("All specializations for \(selectedSkill) are already added.")
+                            .foregroundColor(.secondary)
+                            .italic()
+                    }
+                }
+            }
+            .navigationTitle("Add Specialization")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add") {
+                        addSpecialization()
+                    }
+                    .disabled(selectedSpecialization.isEmpty)
+                }
+            }
+        }
+    }
+    
+    private func addSpecialization() {
+        guard !selectedSpecialization.isEmpty else { return }
+        
+        var specializations = character.specializationAdvances
+        specializations[selectedSpecialization] = 0
+        character.specializationAdvances = specializations
+        character.lastModified = Date()
+        store.saveChanges()
+        dismiss()
+    }
+}
 
 // MARK: - Talents Tab
 
