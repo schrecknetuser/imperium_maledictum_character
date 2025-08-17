@@ -13,7 +13,7 @@ struct CharacterDetailView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedTab: Int = 0
-    @State private var showingEditSheet = false
+    @State private var isEditMode = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -21,28 +21,28 @@ struct CharacterDetailView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            OverviewTab(character: $character, store: store)
+            OverviewTab(character: $character, store: store, isEditMode: $isEditMode)
                 .tabItem {
                     Image(systemName: "person.circle")
                     Text("Overview")
                 }
                 .tag(0)
             
-            CharacteristicsTab(character: character)
+            CharacteristicsTab(character: character, store: store, isEditMode: $isEditMode)
                 .tabItem {
                     Image(systemName: "chart.bar")
                     Text("Stats")
                 }
                 .tag(1)
             
-            TalentsTab(character: character, store: store)
+            TalentsTab(character: character, store: store, isEditMode: $isEditMode)
                 .tabItem {
                     Image(systemName: "star.circle")
                     Text("Talents")
                 }
                 .tag(2)
             
-            EquipmentTab(character: character, store: store)
+            EquipmentTab(character: character, store: store, isEditMode: $isEditMode)
                 .tabItem {
                     Image(systemName: "bag")
                     Text("Equipment")
@@ -50,7 +50,7 @@ struct CharacterDetailView: View {
                 .tag(3)
             
             if imperiumCharacter?.role.lowercased().contains("psyker") == true {
-                PsychicPowersTab(character: character, store: store)
+                PsychicPowersTab(character: character, store: store, isEditMode: $isEditMode)
                     .tabItem {
                         Image(systemName: "brain")
                         Text("Psychic")
@@ -62,13 +62,19 @@ struct CharacterDetailView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Edit") {
-                    showingEditSheet = true
+                if isEditMode {
+                    Button("Done") {
+                        // Save all changes
+                        character.lastModified = Date()
+                        store.saveChanges()
+                        isEditMode = false
+                    }
+                } else {
+                    Button("Edit") {
+                        isEditMode = true
+                    }
                 }
             }
-        }
-        .sheet(isPresented: $showingEditSheet) {
-            EditCharacterSheet(character: $character, store: store)
         }
     }
 }
@@ -78,6 +84,7 @@ struct CharacterDetailView: View {
 struct OverviewTab: View {
     @Binding var character: any BaseCharacter
     @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
     @State private var showingStatusPopup = false
     @State private var showingInjuriesPopup = false
     @State private var showingConditionsPopup = false
@@ -106,33 +113,62 @@ struct OverviewTab: View {
                             .font(.largeTitle)
                         
                         VStack(alignment: .leading) {
-                            Text(character.name.isEmpty ? "Unnamed Character" : character.name)
-                                .font(.title)
-                                .fontWeight(.bold)
+                            if isEditMode {
+                                TextField("Character Name", text: $character.name)
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            } else {
+                                Text(character.name.isEmpty ? "Unnamed Character" : character.name)
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                            }
                             
-                            if !character.faction.isEmpty {
+                            if isEditMode {
+                                TextField("Faction", text: $character.faction)
+                                    .font(.headline)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            } else if !character.faction.isEmpty {
                                 Text(character.faction)
                                     .font(.headline)
                                     .foregroundColor(.secondary)
                             }
                             
-                            if !character.role.isEmpty {
+                            if isEditMode {
+                                TextField("Role", text: $character.role)
+                                    .font(.subheadline)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            } else if !character.role.isEmpty {
                                 Text(character.role)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
                             
-                            if let imperium = imperiumCharacter, !imperium.homeworld.isEmpty {
-                                Text(imperium.homeworld)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                            if let imperium = imperiumCharacter {
+                                if isEditMode {
+                                    let homeworldBinding = Binding<String>(
+                                        get: { imperium.homeworld },
+                                        set: { imperium.homeworld = $0 }
+                                    )
+                                    TextField("Homeworld", text: homeworldBinding)
+                                        .font(.subheadline)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                } else if !imperium.homeworld.isEmpty {
+                                    Text(imperium.homeworld)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
                             }
                         }
                         
                         Spacer()
                     }
                     
-                    if !character.campaign.isEmpty {
+                    if isEditMode {
+                        TextField("Campaign", text: $character.campaign)
+                            .font(.caption)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                    } else if !character.campaign.isEmpty {
                         Text("Campaign: \(character.campaign)")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -148,23 +184,64 @@ struct OverviewTab: View {
                         Text("Character Information")
                             .font(.headline)
                         
-                        if !imperium.shortTermGoal.isEmpty {
-                            DetailRow(title: "Short-term Goal", value: imperium.shortTermGoal)
-                        }
-                        
-                        if !imperium.longTermGoal.isEmpty {
-                            DetailRow(title: "Long-term Goal", value: imperium.longTermGoal)
-                        }
-                        
-                        if !imperium.characterDescription.isEmpty {
-                            DetailRow(title: "Description", value: imperium.characterDescription)
-                        }
-                        
-                        if imperium.shortTermGoal.isEmpty && imperium.longTermGoal.isEmpty && imperium.characterDescription.isEmpty {
-                            Text("No character information provided")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .italic()
+                        if isEditMode {
+                            let shortTermGoalBinding = Binding<String>(
+                                get: { imperium.shortTermGoal },
+                                set: { imperium.shortTermGoal = $0 }
+                            )
+                            VStack(alignment: .leading) {
+                                Text("Short-term Goal")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                TextField("Short-term Goal", text: shortTermGoalBinding, axis: .vertical)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .lineLimit(2...4)
+                            }
+                            
+                            let longTermGoalBinding = Binding<String>(
+                                get: { imperium.longTermGoal },
+                                set: { imperium.longTermGoal = $0 }
+                            )
+                            VStack(alignment: .leading) {
+                                Text("Long-term Goal")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                TextField("Long-term Goal", text: longTermGoalBinding, axis: .vertical)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .lineLimit(2...4)
+                            }
+                            
+                            let descriptionBinding = Binding<String>(
+                                get: { imperium.characterDescription },
+                                set: { imperium.characterDescription = $0 }
+                            )
+                            VStack(alignment: .leading) {
+                                Text("Description")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                TextField("Character Description", text: descriptionBinding, axis: .vertical)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .lineLimit(3...6)
+                            }
+                        } else {
+                            if !imperium.shortTermGoal.isEmpty {
+                                DetailRow(title: "Short-term Goal", value: imperium.shortTermGoal)
+                            }
+                            
+                            if !imperium.longTermGoal.isEmpty {
+                                DetailRow(title: "Long-term Goal", value: imperium.longTermGoal)
+                            }
+                            
+                            if !imperium.characterDescription.isEmpty {
+                                DetailRow(title: "Description", value: imperium.characterDescription)
+                            }
+                            
+                            if imperium.shortTermGoal.isEmpty && imperium.longTermGoal.isEmpty && imperium.characterDescription.isEmpty {
+                                Text("No character information provided")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                            }
                         }
                     }
                     .padding()
@@ -212,36 +289,81 @@ struct OverviewTab: View {
                         Text("Experience")
                             .font(.headline)
                         
-                        HStack(spacing: 20) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Total XP")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("\(imperium.totalExperience)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                        if isEditMode {
+                            VStack(spacing: 8) {
+                                let totalExperienceBinding = Binding<Int>(
+                                    get: { imperium.totalExperience },
+                                    set: { imperium.totalExperience = $0 }
+                                )
+                                HStack {
+                                    Text("Total XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    TextField("Total", value: totalExperienceBinding, format: .number)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                        .frame(width: 80)
+                                        .keyboardType(.numberPad)
+                                }
+                                
+                                let spentExperienceBinding = Binding<Int>(
+                                    get: { imperium.spentExperience },
+                                    set: { imperium.spentExperience = $0 }
+                                )
+                                HStack {
+                                    Text("Spent XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    TextField("Spent", value: spentExperienceBinding, format: .number)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                        .frame(width: 80)
+                                        .keyboardType(.numberPad)
+                                }
+                                
+                                HStack {
+                                    Text("Available XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text("\(imperium.availableExperience)")
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.green)
+                                }
                             }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Spent XP")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("\(imperium.spentExperience)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                        } else {
+                            HStack(spacing: 20) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Total XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("\(imperium.totalExperience)")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Spent XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("\(imperium.spentExperience)")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Available XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("\(imperium.availableExperience)")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.green)
+                                }
+                                
+                                Spacer()
                             }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Available XP")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("\(imperium.availableExperience)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.green)
-                            }
-                            
-                            Spacer()
                         }
                     }
                     .padding()
@@ -356,6 +478,8 @@ struct DetailRow: View {
 
 struct CharacteristicsTab: View {
     let character: any BaseCharacter
+    @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -730,6 +854,7 @@ struct CharacteristicDisplay: View {
 struct TalentsTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -840,6 +965,7 @@ struct EquipmentDisplayItem {
 struct EquipmentTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -908,6 +1034,7 @@ struct EquipmentTab: View {
 struct PsychicPowersTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -927,131 +1054,6 @@ struct PsychicPowersTab: View {
             }
             .navigationTitle("Psychic Powers")
             .navigationBarTitleDisplayMode(.inline)
-        }
-    }
-}
-
-// MARK: - Edit Character Sheet
-
-struct EditCharacterSheet: View {
-    @Binding var character: any BaseCharacter
-    @ObservedObject var store: CharacterStore
-    @Environment(\.dismiss) private var dismiss
-    
-    var imperiumCharacter: ImperiumCharacter? {
-        return character as? ImperiumCharacter
-    }
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Basic Information") {
-                    TextField("Name", text: $character.name)
-                    TextField("Player", text: $character.player)
-                    TextField("Campaign", text: $character.campaign)
-                }
-                
-                Section("Faction & Role") {
-                    TextField("Faction", text: $character.faction)
-                    TextField("Role", text: $character.role)
-                    
-                    if let imperium = imperiumCharacter {
-                        let homeworldBinding = Binding<String>(
-                            get: { imperium.homeworld },
-                            set: { imperium.homeworld = $0 }
-                        )
-                        TextField("Homeworld", text: homeworldBinding)
-                    }
-                }
-                
-                if let imperium = imperiumCharacter {
-                    Section("Character Information") {
-                        let shortTermGoalBinding = Binding<String>(
-                            get: { imperium.shortTermGoal },
-                            set: { imperium.shortTermGoal = $0 }
-                        )
-                        TextField("Short-term Goal", text: shortTermGoalBinding, axis: .vertical)
-                            .lineLimit(2...4)
-                        
-                        let longTermGoalBinding = Binding<String>(
-                            get: { imperium.longTermGoal },
-                            set: { imperium.longTermGoal = $0 }
-                        )
-                        TextField("Long-term Goal", text: longTermGoalBinding, axis: .vertical)
-                            .lineLimit(2...4)
-                        
-                        let descriptionBinding = Binding<String>(
-                            get: { imperium.characterDescription },
-                            set: { imperium.characterDescription = $0 }
-                        )
-                        TextField("Character Description", text: descriptionBinding, axis: .vertical)
-                            .lineLimit(3...6)
-                    }
-                }
-                
-                Section("Status") {
-                    HStack {
-                        Text("Wounds")
-                        Spacer()
-                        TextField("Current", value: $character.wounds, format: .number)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 60)
-                        Text("/")
-                        if let imperium = imperiumCharacter {
-                            Text("\(imperium.calculateMaxWounds())")
-                                .frame(width: 60)
-                        } else {
-                            TextField("Max", value: $character.maxWounds, format: .number)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(width: 60)
-                        }
-                    }
-                    
-                    HStack {
-                        Text("Corruption")
-                        Spacer()
-                        TextField("Corruption", value: $character.corruption, format: .number)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 80)
-                        
-                        if let imperium = imperiumCharacter {
-                            Text("/ 100 (Threshold: \(imperium.calculateCorruptionThreshold()))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    if let imperium = imperiumCharacter {
-                        HStack {
-                            Text("Critical Wounds")
-                            Spacer()
-                            let criticalWoundsBinding = Binding<Int>(
-                                get: { imperium.criticalWounds },
-                                set: { imperium.criticalWounds = $0 }
-                            )
-                            TextField("Count", value: criticalWoundsBinding, format: .number)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(width: 60)
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Edit Character")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        store.saveChanges()
-                        dismiss()
-                    }
-                }
-            }
         }
     }
 }
