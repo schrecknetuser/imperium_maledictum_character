@@ -8,15 +8,20 @@
 import Foundation
 
 struct CriticalWound: Codable, Identifiable {
-    let id = UUID()
+    var id: UUID = UUID()
     let name: String
     let description: String
     let treatment: String
     
     init(name: String, description: String, treatment: String) {
+        self.id = UUID()
         self.name = name
         self.description = description
         self.treatment = treatment
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case name, description, treatment
     }
 }
 

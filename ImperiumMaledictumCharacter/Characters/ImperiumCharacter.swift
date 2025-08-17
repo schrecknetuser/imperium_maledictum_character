@@ -168,7 +168,7 @@ class ImperiumCharacter: BaseCharacter {
         lastModified = Date()
     }
     
-    private func calculateMaxWounds() -> Int {
+    func calculateMaxWounds() -> Int {
         // New formula: (current_strength - current_strength%10)/10 + (current_willpower-current_willpower%10)/10 + 2*(current_toughness - current_toughness%10)/10
         let strengthComponent = (strength - strength % 10) / 10
         let willpowerComponent = (willpower - willpower % 10) / 10
