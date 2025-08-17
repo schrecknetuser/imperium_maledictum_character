@@ -200,6 +200,53 @@ struct OverviewTab: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(12)
                 }
+                
+                // Experience Block
+                if let imperium = imperiumCharacter {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Experience")
+                            .font(.headline)
+                        
+                        HStack(spacing: 20) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Total XP")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("\(imperium.totalExperience)")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Spent XP")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("\(imperium.spentExperience)")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Available XP")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Text("\(imperium.availableExperience)")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.green)
+                            }
+                            
+                            Spacer()
+                        }
+                        
+                        Text("Experience points represent your character's growth and development through adventures.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
             }
             .padding()
         }
@@ -1021,8 +1068,6 @@ struct EditCharacterSheet: View {
     }
 }
 
-}
-
 // MARK: - Status Popup View
 
 struct StatusPopupView: View {
@@ -1164,6 +1209,83 @@ struct StatusPopupView: View {
                         Text("Fate")
                         Spacer()
                         Text("\(character.fate)")
+                    }
+                }
+                
+                Section("Experience") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Total Experience")
+                            .font(.headline)
+                        
+                        HStack {
+                            Button {
+                                if character.totalExperience > 0 {
+                                    character.totalExperience -= 1
+                                }
+                            } label: {
+                                Image(systemName: "minus.circle")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                            .disabled(character.totalExperience <= 0)
+                            
+                            Spacer()
+                            
+                            Text("\(character.totalExperience)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                            
+                            Button {
+                                character.totalExperience += 1
+                            } label: {
+                                Image(systemName: "plus.circle")
+                                    .font(.title2)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Spent Experience")
+                            .font(.headline)
+                        
+                        HStack {
+                            Button {
+                                if character.spentExperience > 0 {
+                                    character.spentExperience -= 1
+                                }
+                            } label: {
+                                Image(systemName: "minus.circle")
+                                    .font(.title2)
+                                    .foregroundColor(.gray)
+                            }
+                            .disabled(character.spentExperience <= 0)
+                            
+                            Spacer()
+                            
+                            Text("\(character.spentExperience)")
+                                .font(.title2)
+                                .fontWeight(.bold)
+                            
+                            Spacer()
+                            
+                            Button {
+                                if character.spentExperience < character.totalExperience {
+                                    character.spentExperience += 1
+                                }
+                            } label: {
+                                Image(systemName: "plus.circle")
+                                    .font(.title2)
+                                    .foregroundColor(.gray)
+                            }
+                            .disabled(character.spentExperience >= character.totalExperience)
+                        }
+                        
+                        Text("Available: \(character.availableExperience)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                 }
             }

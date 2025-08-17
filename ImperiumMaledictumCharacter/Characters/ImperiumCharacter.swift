@@ -72,6 +72,10 @@ class ImperiumCharacter: BaseCharacter {
     var fate: Int = 3
     var solars: Int = 0
     
+    // Experience tracking
+    var totalExperience: Int = 0
+    var spentExperience: Int = 0
+    
     // Skills (stored as JSON string) - DEPRECATED, use skillsAdvancesData 
     var skillsData: String = ""
     var talentsData: String = "" // DEPRECATED, use talentNamesData
@@ -132,6 +136,8 @@ class ImperiumCharacter: BaseCharacter {
         stress = 0
         fate = 3
         solars = 0
+        totalExperience = 0
+        spentExperience = 0
         
         // Reset data
         skillsData = ""
@@ -175,6 +181,10 @@ class ImperiumCharacter: BaseCharacter {
         let willpowerComponent = (willpower - willpower % 10) / 10
         let toughnessComponent = (toughness - toughness % 10) / 10
         return willpowerComponent + toughnessComponent
+    }
+    
+    var availableExperience: Int {
+        return totalExperience - spentExperience
     }
     
     // Convenience methods for skills, talents, etc.
