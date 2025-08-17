@@ -35,26 +35,19 @@ struct CharacterDetailView: View {
                 }
                 .tag(1)
             
-            SkillsTab(character: character, store: store)
-                .tabItem {
-                    Image(systemName: "brain.head.profile")
-                    Text("Skills")
-                }
-                .tag(2)
-            
             TalentsTab(character: character, store: store)
                 .tabItem {
                     Image(systemName: "star.circle")
                     Text("Talents")
                 }
-                .tag(3)
+                .tag(2)
             
             EquipmentTab(character: character, store: store)
                 .tabItem {
                     Image(systemName: "bag")
                     Text("Equipment")
                 }
-                .tag(4)
+                .tag(3)
             
             if imperiumCharacter?.role.lowercased().contains("psyker") == true {
                 PsychicPowersTab(character: character, store: store)
@@ -62,7 +55,7 @@ struct CharacterDetailView: View {
                         Image(systemName: "brain")
                         Text("Psychic")
                     }
-                    .tag(5)
+                    .tag(4)
             }
         }
         .navigationTitle(character.name.isEmpty ? "Unnamed Character" : character.name)
@@ -732,37 +725,6 @@ struct CharacteristicDisplay: View {
 
 // MARK: - Skills Tab
 
-struct SkillsTab: View {
-    let character: any BaseCharacter
-    @ObservedObject var store: CharacterStore
-    
-    var imperiumCharacter: ImperiumCharacter? {
-        return character as? ImperiumCharacter
-    }
-    
-    var body: some View {
-        NavigationView {
-            List {
-                if let imperium = imperiumCharacter {
-                    ForEach(Array(imperium.skills.keys.sorted()), id: \.self) { skill in
-                        HStack {
-                            Text(skill)
-                            Spacer()
-                            Text("\(imperium.skills[skill] ?? 0)")
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                } else {
-                    Text("Skills not available for this character type")
-                        .foregroundColor(.secondary)
-                }
-            }
-            .navigationTitle("Skills")
-            .navigationBarTitleDisplayMode(.inline)
-        }
-    }
-}
-
 // MARK: - Talents Tab
 
 struct TalentsTab: View {
@@ -1106,8 +1068,6 @@ struct StatusPopupView: View {
     @State private var corruption: Int = 0
     @State private var fate: Int = 0
     @State private var spentFate: Int = 0
-    @State private var totalExperience: Int = 0
-    @State private var spentExperience: Int = 0
     
     var body: some View {
         NavigationStack {
@@ -1313,38 +1273,6 @@ struct StatusPopupView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                
-                Section("Experience") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Total Experience")
-                            .font(.headline)
-                        
-                        TextField("Total Experience", value: $totalExperience, formatter: NumberFormatter())
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.numberPad)
-                            .onChange(of: totalExperience) { _ in
-                                if totalExperience < 0 {
-                                    totalExperience = 0
-                                }
-                                updateCharacter()
-                            }
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Spent Experience")
-                            .font(.headline)
-                        
-                        TextField("Spent Experience", value: $spentExperience, formatter: NumberFormatter())
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.numberPad)
-                            .onChange(of: spentExperience) { _ in
-                                if spentExperience < 0 {
-                                    spentExperience = 0
-                                }
-                                updateCharacter()
-                            }
-                    }
-                }
             }
             .navigationTitle("Character Status")
             .navigationBarTitleDisplayMode(.inline)
@@ -1362,8 +1290,6 @@ struct StatusPopupView: View {
                 corruption = character.corruption
                 fate = character.fate
                 spentFate = character.spentFate
-                totalExperience = character.totalExperience
-                spentExperience = character.spentExperience
             }
         }
     }
@@ -1373,8 +1299,6 @@ struct StatusPopupView: View {
         character.corruption = corruption
         character.fate = fate
         character.spentFate = spentFate
-        character.totalExperience = totalExperience
-        character.spentExperience = spentExperience
         character.lastModified = Date()
         store.saveChanges()
     }
