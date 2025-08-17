@@ -6,10 +6,8 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-class Weapon {
+class Weapon: Codable {
     var name: String
     var specialization: String
     var damage: String

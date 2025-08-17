@@ -6,10 +6,8 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-class Equipment {
+class Equipment: Codable {
     var name: String
     var equipmentDescription: String
     var encumbrance: Int
