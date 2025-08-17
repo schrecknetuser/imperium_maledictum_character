@@ -140,3 +140,12 @@ struct EquipmentTraitNames {
         shield, spread, subtle, supercharge, thrown, twoHanded, unstable
     ]
 }
+
+struct AvailabilityLevels {
+    static let common = "Common"
+    static let rare = "Rare"
+    static let scarce = "Scarce"
+    static let exotic = "Exotic"
+    
+    static let all = [common, rare, scarce, exotic]
+}

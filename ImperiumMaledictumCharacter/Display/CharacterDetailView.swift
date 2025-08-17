@@ -1207,82 +1207,6 @@ struct AddTalentSheet: View {
 
 // MARK: - Equipment Tab
 
-struct EquipmentDisplayItem {
-    let baseName: String
-    let modifications: [String]
-    let traits: [String]
-    
-    init(from fullName: String) {
-        var working = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
-        var modifications: [String] = []
-        var traits: [String] = []
-        
-        // Known traits that should be separated (order matters for longest-first matching)
-        let knownTraits = ["Master Crafted", "Mono-Edge", "Shoddy", "Ugly", "Bulky", "Lightweight", "Ornamental", "Durable", "Razor Sharp", "Well Balanced", "Power Field"]
-        
-        // First, extract content from parentheses
-        let modificationPattern = #"\(([^)]+)\)"#
-        var parenthesesContent: [String] = []
-        
-        if let regex = try? NSRegularExpression(pattern: modificationPattern) {
-            let matches = regex.matches(in: working, range: NSRange(working.startIndex..., in: working))
-            for match in matches.reversed() {
-                if let range = Range(match.range(at: 1), in: working) {
-                    let content = String(working[range]).trimmingCharacters(in: .whitespacesAndNewlines)
-                    parenthesesContent.append(content)
-                }
-                if let fullRange = Range(match.range, in: working) {
-                    working.removeSubrange(fullRange)
-                    working = working.trimmingCharacters(in: .whitespacesAndNewlines)
-                }
-            }
-        }
-        
-        // Now extract traits from both the main name and parentheses content
-        for trait in knownTraits {
-            // Check main name
-            if working.lowercased().contains(trait.lowercased()) {
-                traits.append(trait)
-                let regex = try! NSRegularExpression(pattern: "\\b" + NSRegularExpression.escapedPattern(for: trait) + "\\b", options: .caseInsensitive)
-                working = regex.stringByReplacingMatches(in: working, options: [], range: NSRange(location: 0, length: working.count), withTemplate: "")
-                working = working.trimmingCharacters(in: .whitespacesAndNewlines)
-                working = working.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
-            }
-            
-            // Check parentheses content and separate traits from other modifications
-            parenthesesContent = parenthesesContent.compactMap { content in
-                if content.lowercased() == trait.lowercased() {
-                    if !traits.contains(trait) {
-                        traits.append(trait)
-                    }
-                    return nil // Remove this content as it's now a trait
-                } else {
-                    return content
-                }
-            }
-        }
-        
-        // Remaining parentheses content are modifications
-        modifications = parenthesesContent.filter { !$0.isEmpty }
-        
-        self.baseName = working.trimmingCharacters(in: .whitespacesAndNewlines)
-        self.modifications = modifications
-        self.traits = traits
-    }
-    
-    var displayText: String {
-        var result = baseName
-        if !modifications.isEmpty {
-            result += " (" + modifications.joined(separator: ", ") + ")"
-        }
-        return result
-    }
-    
-    var traitsText: String {
-        return traits.isEmpty ? "" : "Traits: " + traits.joined(separator: ", ")
-    }
-}
-
 struct EquipmentTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
@@ -1291,8 +1215,8 @@ struct EquipmentTab: View {
     @State private var showingAddWeaponSheet = false
     @State private var showingEditEquipmentSheet = false
     @State private var showingEditWeaponSheet = false
-    @State private var editingEquipmentItem: String?
-    @State private var editingWeaponItem: String?
+    @State private var editingEquipment: Equipment?
+    @State private var editingWeapon: Weapon?
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -1303,18 +1227,31 @@ struct EquipmentTab: View {
             List {
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
-                        ForEach(imperium.equipmentNames, id: \.self) { item in
-                            let equipmentItem = EquipmentDisplayItem(from: item)
+                        ForEach(imperium.equipmentList, id: \.name) { equipment in
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(equipmentItem.displayText)
+                                    Text(equipment.name)
                                         .font(.body)
-                                    if !equipmentItem.traitsText.isEmpty {
-                                        Text(equipmentItem.traitsText)
+                                    
+                                    if !equipment.equipmentDescription.isEmpty {
+                                        Text(equipment.equipmentDescription)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    
+                                    // Show traits, qualities, and flaws
+                                    let details = buildEquipmentDetails(equipment)
+                                    if !details.isEmpty {
+                                        Text(details)
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                             .italic()
                                     }
+                                    
+                                    // Show stats
+                                    Text("Encumbrance: \(equipment.encumbrance), Cost: \(equipment.cost), \(equipment.availability)")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
                                 }
                                 
                                 Spacer()
@@ -1322,7 +1259,7 @@ struct EquipmentTab: View {
                                 if isEditMode {
                                     HStack(spacing: 8) {
                                         Button(action: {
-                                            editEquipment(item)
+                                            editEquipment(equipment)
                                         }) {
                                             Image(systemName: "pencil.circle.fill")
                                                 .foregroundColor(.blue)
@@ -1330,7 +1267,7 @@ struct EquipmentTab: View {
                                         .buttonStyle(PlainButtonStyle())
                                         
                                         Button(action: {
-                                            removeEquipment(item)
+                                            removeEquipment(equipment)
                                         }) {
                                             Image(systemName: "minus.circle.fill")
                                                 .foregroundColor(.red)
@@ -1356,7 +1293,7 @@ struct EquipmentTab: View {
                             .buttonStyle(PlainButtonStyle())
                         }
                         
-                        if imperium.equipmentNames.isEmpty && !isEditMode {
+                        if imperium.equipmentList.isEmpty && !isEditMode {
                             Text("No equipment")
                                 .foregroundColor(.secondary)
                                 .italic()
@@ -1364,18 +1301,30 @@ struct EquipmentTab: View {
                     }
                     
                     Section("Weapons") {
-                        ForEach(imperium.weaponNames, id: \.self) { weapon in
-                            let weaponItem = EquipmentDisplayItem(from: weapon)
+                        ForEach(imperium.weaponList, id: \.name) { weapon in
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(weaponItem.displayText)
+                                    Text(weapon.name)
                                         .font(.body)
-                                    if !weaponItem.traitsText.isEmpty {
-                                        Text(weaponItem.traitsText)
+                                    
+                                    // Show weapon stats
+                                    Text("Damage: \(weapon.damage), Range: \(weapon.range), Magazine: \(weapon.magazine)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    // Show traits, qualities, flaws, and modifications
+                                    let details = buildWeaponDetails(weapon)
+                                    if !details.isEmpty {
+                                        Text(details)
                                             .font(.caption)
                                             .foregroundColor(.secondary)
                                             .italic()
                                     }
+                                    
+                                    // Show other stats
+                                    Text("Specialization: \(weapon.specialization), Encumbrance: \(weapon.encumbrance), Cost: \(weapon.cost), \(weapon.availability)")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
                                 }
                                 
                                 Spacer()
@@ -1417,7 +1366,7 @@ struct EquipmentTab: View {
                             .buttonStyle(PlainButtonStyle())
                         }
                         
-                        if imperium.weaponNames.isEmpty && !isEditMode {
+                        if imperium.weaponList.isEmpty && !isEditMode {
                             Text("No weapons")
                                 .foregroundColor(.secondary)
                                 .italic()
@@ -1430,97 +1379,257 @@ struct EquipmentTab: View {
             }
             .navigationTitle("Equipment")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                // Migrate old string-based data to new object-based system
+                imperiumCharacter?.migrateEquipmentAndWeapons()
+            }
         }
         .sheet(isPresented: $showingAddEquipmentSheet) {
             if let imperium = imperiumCharacter {
-                AddEquipmentSheet(character: imperium, store: store, isWeapon: false)
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false)
             }
         }
         .sheet(isPresented: $showingAddWeaponSheet) {
             if let imperium = imperiumCharacter {
-                AddEquipmentSheet(character: imperium, store: store, isWeapon: true)
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true)
             }
         }
         .sheet(isPresented: $showingEditEquipmentSheet) {
-            if let imperium = imperiumCharacter, let item = editingEquipmentItem {
-                EditEquipmentSheet(character: imperium, store: store, isWeapon: false, originalItem: item)
+            if let imperium = imperiumCharacter, let equipment = editingEquipment {
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, editingEquipment: equipment)
             }
         }
         .sheet(isPresented: $showingEditWeaponSheet) {
-            if let imperium = imperiumCharacter, let item = editingWeaponItem {
-                EditEquipmentSheet(character: imperium, store: store, isWeapon: true, originalItem: item)
+            if let imperium = imperiumCharacter, let weapon = editingWeapon {
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon)
             }
         }
     }
     
-    private func editEquipment(_ equipment: String) {
-        editingEquipmentItem = equipment
+    private func buildEquipmentDetails(_ equipment: Equipment) -> String {
+        var details: [String] = []
+        
+        if !equipment.traits.isEmpty {
+            details.append("Traits: " + equipment.traits.map { $0.displayName }.joined(separator: ", "))
+        }
+        
+        if !equipment.qualities.isEmpty {
+            details.append("Qualities: " + equipment.qualities.joined(separator: ", "))
+        }
+        
+        if !equipment.flaws.isEmpty {
+            details.append("Flaws: " + equipment.flaws.joined(separator: ", "))
+        }
+        
+        return details.joined(separator: " • ")
+    }
+    
+    private func buildWeaponDetails(_ weapon: Weapon) -> String {
+        var details: [String] = []
+        
+        if !weapon.weaponTraits.isEmpty {
+            details.append("Traits: " + weapon.weaponTraits.map { $0.displayName }.joined(separator: ", "))
+        }
+        
+        if !weapon.modifications.isEmpty {
+            details.append("Modifications: " + weapon.modifications.joined(separator: ", "))
+        }
+        
+        if !weapon.qualities.isEmpty {
+            details.append("Qualities: " + weapon.qualities.joined(separator: ", "))
+        }
+        
+        if !weapon.flaws.isEmpty {
+            details.append("Flaws: " + weapon.flaws.joined(separator: ", "))
+        }
+        
+        return details.joined(separator: " • ")
+    }
+    
+    private func editEquipment(_ equipment: Equipment) {
+        editingEquipment = equipment
         showingEditEquipmentSheet = true
     }
     
-    private func editWeapon(_ weapon: String) {
-        editingWeaponItem = weapon
+    private func editWeapon(_ weapon: Weapon) {
+        editingWeapon = weapon
         showingEditWeaponSheet = true
     }
     
-    private func removeEquipment(_ equipment: String) {
+    private func removeEquipment(_ equipment: Equipment) {
         guard let imperium = imperiumCharacter else { return }
-        var equipmentList = imperium.equipmentNames
-        equipmentList.removeAll { $0 == equipment }
-        imperium.equipmentNames = equipmentList
+        var equipmentList = imperium.equipmentList
+        equipmentList.removeAll { $0.name == equipment.name }
+        imperium.equipmentList = equipmentList
         imperium.lastModified = Date()
         store.saveChanges()
     }
     
-    private func removeWeapon(_ weapon: String) {
+    private func removeWeapon(_ weapon: Weapon) {
         guard let imperium = imperiumCharacter else { return }
-        var weaponList = imperium.weaponNames
-        weaponList.removeAll { $0 == weapon }
-        imperium.weaponNames = weaponList
+        var weaponList = imperium.weaponList
+        weaponList.removeAll { $0.name == weapon.name }
+        imperium.weaponList = weaponList
         imperium.lastModified = Date()
         store.saveChanges()
     }
 }
 
-struct AddEquipmentSheet: View {
+struct ComprehensiveEquipmentSheet: View {
     let character: ImperiumCharacter
     @ObservedObject var store: CharacterStore
     let isWeapon: Bool
+    let editingEquipment: Equipment?
+    let editingWeapon: Weapon?
     @Environment(\.dismiss) private var dismiss
     
+    // Equipment properties
     @State private var itemName = ""
+    @State private var itemDescription = ""
+    @State private var encumbrance = 0
+    @State private var cost = 0
+    @State private var availability = AvailabilityLevels.common
+    @State private var selectedQualities: Set<String> = []
+    @State private var selectedFlaws: Set<String> = []
     @State private var selectedTraits: Set<String> = []
+    
+    // Weapon-specific properties
+    @State private var specialization = WeaponSpecializations.none
+    @State private var damage = ""
+    @State private var range = WeaponRanges.short
+    @State private var magazine = 0
+    @State private var selectedWeaponTraits: Set<String> = []
     @State private var selectedModifications: Set<String> = []
+    
+    // UI state
+    @State private var showingTraitPicker = false
+    @State private var showingWeaponTraitPicker = false
+    
+    init(character: ImperiumCharacter, store: CharacterStore, isWeapon: Bool, editingEquipment: Equipment? = nil, editingWeapon: Weapon? = nil) {
+        self.character = character
+        self.store = store
+        self.isWeapon = isWeapon
+        self.editingEquipment = editingEquipment
+        self.editingWeapon = editingWeapon
+    }
     
     var body: some View {
         NavigationStack {
             Form {
-                Section("\(isWeapon ? "Weapon" : "Equipment") Details") {
+                Section("Basic Information") {
                     TextField(isWeapon ? "Weapon Name" : "Equipment Name", text: $itemName)
+                    TextField("Description", text: $itemDescription, axis: .vertical)
+                        .lineLimit(3...6)
                 }
                 
-                Section("Traits") {
-                    ForEach(EquipmentTraitNames.all, id: \.self) { trait in
+                if isWeapon {
+                    Section("Weapon Properties") {
+                        Picker("Specialization", selection: $specialization) {
+                            ForEach(WeaponSpecializations.all, id: \.self) { spec in
+                                Text(spec).tag(spec)
+                            }
+                        }
+                        
+                        TextField("Damage", text: $damage)
+                        
+                        Picker("Range", selection: $range) {
+                            ForEach(WeaponRanges.all, id: \.self) { rangeType in
+                                Text(rangeType).tag(rangeType)
+                            }
+                        }
+                        
                         HStack {
-                            Text(trait)
+                            Text("Magazine")
                             Spacer()
-                            if selectedTraits.contains(trait) {
+                            Stepper("\(magazine)", value: $magazine, in: 0...999)
+                        }
+                    }
+                }
+                
+                Section("Physical Properties") {
+                    HStack {
+                        Text("Encumbrance")
+                        Spacer()
+                        Stepper("\(encumbrance)", value: $encumbrance, in: 0...50)
+                    }
+                    
+                    HStack {
+                        Text("Cost")
+                        Spacer()
+                        Stepper("\(cost)", value: $cost, in: 0...99999)
+                    }
+                    
+                    Picker("Availability", selection: $availability) {
+                        ForEach(AvailabilityLevels.all, id: \.self) { level in
+                            Text(level).tag(level)
+                        }
+                    }
+                }
+                
+                Section("Qualities") {
+                    ForEach(EquipmentQualities.all, id: \.self) { quality in
+                        HStack {
+                            Text(quality)
+                            Spacer()
+                            if selectedQualities.contains(quality) {
                                 Image(systemName: "checkmark")
                                     .foregroundColor(.blue)
                             }
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            if selectedTraits.contains(trait) {
-                                selectedTraits.remove(trait)
+                            if selectedQualities.contains(quality) {
+                                selectedQualities.remove(quality)
                             } else {
-                                selectedTraits.insert(trait)
+                                selectedQualities.insert(quality)
+                            }
+                        }
+                    }
+                }
+                
+                Section("Flaws") {
+                    ForEach(EquipmentFlaws.all, id: \.self) { flaw in
+                        HStack {
+                            Text(flaw)
+                            Spacer()
+                            if selectedFlaws.contains(flaw) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if selectedFlaws.contains(flaw) {
+                                selectedFlaws.remove(flaw)
+                            } else {
+                                selectedFlaws.insert(flaw)
                             }
                         }
                     }
                 }
                 
                 if isWeapon {
+                    Section("Weapon Traits") {
+                        ForEach(WeaponTraitNames.all, id: \.self) { trait in
+                            HStack {
+                                Text(trait)
+                                Spacer()
+                                if selectedWeaponTraits.contains(trait) {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if selectedWeaponTraits.contains(trait) {
+                                    selectedWeaponTraits.remove(trait)
+                                } else {
+                                    selectedWeaponTraits.insert(trait)
+                                }
+                            }
+                        }
+                    }
+                    
                     Section("Modifications") {
                         ForEach(WeaponModifications.all, id: \.self) { modification in
                             HStack {
@@ -1541,123 +1650,23 @@ struct AddEquipmentSheet: View {
                             }
                         }
                     }
-                }
-                
-                Section {
-                    Text("Tap on traits\(isWeapon ? " and modifications" : "") to select them for your \(isWeapon ? "weapon" : "equipment").")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-            .navigationTitle("Add \(isWeapon ? "Weapon" : "Equipment")")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Add") {
-                        addItem()
-                    }
-                    .disabled(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-            }
-        }
-    }
-    
-    private func addItem() {
-        let trimmedName = itemName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedName.isEmpty else { return }
-        
-        var fullName = trimmedName
-        
-        // Add modifications for weapons
-        if isWeapon && !selectedModifications.isEmpty {
-            let modificationsList = Array(selectedModifications).sorted()
-            fullName += " (" + modificationsList.joined(separator: ", ") + ")"
-        }
-        
-        // Add traits
-        if !selectedTraits.isEmpty {
-            let traitsList = Array(selectedTraits).sorted()
-            fullName += " " + traitsList.joined(separator: " ")
-        }
-        
-        if isWeapon {
-            var weaponList = character.weaponNames
-            weaponList.append(fullName)
-            character.weaponNames = weaponList
-        } else {
-            var equipmentList = character.equipmentNames
-            equipmentList.append(fullName)
-            character.equipmentNames = equipmentList
-        }
-        
-        character.lastModified = Date()
-        store.saveChanges()
-        dismiss()
-    }
-}
-
-struct EditEquipmentSheet: View {
-    let character: ImperiumCharacter
-    @ObservedObject var store: CharacterStore
-    let isWeapon: Bool
-    let originalItem: String
-    @Environment(\.dismiss) private var dismiss
-    
-    @State private var itemName = ""
-    @State private var selectedTraits: Set<String> = []
-    @State private var selectedModifications: Set<String> = []
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("\(isWeapon ? "Weapon" : "Equipment") Details") {
-                    TextField(isWeapon ? "Weapon Name" : "Equipment Name", text: $itemName)
-                }
-                
-                Section("Traits") {
-                    ForEach(EquipmentTraitNames.all, id: \.self) { trait in
-                        HStack {
-                            Text(trait)
-                            Spacer()
-                            if selectedTraits.contains(trait) {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
-                            }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            if selectedTraits.contains(trait) {
-                                selectedTraits.remove(trait)
-                            } else {
-                                selectedTraits.insert(trait)
-                            }
-                        }
-                    }
-                }
-                
-                if isWeapon {
-                    Section("Modifications") {
-                        ForEach(WeaponModifications.all, id: \.self) { modification in
+                } else {
+                    Section("Equipment Traits") {
+                        ForEach(EquipmentTraitNames.all, id: \.self) { trait in
                             HStack {
-                                Text(modification)
+                                Text(trait)
                                 Spacer()
-                                if selectedModifications.contains(modification) {
+                                if selectedTraits.contains(trait) {
                                     Image(systemName: "checkmark")
                                         .foregroundColor(.blue)
                                 }
                             }
                             .contentShape(Rectangle())
                             .onTapGesture {
-                                if selectedModifications.contains(modification) {
-                                    selectedModifications.remove(modification)
+                                if selectedTraits.contains(trait) {
+                                    selectedTraits.remove(trait)
                                 } else {
-                                    selectedModifications.insert(modification)
+                                    selectedTraits.insert(trait)
                                 }
                             }
                         }
@@ -1665,12 +1674,12 @@ struct EditEquipmentSheet: View {
                 }
                 
                 Section {
-                    Text("Tap on traits\(isWeapon ? " and modifications" : "") to select them for your \(isWeapon ? "weapon" : "equipment").")
+                    Text("Tap on items to select/deselect them for your \(isWeapon ? "weapon" : "equipment").")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Edit \(isWeapon ? "Weapon" : "Equipment")")
+            .navigationTitle(editingEquipment != nil || editingWeapon != nil ? "Edit \(isWeapon ? "Weapon" : "Equipment")" : "Add \(isWeapon ? "Weapon" : "Equipment")")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -1680,28 +1689,41 @@ struct EditEquipmentSheet: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
+                    Button(editingEquipment != nil || editingWeapon != nil ? "Save" : "Add") {
                         saveItem()
                     }
                     .disabled(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
             .onAppear {
-                parseOriginalItem()
+                loadExistingData()
             }
         }
     }
     
-    private func parseOriginalItem() {
-        let equipmentItem = EquipmentDisplayItem(from: originalItem)
-        itemName = equipmentItem.baseName
-        
-        // Parse traits
-        selectedTraits = Set(equipmentItem.traits)
-        
-        // Parse modifications for weapons
-        if isWeapon {
-            selectedModifications = Set(equipmentItem.modifications)
+    private func loadExistingData() {
+        if let equipment = editingEquipment {
+            itemName = equipment.name
+            itemDescription = equipment.equipmentDescription
+            encumbrance = equipment.encumbrance
+            cost = equipment.cost
+            availability = equipment.availability
+            selectedQualities = Set(equipment.qualities)
+            selectedFlaws = Set(equipment.flaws)
+            selectedTraits = Set(equipment.traits.map { $0.name })
+        } else if let weapon = editingWeapon {
+            itemName = weapon.name
+            specialization = weapon.specialization
+            damage = weapon.damage
+            range = weapon.range
+            magazine = weapon.magazine
+            encumbrance = weapon.encumbrance
+            cost = weapon.cost
+            availability = weapon.availability
+            selectedQualities = Set(weapon.qualities)
+            selectedFlaws = Set(weapon.flaws)
+            selectedWeaponTraits = Set(weapon.weaponTraits.map { $0.name })
+            selectedModifications = Set(weapon.modifications)
         }
     }
     
@@ -1709,31 +1731,56 @@ struct EditEquipmentSheet: View {
         let trimmedName = itemName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return }
         
-        var fullName = trimmedName
-        
-        // Add modifications for weapons
-        if isWeapon && !selectedModifications.isEmpty {
-            let modificationsList = Array(selectedModifications).sorted()
-            fullName += " (" + modificationsList.joined(separator: ", ") + ")"
-        }
-        
-        // Add traits
-        if !selectedTraits.isEmpty {
-            let traitsList = Array(selectedTraits).sorted()
-            fullName += " " + traitsList.joined(separator: " ")
-        }
-        
-        // Remove original item and add updated item
         if isWeapon {
-            var weaponList = character.weaponNames
-            weaponList.removeAll { $0 == originalItem }
-            weaponList.append(fullName)
-            character.weaponNames = weaponList
+            let weapon = Weapon(
+                name: trimmedName,
+                specialization: specialization,
+                damage: damage,
+                range: range,
+                magazine: magazine,
+                encumbrance: encumbrance,
+                availability: availability,
+                cost: cost
+            )
+            
+            // Set weapon traits
+            weapon.weaponTraits = selectedWeaponTraits.map { WeaponTrait(name: $0) }
+            weapon.modifications = Array(selectedModifications)
+            weapon.qualities = Array(selectedQualities)
+            weapon.flaws = Array(selectedFlaws)
+            
+            var weaponList = character.weaponList
+            
+            if let editingWeapon = editingWeapon {
+                // Remove the old weapon and add the new one
+                weaponList.removeAll { $0.name == editingWeapon.name }
+            }
+            
+            weaponList.append(weapon)
+            character.weaponList = weaponList
         } else {
-            var equipmentList = character.equipmentNames
-            equipmentList.removeAll { $0 == originalItem }
-            equipmentList.append(fullName)
-            character.equipmentNames = equipmentList
+            let equipment = Equipment(
+                name: trimmedName,
+                equipmentDescription: itemDescription,
+                encumbrance: encumbrance,
+                cost: cost,
+                availability: availability
+            )
+            
+            // Set equipment properties
+            equipment.traits = selectedTraits.map { EquipmentTrait(name: $0) }
+            equipment.qualities = Array(selectedQualities)
+            equipment.flaws = Array(selectedFlaws)
+            
+            var equipmentList = character.equipmentList
+            
+            if let editingEquipment = editingEquipment {
+                // Remove the old equipment and add the new one
+                equipmentList.removeAll { $0.name == editingEquipment.name }
+            }
+            
+            equipmentList.append(equipment)
+            character.equipmentList = equipmentList
         }
         
         character.lastModified = Date()

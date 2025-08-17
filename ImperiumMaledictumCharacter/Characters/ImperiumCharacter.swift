@@ -47,8 +47,10 @@ class ImperiumCharacter: BaseCharacter {
     var factionSkillAdvancesData: String = "" // JSON data for faction-specific skill advances
     var specializationAdvancesData: String = "" // JSON data for specialization advances
     var talentNamesData: String = "" // JSON array of talent names
-    var equipmentNamesData: String = "" // JSON array of equipment names  
-    var weaponNamesData: String = "" // JSON array of weapon names
+    var equipmentNamesData: String = "" // JSON array of equipment names - DEPRECATED
+    var weaponNamesData: String = "" // JSON array of weapon names - DEPRECATED
+    var equipmentListData: String = "" // JSON array of Equipment objects
+    var weaponListData: String = "" // JSON array of Weapon objects
     var reputationData: String = "" // JSON data for reputation
     
     // Bonus tracking to prevent double application
@@ -159,6 +161,8 @@ class ImperiumCharacter: BaseCharacter {
         talentNamesData = ""
         equipmentNamesData = ""
         weaponNamesData = ""
+        equipmentListData = ""
+        weaponListData = ""
         reputationData = ""
         appliedOriginBonuses = ""
         appliedFactionBonuses = ""
@@ -387,6 +391,38 @@ class ImperiumCharacter: BaseCharacter {
         }
     }
     
+    var equipmentList: [Equipment] {
+        get {
+            guard let data = equipmentListData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([Equipment].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                equipmentListData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
+    var weaponList: [Weapon] {
+        get {
+            guard let data = weaponListData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([Weapon].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                weaponListData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
     var reputations: [Reputation] {
         get {
             guard let data = reputationData.data(using: .utf8),
@@ -556,5 +592,41 @@ class ImperiumCharacter: BaseCharacter {
             }
             lastModified = Date()
         }
+    }
+    
+    // MARK: - Migration Methods
+    
+    /// Migrates equipment and weapons from string arrays to proper Equipment/Weapon objects
+    func migrateEquipmentAndWeapons() {
+        // Only migrate if we have old data and no new data
+        if !equipmentNames.isEmpty && equipmentList.isEmpty {
+            var newEquipmentList: [Equipment] = []
+            
+            for equipmentName in equipmentNames {
+                // Parse basic equipment from name
+                let equipment = Equipment(name: equipmentName)
+                newEquipmentList.append(equipment)
+            }
+            
+            equipmentList = newEquipmentList
+            // Keep old data for backward compatibility, but mark it as migrated by clearing it
+            // equipmentNames = [] // Uncomment this line if you want to clear old data after migration
+        }
+        
+        if !weaponNames.isEmpty && weaponList.isEmpty {
+            var newWeaponList: [Weapon] = []
+            
+            for weaponName in weaponNames {
+                // Parse basic weapon from name
+                let weapon = Weapon(name: weaponName)
+                newWeaponList.append(weapon)
+            }
+            
+            weaponList = newWeaponList
+            // Keep old data for backward compatibility, but mark it as migrated by clearing it
+            // weaponNames = [] // Uncomment this line if you want to clear old data after migration
+        }
+        
+        lastModified = Date()
     }
 }
