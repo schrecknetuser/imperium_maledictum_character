@@ -1104,16 +1104,17 @@ struct StatusPopupView: View {
                             .font(.headline)
                         
                         HStack {
-                            Button {
+                            Button(action: {
                                 if wounds > 0 {
                                     wounds -= 1
                                     updateCharacter()
                                 }
-                            } label: {
-                                Image(systemName: "minus.circle")
+                            }) {
+                                Image(systemName: "minus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.red)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(wounds <= 0)
                             
                             Spacer()
@@ -1124,16 +1125,17 @@ struct StatusPopupView: View {
                             
                             Spacer()
                             
-                            Button {
+                            Button(action: {
                                 if wounds < character.calculateMaxWounds() {
                                     wounds += 1
                                     updateCharacter()
                                 }
-                            } label: {
-                                Image(systemName: "plus.circle")
+                            }) {
+                                Image(systemName: "plus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.red)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(wounds >= character.calculateMaxWounds())
                         }
                         
@@ -1148,16 +1150,17 @@ struct StatusPopupView: View {
                             .font(.headline)
                         
                         HStack {
-                            Button {
+                            Button(action: {
                                 if corruption > 0 {
                                     corruption -= 1
                                     updateCharacter()
                                 }
-                            } label: {
-                                Image(systemName: "minus.circle")
+                            }) {
+                                Image(systemName: "minus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.purple)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(corruption <= 0)
                             
                             Spacer()
@@ -1168,14 +1171,15 @@ struct StatusPopupView: View {
                             
                             Spacer()
                             
-                            Button {
+                            Button(action: {
                                 corruption += 1
                                 updateCharacter()
-                            } label: {
-                                Image(systemName: "plus.circle")
+                            }) {
+                                Image(systemName: "plus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.purple)
                             }
+                            .buttonStyle(PlainButtonStyle())
                         }
                         
                         Text("Corruption Threshold: \(character.calculateCorruptionThreshold())")
@@ -1211,7 +1215,7 @@ struct StatusPopupView: View {
                             .font(.headline)
                         
                         HStack {
-                            Button {
+                            Button(action: {
                                 if fate > 0 {
                                     fate -= 1
                                     // Adjust spent fate if it exceeds current fate
@@ -1220,11 +1224,12 @@ struct StatusPopupView: View {
                                     }
                                     updateCharacter()
                                 }
-                            } label: {
-                                Image(systemName: "minus.circle")
+                            }) {
+                                Image(systemName: "minus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.yellow)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(fate <= 0)
                             
                             Spacer()
@@ -1235,14 +1240,15 @@ struct StatusPopupView: View {
                             
                             Spacer()
                             
-                            Button {
+                            Button(action: {
                                 fate += 1
                                 updateCharacter()
-                            } label: {
-                                Image(systemName: "plus.circle")
+                            }) {
+                                Image(systemName: "plus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.yellow)
                             }
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                     
@@ -1252,16 +1258,17 @@ struct StatusPopupView: View {
                             .font(.headline)
                         
                         HStack {
-                            Button {
+                            Button(action: {
                                 if spentFate > 0 {
                                     spentFate -= 1
                                     updateCharacter()
                                 }
-                            } label: {
-                                Image(systemName: "minus.circle")
+                            }) {
+                                Image(systemName: "minus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.orange)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(spentFate <= 0)
                             
                             Spacer()
@@ -1272,16 +1279,17 @@ struct StatusPopupView: View {
                             
                             Spacer()
                             
-                            Button {
+                            Button(action: {
                                 if spentFate < fate {
                                     spentFate += 1
                                     updateCharacter()
                                 }
-                            } label: {
-                                Image(systemName: "plus.circle")
+                            }) {
+                                Image(systemName: "plus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.orange)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(spentFate >= fate)
                         }
                         
@@ -1297,7 +1305,7 @@ struct StatusPopupView: View {
                             .font(.headline)
                         
                         HStack {
-                            Button {
+                            Button(action: {
                                 if totalExperience > 0 {
                                     totalExperience -= 1
                                     // Adjust spent experience if it exceeds total
@@ -1306,11 +1314,12 @@ struct StatusPopupView: View {
                                     }
                                     updateCharacter()
                                 }
-                            } label: {
-                                Image(systemName: "minus.circle")
+                            }) {
+                                Image(systemName: "minus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.blue)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(totalExperience <= 0)
                             
                             Spacer()
@@ -1321,14 +1330,15 @@ struct StatusPopupView: View {
                             
                             Spacer()
                             
-                            Button {
+                            Button(action: {
                                 totalExperience += 1
                                 updateCharacter()
-                            } label: {
-                                Image(systemName: "plus.circle")
+                            }) {
+                                Image(systemName: "plus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.blue)
                             }
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
                     
@@ -1337,16 +1347,17 @@ struct StatusPopupView: View {
                             .font(.headline)
                         
                         HStack {
-                            Button {
+                            Button(action: {
                                 if spentExperience > 0 {
                                     spentExperience -= 1
                                     updateCharacter()
                                 }
-                            } label: {
-                                Image(systemName: "minus.circle")
+                            }) {
+                                Image(systemName: "minus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.gray)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(spentExperience <= 0)
                             
                             Spacer()
@@ -1357,16 +1368,17 @@ struct StatusPopupView: View {
                             
                             Spacer()
                             
-                            Button {
+                            Button(action: {
                                 if spentExperience < totalExperience {
                                     spentExperience += 1
                                     updateCharacter()
                                 }
-                            } label: {
-                                Image(systemName: "plus.circle")
+                            }) {
+                                Image(systemName: "plus.circle.fill")
                                     .font(.title2)
                                     .foregroundColor(.gray)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(spentExperience >= totalExperience)
                         }
                         
