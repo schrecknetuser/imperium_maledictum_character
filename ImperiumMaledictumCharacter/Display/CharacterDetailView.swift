@@ -527,9 +527,22 @@ struct CharacteristicsTab: View {
                                 Text("\(characteristic.baseValue)")
                                     .font(.caption)
                                     .frame(width: 40, alignment: .center)
-                                Text("\(characteristic.advances)")
-                                    .font(.caption)
-                                    .frame(width: 40, alignment: .center)
+                                
+                                if isEditMode {
+                                    // Editable dropdown for advances
+                                    Picker("Advances", selection: getCharacteristicAdvanceBinding(for: characteristic.name)) {
+                                        ForEach(0...4, id: \.self) { value in
+                                            Text("\(value)").tag(value)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .frame(width: 40)
+                                } else {
+                                    Text("\(characteristic.advances)")
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .center)
+                                }
+                                
                                 Text("\(characteristic.totalValue)")
                                     .font(.caption)
                                     .fontWeight(.medium)
@@ -583,9 +596,22 @@ struct CharacteristicsTab: View {
                                 Text(skill.characteristicAbbreviation)
                                     .font(.caption)
                                     .frame(width: 40, alignment: .center)
-                                Text("\(skill.advances)")
-                                    .font(.caption)
-                                    .frame(width: 40, alignment: .center)
+                                
+                                if isEditMode {
+                                    // Editable dropdown for advances
+                                    Picker("Advances", selection: getSkillAdvanceBinding(for: skill.name)) {
+                                        ForEach(0...4, id: \.self) { value in
+                                            Text("\(value)").tag(value)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .frame(width: 40)
+                                } else {
+                                    Text("\(skill.advances)")
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .center)
+                                }
+                                
                                 Text("\(skill.totalValue)")
                                     .font(.caption)
                                     .fontWeight(.medium)
@@ -638,9 +664,22 @@ struct CharacteristicsTab: View {
                                 Text(specialization.skillName)
                                     .font(.caption)
                                     .frame(width: 60, alignment: .center)
-                                Text("\(specialization.advances)")
-                                    .font(.caption)
-                                    .frame(width: 40, alignment: .center)
+                                
+                                if isEditMode {
+                                    // Editable dropdown for advances
+                                    Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name)) {
+                                        ForEach(0...4, id: \.self) { value in
+                                            Text("\(value)").tag(value)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .frame(width: 40)
+                                } else {
+                                    Text("\(specialization.advances)")
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .center)
+                                }
+                                
                                 Text("\(specialization.totalValue)")
                                     .font(.caption)
                                     .fontWeight(.medium)
@@ -650,6 +689,25 @@ struct CharacteristicsTab: View {
                             .padding(.vertical, 6)
                             .background(Color(.systemGray6).opacity(0.5))
                         }
+                        
+                        // Add new specialization button in edit mode
+                        if isEditMode {
+                            Button(action: {
+                                // TODO: Add new specialization
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus")
+                                        .font(.caption)
+                                    Text("Add Specialization")
+                                        .font(.caption)
+                                    Spacer()
+                                }
+                                .padding(.horizontal)
+                                .padding(.vertical, 6)
+                                .background(Color(.systemBlue).opacity(0.1))
+                                .foregroundColor(.blue)
+                            }
+                        }
                     }
                     .background(Color(.systemGray6))
                     .cornerRadius(8)
@@ -657,6 +715,57 @@ struct CharacteristicsTab: View {
             }
             .padding()
         }
+    }
+    
+    private func getCharacteristicAdvanceBinding(for characteristicName: String) -> Binding<Int> {
+        return Binding<Int>(
+            get: {
+                guard let imperium = imperiumCharacter else { return 0 }
+                return imperium.characteristics[characteristicName]?.advances ?? 0
+            },
+            set: { newValue in
+                guard let imperium = imperiumCharacter else { return }
+                var characteristics = imperium.characteristics
+                if var characteristic = characteristics[characteristicName] {
+                    characteristic.advances = newValue
+                    characteristics[characteristicName] = characteristic
+                    imperium.characteristics = characteristics
+                    store.saveChanges()
+                }
+            }
+        )
+    }
+    
+    private func getSkillAdvanceBinding(for skillName: String) -> Binding<Int> {
+        return Binding<Int>(
+            get: {
+                guard let imperium = imperiumCharacter else { return 0 }
+                return imperium.skillAdvances[skillName] ?? 0
+            },
+            set: { newValue in
+                guard let imperium = imperiumCharacter else { return }
+                var skillAdvances = imperium.skillAdvances
+                skillAdvances[skillName] = newValue
+                imperium.skillAdvances = skillAdvances
+                store.saveChanges()
+            }
+        )
+    }
+    
+    private func getSpecializationAdvanceBinding(for specializationName: String) -> Binding<Int> {
+        return Binding<Int>(
+            get: {
+                guard let imperium = imperiumCharacter else { return 0 }
+                return imperium.specializationAdvances[specializationName] ?? 0
+            },
+            set: { newValue in
+                guard let imperium = imperiumCharacter else { return }
+                var specializationAdvances = imperium.specializationAdvances
+                specializationAdvances[specializationName] = newValue
+                imperium.specializationAdvances = specializationAdvances
+                store.saveChanges()
+            }
+        )
     }
     
     private func getCharacteristicsList() -> [CharacteristicRowData] {
@@ -757,7 +866,7 @@ struct CharacteristicsTab: View {
             }
             
             for (specializationName, advances) in specializationAdvances {
-                if advances > 0 {
+                if advances > 0 || isEditMode {
                     // Find skill name by lookup in specializations map
                     let skillName = specializationToSkillMap[specializationName] ?? "Unknown"
                     
