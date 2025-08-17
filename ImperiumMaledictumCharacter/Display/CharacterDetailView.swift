@@ -1402,11 +1402,19 @@ struct EquipmentTab: View {
         .sheet(isPresented: $showingEditEquipmentSheet) {
             if let imperium = imperiumCharacter, let equipment = editingEquipment {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, editingEquipment: equipment)
+                    .onDisappear {
+                        // Clear editing state when sheet is dismissed
+                        editingEquipment = nil
+                    }
             }
         }
         .sheet(isPresented: $showingEditWeaponSheet) {
             if let imperium = imperiumCharacter, let weapon = editingWeapon {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon)
+                    .onDisappear {
+                        // Clear editing state when sheet is dismissed
+                        editingWeapon = nil
+                    }
             }
         }
     }
@@ -1452,31 +1460,25 @@ struct EquipmentTab: View {
     }
     
     private func editEquipment(_ equipment: Equipment) {
-        // Reset any existing state first
-        editingEquipment = nil
-        editingWeapon = nil
-        showingEditEquipmentSheet = false
+        // Close any open sheets first
         showingEditWeaponSheet = false
+        showingEditEquipmentSheet = false
         
-        // Small delay to ensure state is cleared before setting new state
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            editingEquipment = equipment
-            showingEditEquipmentSheet = true
-        }
+        // Set the editing equipment directly and present the sheet
+        editingEquipment = equipment
+        editingWeapon = nil
+        showingEditEquipmentSheet = true
     }
     
     private func editWeapon(_ weapon: Weapon) {
-        // Reset any existing state first
-        editingEquipment = nil
-        editingWeapon = nil
+        // Close any open sheets first
         showingEditEquipmentSheet = false
         showingEditWeaponSheet = false
         
-        // Small delay to ensure state is cleared before setting new state
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-            editingWeapon = weapon
-            showingEditWeaponSheet = true
-        }
+        // Set the editing weapon directly and present the sheet
+        editingWeapon = weapon
+        editingEquipment = nil
+        showingEditWeaponSheet = true
     }
     
     private func removeEquipment(_ equipment: Equipment) {
@@ -1535,13 +1537,14 @@ struct ComprehensiveEquipmentSheet: View {
         self.editingEquipment = editingEquipment
         self.editingWeapon = editingWeapon
         
-        // Initialize state variables immediately - ensure proper data binding
-        if let equipment = editingEquipment {
-            _itemName = State(initialValue: equipment.name)
+        // Initialize state variables with proper defensive checks
+        if let equipment = editingEquipment, !isWeapon {
+            // Editing existing equipment
+            _itemName = State(initialValue: equipment.name.isEmpty ? "Unnamed Equipment" : equipment.name)
             _itemDescription = State(initialValue: equipment.equipmentDescription)
-            _encumbrance = State(initialValue: equipment.encumbrance)
-            _cost = State(initialValue: equipment.cost)
-            _availability = State(initialValue: equipment.availability)
+            _encumbrance = State(initialValue: max(0, equipment.encumbrance))
+            _cost = State(initialValue: max(0, equipment.cost))
+            _availability = State(initialValue: equipment.availability.isEmpty ? AvailabilityLevels.common : equipment.availability)
             _selectedQualities = State(initialValue: Set(equipment.qualities))
             _selectedFlaws = State(initialValue: Set(equipment.flaws))
             _selectedTraits = State(initialValue: Set(equipment.traits.map { $0.name }))
@@ -1552,16 +1555,17 @@ struct ComprehensiveEquipmentSheet: View {
             _magazine = State(initialValue: 0)
             _selectedWeaponTraits = State(initialValue: [])
             _selectedModifications = State(initialValue: [])
-        } else if let weapon = editingWeapon {
-            _itemName = State(initialValue: weapon.name)
+        } else if let weapon = editingWeapon, isWeapon {
+            // Editing existing weapon
+            _itemName = State(initialValue: weapon.name.isEmpty ? "Unnamed Weapon" : weapon.name)
             _itemDescription = State(initialValue: "") // Weapons don't have descriptions in equipment section
-            _specialization = State(initialValue: weapon.specialization)
+            _specialization = State(initialValue: weapon.specialization.isEmpty ? WeaponSpecializations.none : weapon.specialization)
             _damage = State(initialValue: weapon.damage)
-            _range = State(initialValue: weapon.range)
-            _magazine = State(initialValue: weapon.magazine)
-            _encumbrance = State(initialValue: weapon.encumbrance)
-            _cost = State(initialValue: weapon.cost)
-            _availability = State(initialValue: weapon.availability)
+            _range = State(initialValue: weapon.range.isEmpty ? WeaponRanges.short : weapon.range)
+            _magazine = State(initialValue: max(0, weapon.magazine))
+            _encumbrance = State(initialValue: max(0, weapon.encumbrance))
+            _cost = State(initialValue: max(0, weapon.cost))
+            _availability = State(initialValue: weapon.availability.isEmpty ? AvailabilityLevels.common : weapon.availability)
             _selectedQualities = State(initialValue: Set(weapon.qualities))
             _selectedFlaws = State(initialValue: Set(weapon.flaws))
             _selectedWeaponTraits = State(initialValue: Set(weapon.weaponTraits.map { $0.name }))
