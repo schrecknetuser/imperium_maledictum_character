@@ -1304,87 +1304,30 @@ struct StatusPopupView: View {
                         Text("Total Experience")
                             .font(.headline)
                         
-                        HStack {
-                            Button(action: {
-                                if totalExperience > 0 {
-                                    totalExperience -= 1
-                                    // Adjust spent experience if it exceeds total
-                                    if spentExperience > totalExperience {
-                                        spentExperience = totalExperience
-                                    }
-                                    updateCharacter()
+                        TextField("Total Experience", value: $totalExperience, formatter: NumberFormatter())
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .keyboardType(.numberPad)
+                            .onChange(of: totalExperience) { _ in
+                                if totalExperience < 0 {
+                                    totalExperience = 0
                                 }
-                            }) {
-                                Image(systemName: "minus.circle.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.blue)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            .disabled(totalExperience <= 0)
-                            
-                            Spacer()
-                            
-                            Text("\(totalExperience)")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                totalExperience += 1
                                 updateCharacter()
-                            }) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.blue)
                             }
-                            .buttonStyle(PlainButtonStyle())
-                        }
                     }
                     
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Spent Experience")
                             .font(.headline)
                         
-                        HStack {
-                            Button(action: {
-                                if spentExperience > 0 {
-                                    spentExperience -= 1
-                                    updateCharacter()
+                        TextField("Spent Experience", value: $spentExperience, formatter: NumberFormatter())
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .keyboardType(.numberPad)
+                            .onChange(of: spentExperience) { _ in
+                                if spentExperience < 0 {
+                                    spentExperience = 0
                                 }
-                            }) {
-                                Image(systemName: "minus.circle.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.gray)
+                                updateCharacter()
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .disabled(spentExperience <= 0)
-                            
-                            Spacer()
-                            
-                            Text("\(spentExperience)")
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                if spentExperience < totalExperience {
-                                    spentExperience += 1
-                                    updateCharacter()
-                                }
-                            }) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.gray)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            .disabled(spentExperience >= totalExperience)
-                        }
-                        
-                        Text("Available: \(totalExperience - spentExperience)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
                     }
                 }
             }
