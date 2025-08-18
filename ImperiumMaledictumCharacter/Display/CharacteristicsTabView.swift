@@ -1,0 +1,563 @@
+//
+//  CharacteristicsTabView.swift
+//  ImperiumMaledictumCharacter
+//
+//  Created by User on 11.01.2025.
+//
+
+import SwiftUI
+
+struct CharacteristicsTab: View {
+    let character: any BaseCharacter
+    @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
+    @State private var showingAddSpecializationSheet = false
+    
+    var imperiumCharacter: ImperiumCharacter? {
+        return character as? ImperiumCharacter
+    }
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Characteristics Table
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Characteristics")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    VStack(spacing: 0) {
+                        // Header row
+                        HStack {
+                            Text("Char.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .leading)
+                            Text("Base")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .center)
+                            Text("Adv.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .center)
+                            Text("Total")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 50, alignment: .center)
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemGray5))
+                        
+                        ForEach(getCharacteristicsList(), id: \.abbreviation) { characteristic in
+                            HStack {
+                                Text(characteristic.abbreviation)
+                                    .font(.caption)
+                                    .frame(width: 40, alignment: .leading)
+                                Text("\(characteristic.baseValue)")
+                                    .font(.caption)
+                                    .frame(width: 40, alignment: .center)
+                                
+                                if isEditMode {
+                                    // Editable dropdown for advances
+                                    Picker("Advances", selection: getCharacteristicAdvanceBinding(for: characteristic.name)) {
+                                        ForEach(0...4, id: \.self) { value in
+                                            Text("\(value)").tag(value)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .frame(width: 40)
+                                } else {
+                                    Text("\(characteristic.advances)")
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .center)
+                                }
+                                
+                                Text("\(characteristic.totalValue)")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .frame(width: 50, alignment: .center)
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 6)
+                            .background(Color(.systemGray6).opacity(0.5))
+                        }
+                    }
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
+                
+                // Skills Table
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Skills")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    VStack(spacing: 0) {
+                        // Header row
+                        HStack {
+                            Text("Skill")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text("Char.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .center)
+                            Text("Adv.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .center)
+                            Text("Total")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 50, alignment: .center)
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemGray5))
+                        
+                        ForEach(getSkillsList(), id: \.name) { skill in
+                            HStack {
+                                Text(skill.name)
+                                    .font(.caption)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text(skill.characteristicAbbreviation)
+                                    .font(.caption)
+                                    .frame(width: 40, alignment: .center)
+                                
+                                if isEditMode {
+                                    // Editable dropdown for advances
+                                    Picker("Advances", selection: getSkillAdvanceBinding(for: skill.name)) {
+                                        ForEach(0...4, id: \.self) { value in
+                                            Text("\(value)").tag(value)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .frame(width: 40)
+                                } else {
+                                    Text("\(skill.advances)")
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .center)
+                                }
+                                
+                                Text("\(skill.totalValue)")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .frame(width: 50, alignment: .center)
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 6)
+                            .background(Color(.systemGray6).opacity(0.5))
+                        }
+                    }
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
+                
+                // Specializations Table
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Specializations")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    VStack(spacing: 0) {
+                        // Header row
+                        HStack {
+                            Text("Specialization")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Text("Skill")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 60, alignment: .center)
+                            Text("Adv.")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 40, alignment: .center)
+                            Text("Total")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .frame(width: 50, alignment: .center)
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemGray5))
+                        
+                        ForEach(getSpecializationsList(), id: \.name) { specialization in
+                            HStack {
+                                Text(specialization.name)
+                                    .font(.caption)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Text(specialization.skillName)
+                                    .font(.caption)
+                                    .frame(width: 60, alignment: .center)
+                                
+                                if isEditMode {
+                                    // Editable dropdown for advances
+                                    Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name)) {
+                                        ForEach(0...4, id: \.self) { value in
+                                            Text("\(value)").tag(value)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .frame(width: 40)
+                                } else {
+                                    Text("\(specialization.advances)")
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .center)
+                                }
+                                
+                                Text("\(specialization.totalValue)")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                    .frame(width: 50, alignment: .center)
+                            }
+                            .padding(.horizontal)
+                            .padding(.vertical, 6)
+                            .background(Color(.systemGray6).opacity(0.5))
+                        }
+                        
+                        // Add new specialization button in edit mode
+                        if isEditMode {
+                            Button(action: {
+                                showingAddSpecializationSheet = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus")
+                                        .font(.caption)
+                                    Text("Add Specialization")
+                                        .font(.caption)
+                                    Spacer()
+                                }
+                                .padding(.horizontal)
+                                .padding(.vertical, 6)
+                                .background(Color(.systemBlue).opacity(0.1))
+                                .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
+            }
+            .padding()
+        }
+        .sheet(isPresented: $showingAddSpecializationSheet) {
+            if let imperium = imperiumCharacter {
+                AddSpecializationSheet(character: imperium, store: store)
+            }
+        }
+    }
+    
+    private func getCharacteristicAdvanceBinding(for characteristicName: String) -> Binding<Int> {
+        return Binding<Int>(
+            get: {
+                guard let imperium = imperiumCharacter else { return 0 }
+                return imperium.characteristics[characteristicName]?.advances ?? 0
+            },
+            set: { newValue in
+                guard let imperium = imperiumCharacter else { return }
+                var characteristics = imperium.characteristics
+                if var characteristic = characteristics[characteristicName] {
+                    characteristic.advances = newValue
+                    characteristics[characteristicName] = characteristic
+                    imperium.characteristics = characteristics
+                    store.saveChanges()
+                }
+            }
+        )
+    }
+    
+    private func getSkillAdvanceBinding(for skillName: String) -> Binding<Int> {
+        return Binding<Int>(
+            get: {
+                guard let imperium = imperiumCharacter else { return 0 }
+                return imperium.skillAdvances[skillName] ?? 0
+            },
+            set: { newValue in
+                guard let imperium = imperiumCharacter else { return }
+                var skillAdvances = imperium.skillAdvances
+                skillAdvances[skillName] = newValue
+                imperium.skillAdvances = skillAdvances
+                store.saveChanges()
+            }
+        )
+    }
+    
+    private func getSpecializationAdvanceBinding(for specializationName: String) -> Binding<Int> {
+        return Binding<Int>(
+            get: {
+                guard let imperium = imperiumCharacter else { return 0 }
+                return imperium.specializationAdvances[specializationName] ?? 0
+            },
+            set: { newValue in
+                guard let imperium = imperiumCharacter else { return }
+                var specializationAdvances = imperium.specializationAdvances
+                specializationAdvances[specializationName] = newValue
+                imperium.specializationAdvances = specializationAdvances
+                store.saveChanges()
+            }
+        )
+    }
+    
+    private func getCharacteristicsList() -> [CharacteristicRowData] {
+        var result: [CharacteristicRowData] = []
+        
+        if let imperium = imperiumCharacter {
+            let characteristics = imperium.characteristics
+            let characteristicInfo = [
+                ("WS", "Weapon Skill", characteristics[CharacteristicNames.weaponSkill] ?? Characteristic(name: CharacteristicNames.weaponSkill, initialValue: 20, advances: 0)),
+                ("BS", "Ballistic Skill", characteristics[CharacteristicNames.ballisticSkill] ?? Characteristic(name: CharacteristicNames.ballisticSkill, initialValue: 20, advances: 0)),
+                ("Str", "Strength", characteristics[CharacteristicNames.strength] ?? Characteristic(name: CharacteristicNames.strength, initialValue: 20, advances: 0)),
+                ("Tgh", "Toughness", characteristics[CharacteristicNames.toughness] ?? Characteristic(name: CharacteristicNames.toughness, initialValue: 20, advances: 0)),
+                ("Agi", "Agility", characteristics[CharacteristicNames.agility] ?? Characteristic(name: CharacteristicNames.agility, initialValue: 20, advances: 0)),
+                ("Int", "Intelligence", characteristics[CharacteristicNames.intelligence] ?? Characteristic(name: CharacteristicNames.intelligence, initialValue: 20, advances: 0)),
+                ("Per", "Perception", characteristics[CharacteristicNames.perception] ?? Characteristic(name: CharacteristicNames.perception, initialValue: 20, advances: 0)),
+                ("Wil", "Willpower", characteristics[CharacteristicNames.willpower] ?? Characteristic(name: CharacteristicNames.willpower, initialValue: 20, advances: 0)),
+                ("Fel", "Fellowship", characteristics[CharacteristicNames.fellowship] ?? Characteristic(name: CharacteristicNames.fellowship, initialValue: 20, advances: 0))
+            ]
+            
+            for (abbrev, name, characteristic) in characteristicInfo {
+                result.append(CharacteristicRowData(
+                    abbreviation: abbrev,
+                    name: name,
+                    baseValue: characteristic.initialValue,
+                    advances: characteristic.advances,
+                    totalValue: characteristic.derivedValue
+                ))
+            }
+        }
+        
+        return result
+    }
+    
+    private func getSkillsList() -> [SkillRowData] {
+        var result: [SkillRowData] = []
+        
+        if let imperium = imperiumCharacter {
+            let skillAdvances = imperium.skillAdvances
+            let factionSkillAdvances = imperium.factionSkillAdvances
+            
+            // Define skill-to-characteristic mapping using the game's actual skills
+            let skillCharacteristicMap = [
+                "Athletics": "Str",
+                "Awareness": "Per",
+                "Dexterity": "Agi",
+                "Discipline": "Wil",
+                "Fortitude": "Tgh",
+                "Intuition": "Per",
+                "Linguistics": "Int",
+                "Logic": "Int",
+                "Lore": "Int",
+                "Medicae": "Int",
+                "Melee": "WS",
+                "Navigation": "Int",
+                "Piloting": "Agi",
+                "Presence": "Wil",
+                "Psychic Mastery": "Wil",
+                "Ranged": "BS",
+                "Rapport": "Fel",
+                "Reflexes": "Agi",
+                "Stealth": "Agi",
+                "Tech": "Int"
+            ]
+            
+            // Display ALL skills, not just those with advances
+            for skillName in skillCharacteristicMap.keys.sorted() {
+                let skillAdvanceCount = skillAdvances[skillName] ?? 0
+                let factionAdvanceCount = factionSkillAdvances[skillName] ?? 0
+                let totalAdvances = skillAdvanceCount + factionAdvanceCount
+                
+                let characteristicAbbrev = skillCharacteristicMap[skillName] ?? "Int"
+                let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
+                
+                result.append(SkillRowData(
+                    name: skillName,
+                    characteristicAbbreviation: characteristicAbbrev,
+                    advances: totalAdvances,
+                    totalValue: characteristicValue + (totalAdvances * 5)
+                ))
+            }
+        }
+        
+        return result
+    }
+    
+    private func getSpecializationsList() -> [SpecializationRowData] {
+        var result: [SpecializationRowData] = []
+        
+        if let imperium = imperiumCharacter {
+            let specializationAdvances = imperium.specializationAdvances
+            
+            // Create reverse mapping from specialization name to skill
+            var specializationToSkillMap: [String: String] = [:]
+            for (skillName, specializations) in SkillSpecializations.specializations {
+                for specialization in specializations {
+                    specializationToSkillMap[specialization] = skillName
+                }
+            }
+            
+            for (specializationName, advances) in specializationAdvances {
+                if advances > 0 || isEditMode {
+                    // Find skill name by lookup in specializations map
+                    let skillName = specializationToSkillMap[specializationName] ?? "Unknown"
+                    
+                    // Calculate total value (skill characteristic + specialization advances * 5)
+                    let skillCharacteristicMap = [
+                        "Athletics": "Str",
+                        "Awareness": "Per", 
+                        "Dexterity": "Agi",
+                        "Discipline": "Wil",
+                        "Fortitude": "Tgh",
+                        "Intuition": "Per",
+                        "Linguistics": "Int",
+                        "Logic": "Int",
+                        "Lore": "Int",
+                        "Medicae": "Int",
+                        "Melee": "WS",
+                        "Navigation": "Int",
+                        "Piloting": "Agi",
+                        "Presence": "Wil",
+                        "Psychic Mastery": "Wil",
+                        "Ranged": "BS",
+                        "Rapport": "Fel",
+                        "Reflexes": "Agi",
+                        "Stealth": "Agi",
+                        "Tech": "Int"
+                    ]
+                    
+                    let characteristicAbbrev = skillCharacteristicMap[skillName] ?? "Int"
+                    let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
+                    let skillAdvanceCount = imperium.skillAdvances[skillName] ?? 0
+                    let factionAdvanceCount = imperium.factionSkillAdvances[skillName] ?? 0
+                    let totalSkillValue = characteristicValue + ((skillAdvanceCount + factionAdvanceCount) * 5)
+                    let specializationTotalValue = totalSkillValue + (advances * 5)
+                    
+                    result.append(SpecializationRowData(
+                        name: specializationName,
+                        skillName: skillName,
+                        advances: advances,
+                        totalValue: specializationTotalValue
+                    ))
+                }
+            }
+        }
+        
+        return result.sorted { $0.name < $1.name }
+    }
+    
+    private func getCharacteristicValue(for abbreviation: String, from character: ImperiumCharacter) -> Int {
+        let characteristics = character.characteristics
+        switch abbreviation {
+        case "WS": return characteristics[CharacteristicNames.weaponSkill]?.derivedValue ?? 20
+        case "BS": return characteristics[CharacteristicNames.ballisticSkill]?.derivedValue ?? 20
+        case "Str": return characteristics[CharacteristicNames.strength]?.derivedValue ?? 20
+        case "Tgh": return characteristics[CharacteristicNames.toughness]?.derivedValue ?? 20
+        case "Agi": return characteristics[CharacteristicNames.agility]?.derivedValue ?? 20
+        case "Int": return characteristics[CharacteristicNames.intelligence]?.derivedValue ?? 20
+        case "Per": return characteristics[CharacteristicNames.perception]?.derivedValue ?? 20
+        case "Wil": return characteristics[CharacteristicNames.willpower]?.derivedValue ?? 20
+        case "Fel": return characteristics[CharacteristicNames.fellowship]?.derivedValue ?? 20
+        default: return 20
+        }
+    }
+}
+
+// MARK: - Add Specialization Sheet
+
+struct AddSpecializationSheet: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var selectedSkill = ""
+    @State private var selectedSpecialization = ""
+    
+    var availableSkills: [String] {
+        SkillSpecializations.specializations.keys.sorted()
+    }
+    
+    var availableSpecializations: [String] {
+        guard !selectedSkill.isEmpty,
+              let skillSpecializations = SkillSpecializations.specializations[selectedSkill] else {
+            return []
+        }
+        
+        // Filter out specializations that already have advances > 0
+        let currentSpecializations = character.specializationAdvances
+        return skillSpecializations.filter { specialization in
+            (currentSpecializations[specialization] ?? 0) == 0
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Select Skill") {
+                    Picker("Skill", selection: $selectedSkill) {
+                        Text("Choose a skill...").tag("")
+                        ForEach(availableSkills, id: \.self) { skill in
+                            Text(skill).tag(skill)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .onChange(of: selectedSkill) { _ in
+                        selectedSpecialization = ""
+                    }
+                }
+                
+                if !selectedSkill.isEmpty {
+                    Section("Select Specialization") {
+                        Picker("Specialization", selection: $selectedSpecialization) {
+                            Text("Choose a specialization...").tag("")
+                            ForEach(availableSpecializations, id: \.self) { specialization in
+                                Text(specialization).tag(specialization)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                }
+                
+                if !availableSpecializations.isEmpty && availableSpecializations.count == 0 {
+                    Section {
+                        Text("All specializations for \(selectedSkill) are already added.")
+                            .foregroundColor(.secondary)
+                            .italic()
+                    }
+                }
+            }
+            .navigationTitle("Add Specialization")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add") {
+                        addSpecialization()
+                    }
+                    .disabled(selectedSpecialization.isEmpty)
+                }
+            }
+        }
+    }
+    
+    private func addSpecialization() {
+        guard !selectedSpecialization.isEmpty else { return }
+        
+        var specializations = character.specializationAdvances
+        specializations[selectedSpecialization] = 0
+        character.specializationAdvances = specializations
+        character.lastModified = Date()
+        store.saveChanges()
+        dismiss()
+    }
+}
