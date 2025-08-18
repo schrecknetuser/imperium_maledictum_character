@@ -29,11 +29,7 @@ struct ReputationTab: View {
                                 .font(.headline)
                                 .padding(.horizontal)
                             
-                            LazyVGrid(columns: [
-                                GridItem(.flexible()),
-                                GridItem(.flexible()),
-                                GridItem(.flexible())
-                            ], spacing: 8) {
+                            LazyVStack(spacing: 8) {
                                 ForEach(ImperiumFactionsList.factions, id: \.self) { faction in
                                     FactionReputationCard(
                                         faction: faction,
@@ -201,7 +197,7 @@ struct FactionReputationCard: View {
                         Image(systemName: "minus")
                             .font(.caption2)
                             .fontWeight(.bold)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .frame(width: 24, height: 24)
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
@@ -223,7 +219,7 @@ struct FactionReputationCard: View {
                         Image(systemName: "plus")
                             .font(.caption2)
                             .fontWeight(.bold)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .frame(width: 24, height: 24)
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
@@ -315,7 +311,7 @@ struct IndividualReputationRow: View {
                         Image(systemName: "minus")
                             .font(.caption2)
                             .fontWeight(.bold)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .frame(width: 24, height: 24)
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
@@ -337,7 +333,7 @@ struct IndividualReputationRow: View {
                         Image(systemName: "plus")
                             .font(.caption2)
                             .fontWeight(.bold)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .frame(width: 24, height: 24)
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
@@ -350,7 +346,7 @@ struct IndividualReputationRow: View {
                     Button(action: onEdit) {
                         Image(systemName: "pencil")
                             .font(.caption2)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .frame(width: 24, height: 24)
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
@@ -362,7 +358,7 @@ struct IndividualReputationRow: View {
                     Button(action: onDelete) {
                         Image(systemName: "trash")
                             .font(.caption2)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .frame(width: 24, height: 24)
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
@@ -439,7 +435,7 @@ struct AddIndividualReputationSheet: View {
                                 Image(systemName: "minus")
                                     .font(.caption)
                                     .fontWeight(.bold)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .frame(width: 32, height: 32)
                             }
                             .buttonStyle(PlainButtonStyle())
                             .frame(width: 32, height: 32)
@@ -460,7 +456,7 @@ struct AddIndividualReputationSheet: View {
                                 Image(systemName: "plus")
                                     .font(.caption)
                                     .fontWeight(.bold)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .frame(width: 32, height: 32)
                             }
                             .buttonStyle(PlainButtonStyle())
                             .frame(width: 32, height: 32)
@@ -557,7 +553,7 @@ struct EditIndividualReputationSheet: View {
                                 Image(systemName: "minus")
                                     .font(.caption)
                                     .fontWeight(.bold)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .frame(width: 32, height: 32)
                             }
                             .buttonStyle(PlainButtonStyle())
                             .frame(width: 32, height: 32)
@@ -578,7 +574,7 @@ struct EditIndividualReputationSheet: View {
                                 Image(systemName: "plus")
                                     .font(.caption)
                                     .fontWeight(.bold)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                    .frame(width: 32, height: 32)
                             }
                             .buttonStyle(PlainButtonStyle())
                             .frame(width: 32, height: 32)
@@ -587,7 +583,6 @@ struct EditIndividualReputationSheet: View {
                             .cornerRadius(6)
                             .disabled(reputationValue >= 100)
                             .contentShape(Rectangle())
-                        }
                         }
                     }
                 }
