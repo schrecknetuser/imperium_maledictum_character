@@ -196,9 +196,15 @@ struct FactionReputationCard: View {
                     Button(action: {
                         onValueChanged(max(-100, reputation - 1))
                     }) {
-                        Image(systemName: "minus")
-                            .font(.caption2)
-                            .fontWeight(.bold)
+                        ZStack {
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 24, height: 24)
+                            
+                            Image(systemName: "minus")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                        }
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
@@ -206,7 +212,6 @@ struct FactionReputationCard: View {
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                     .disabled(reputation <= -100)
-                    .contentShape(Rectangle())
                     
                     Text("\(reputation)")
                         .font(.caption)
@@ -217,9 +222,15 @@ struct FactionReputationCard: View {
                     Button(action: {
                         onValueChanged(min(100, reputation + 1))
                     }) {
-                        Image(systemName: "plus")
-                            .font(.caption2)
-                            .fontWeight(.bold)
+                        ZStack {
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 24, height: 24)
+                            
+                            Image(systemName: "plus")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                        }
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
@@ -227,7 +238,6 @@ struct FactionReputationCard: View {
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                     .disabled(reputation >= 100)
-                    .contentShape(Rectangle())
                 }
             }
             .padding(.vertical, 8)
@@ -308,9 +318,15 @@ struct IndividualReputationRow: View {
                     Button(action: {
                         onValueChanged(max(-100, individual.value - 1))
                     }) {
-                        Image(systemName: "minus")
-                            .font(.caption2)
-                            .fontWeight(.bold)
+                        ZStack {
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 24, height: 24)
+                            
+                            Image(systemName: "minus")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                        }
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
@@ -318,7 +334,6 @@ struct IndividualReputationRow: View {
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                     .disabled(individual.value <= -100)
-                    .contentShape(Rectangle())
                     
                     Text("\(individual.value)")
                         .font(.caption)
@@ -329,9 +344,15 @@ struct IndividualReputationRow: View {
                     Button(action: {
                         onValueChanged(min(100, individual.value + 1))
                     }) {
-                        Image(systemName: "plus")
-                            .font(.caption2)
-                            .fontWeight(.bold)
+                        ZStack {
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 24, height: 24)
+                            
+                            Image(systemName: "plus")
+                                .font(.caption2)
+                                .fontWeight(.bold)
+                        }
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
@@ -339,29 +360,38 @@ struct IndividualReputationRow: View {
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                     .disabled(individual.value >= 100)
-                    .contentShape(Rectangle())
                     
                     Button(action: onEdit) {
-                        Image(systemName: "pencil")
-                            .font(.caption2)
+                        ZStack {
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 24, height: 24)
+                            
+                            Image(systemName: "pencil")
+                                .font(.caption2)
+                        }
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
                     .background(Color(.systemBlue).opacity(0.2))
                     .foregroundColor(.blue)
                     .cornerRadius(4)
-                    .contentShape(Rectangle())
                     
                     Button(action: onDelete) {
-                        Image(systemName: "trash")
-                            .font(.caption2)
+                        ZStack {
+                            Rectangle()
+                                .fill(Color.clear)
+                                .frame(width: 24, height: 24)
+                            
+                            Image(systemName: "trash")
+                                .font(.caption2)
+                        }
                     }
                     .buttonStyle(PlainButtonStyle())
                     .frame(width: 24, height: 24)
                     .background(Color(.systemRed).opacity(0.2))
                     .foregroundColor(.red)
                     .cornerRadius(4)
-                    .contentShape(Rectangle())
                 }
             } else {
                 Text("\(individual.value)")
@@ -428,9 +458,15 @@ struct AddIndividualReputationSheet: View {
                             Button(action: {
                                 reputationValue = max(-100, reputationValue - 1)
                             }) {
-                                Image(systemName: "minus")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
+                                ZStack {
+                                    Rectangle()
+                                        .fill(Color.clear)
+                                        .frame(width: 32, height: 32)
+                                    
+                                    Image(systemName: "minus")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                }
                             }
                             .buttonStyle(PlainButtonStyle())
                             .frame(width: 32, height: 32)
@@ -438,7 +474,7 @@ struct AddIndividualReputationSheet: View {
                             .foregroundColor(.primary)
                             .cornerRadius(6)
                             .disabled(reputationValue <= -100)
-                            .contentShape(Rectangle())
+                            
                             
                             Text("\(reputationValue)")
                                 .font(.headline)
@@ -448,9 +484,15 @@ struct AddIndividualReputationSheet: View {
                             Button(action: {
                                 reputationValue = min(100, reputationValue + 1)
                             }) {
-                                Image(systemName: "plus")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
+                                ZStack {
+                                    Rectangle()
+                                        .fill(Color.clear)
+                                        .frame(width: 32, height: 32)
+                                    
+                                    Image(systemName: "plus")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                }
                             }
                             .buttonStyle(PlainButtonStyle())
                             .frame(width: 32, height: 32)
@@ -458,7 +500,7 @@ struct AddIndividualReputationSheet: View {
                             .foregroundColor(.primary)
                             .cornerRadius(6)
                             .disabled(reputationValue >= 100)
-                            .contentShape(Rectangle())
+                            
                         }
                     }
                 }
@@ -544,9 +586,15 @@ struct EditIndividualReputationSheet: View {
                             Button(action: {
                                 reputationValue = max(-100, reputationValue - 1)
                             }) {
-                                Image(systemName: "minus")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
+                                ZStack {
+                                    Rectangle()
+                                        .fill(Color.clear)
+                                        .frame(width: 32, height: 32)
+                                    
+                                    Image(systemName: "minus")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                }
                             }
                             .buttonStyle(PlainButtonStyle())
                             .frame(width: 32, height: 32)
@@ -554,7 +602,7 @@ struct EditIndividualReputationSheet: View {
                             .foregroundColor(.primary)
                             .cornerRadius(6)
                             .disabled(reputationValue <= -100)
-                            .contentShape(Rectangle())
+                            
                             
                             Text("\(reputationValue)")
                                 .font(.headline)
@@ -564,9 +612,15 @@ struct EditIndividualReputationSheet: View {
                             Button(action: {
                                 reputationValue = min(100, reputationValue + 1)
                             }) {
-                                Image(systemName: "plus")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
+                                ZStack {
+                                    Rectangle()
+                                        .fill(Color.clear)
+                                        .frame(width: 32, height: 32)
+                                    
+                                    Image(systemName: "plus")
+                                        .font(.caption)
+                                        .fontWeight(.bold)
+                                }
                             }
                             .buttonStyle(PlainButtonStyle())
                             .frame(width: 32, height: 32)
@@ -574,7 +628,7 @@ struct EditIndividualReputationSheet: View {
                             .foregroundColor(.primary)
                             .cornerRadius(6)
                             .disabled(reputationValue >= 100)
-                            .contentShape(Rectangle())
+                            
                         }
                     }
                 }
