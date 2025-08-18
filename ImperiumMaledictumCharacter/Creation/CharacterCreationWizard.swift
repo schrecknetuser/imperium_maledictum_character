@@ -882,9 +882,7 @@ struct FactionStage: View {
         // Add faction equipment
         var allEquipment = character.equipmentNames
         for equipment in faction.equipment {
-            if !allEquipment.contains(equipment) {
-                allEquipment.append(equipment)
-            }
+            allEquipment.append(equipment)
         }
         character.equipmentNames = allEquipment
         
@@ -1560,9 +1558,7 @@ struct RoleStage: View {
         
         // Add granted equipment from role
         for equipment in role.equipment {
-            if !allEquipment.contains(equipment) {
-                allEquipment.append(equipment)
-            }
+            allEquipment.append(equipment)
         }
         
         character.equipmentNames = allEquipment
