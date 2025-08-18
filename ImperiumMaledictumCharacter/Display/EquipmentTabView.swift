@@ -13,6 +13,7 @@ struct EquipmentTab: View {
     @Binding var isEditMode: Bool
     @State private var showingAddEquipmentSheet = false
     @State private var showingAddWeaponSheet = false
+    @State private var showingWeaponSelectionPopup = false
     @State private var editingEquipmentState: EditingEquipmentState = .none
     @State private var editingWeaponState: EditingWeaponState = .none
     
@@ -128,56 +129,80 @@ struct EquipmentTab: View {
                     }
                     
                     Section("Weapons") {
-                        ForEach(imperium.weaponList, id: \.name) { weapon in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(weapon.name)
-                                        .font(.body)
-                                    
-                                    // Show weapon stats
-                                    Text("Damage: \(weapon.damage), Range: \(weapon.range), Magazine: \(weapon.magazine)")
+                        let groupedWeapons = Dictionary(grouping: imperium.weaponList) { $0.category }
+                        
+                        ForEach(WeaponCategories.all, id: \.self) { category in
+                            if let weaponsInCategory = groupedWeapons[category], !weaponsInCategory.isEmpty {
+                                // Category header
+                                HStack {
+                                    Text(category)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    Text("(\(weaponsInCategory.count))")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    
-                                    // Show specialization
-                                    Text("Specialization: \(weapon.specialization)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    
-                                    // Show traits, qualities, flaws, and modifications
-                                    let details = buildWeaponDetails(weapon)
-                                    if !details.isEmpty {
-                                        Text(details)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .italic()
-                                    }
-                                    
-                                    // Show other stats
-                                    Text("Encumbrance: \(weapon.encumbrance), Cost: \(weapon.cost), \(weapon.availability)")
-                                        .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }
+                                .padding(.vertical, 4)
                                 
-                                Spacer()
-                                
-                                if isEditMode {
-                                    HStack(spacing: 8) {
-                                        Button(action: {
-                                            editWeapon(weapon)
-                                        }) {
-                                            Image(systemName: "pencil.circle.fill")
-                                                .foregroundColor(.blue)
+                                ForEach(weaponsInCategory, id: \.name) { weapon in
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(weapon.name)
+                                                .font(.body)
+                                            
+                                            // Show weapon stats based on category
+                                            if weapon.category == WeaponCategories.melee {
+                                                Text("Damage: \(weapon.damage)")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            } else {
+                                                Text("Damage: \(weapon.damage), Range: \(weapon.range), Magazine: \(weapon.magazine)")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            // Show specialization
+                                            Text("Specialization: \(weapon.specialization)")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            
+                                            // Show traits, qualities, flaws, and modifications
+                                            let details = buildWeaponDetails(weapon)
+                                            if !details.isEmpty {
+                                                Text(details)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .italic()
+                                            }
+                                            
+                                            // Show other stats
+                                            Text("Encumbrance: \(weapon.encumbrance), Cost: \(weapon.cost), \(weapon.availability)")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
                                         }
-                                        .buttonStyle(PlainButtonStyle())
                                         
-                                        Button(action: {
-                                            removeWeapon(weapon)
-                                        }) {
-                                            Image(systemName: "minus.circle.fill")
-                                                .foregroundColor(.red)
+                                        Spacer()
+                                        
+                                        if isEditMode {
+                                            HStack(spacing: 8) {
+                                                Button(action: {
+                                                    editWeapon(weapon)
+                                                }) {
+                                                    Image(systemName: "pencil.circle.fill")
+                                                        .foregroundColor(.blue)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                                
+                                                Button(action: {
+                                                    removeWeapon(weapon)
+                                                }) {
+                                                    Image(systemName: "minus.circle.fill")
+                                                        .foregroundColor(.red)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                            }
                                         }
-                                        .buttonStyle(PlainButtonStyle())
                                     }
                                 }
                             }
@@ -185,7 +210,7 @@ struct EquipmentTab: View {
                         
                         if isEditMode {
                             Button(action: {
-                                showingAddWeaponSheet = true
+                                showingWeaponSelectionPopup = true
                             }) {
                                 HStack {
                                     Image(systemName: "plus.circle.fill")
@@ -224,6 +249,11 @@ struct EquipmentTab: View {
         .sheet(isPresented: $showingAddWeaponSheet) {
             if let imperium = imperiumCharacter {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true)
+            }
+        }
+        .sheet(isPresented: $showingWeaponSelectionPopup) {
+            if let imperium = imperiumCharacter {
+                WeaponSelectionPopupView(character: imperium, store: store, showingCustomWeaponSheet: $showingAddWeaponSheet)
             }
         }
         .sheet(isPresented: showingEditEquipmentSheet) {
@@ -329,6 +359,7 @@ struct ComprehensiveEquipmentSheet: View {
     @State private var selectedTraits: Set<String> = []
     
     // Weapon-specific properties
+    @State private var category = WeaponCategories.ranged
     @State private var specialization = WeaponSpecializations.none
     @State private var damage = ""
     @State private var range = WeaponRanges.short
@@ -359,6 +390,7 @@ struct ComprehensiveEquipmentSheet: View {
             _selectedFlaws = State(initialValue: Set(equipment.flaws))
             _selectedTraits = State(initialValue: Set(equipment.traits.map { $0.name }))
             // Set default weapon values for consistency
+            _category = State(initialValue: WeaponCategories.ranged)
             _specialization = State(initialValue: WeaponSpecializations.none)
             _damage = State(initialValue: "")
             _range = State(initialValue: WeaponRanges.short)
@@ -369,6 +401,7 @@ struct ComprehensiveEquipmentSheet: View {
             // Editing existing weapon
             _itemName = State(initialValue: weapon.name.isEmpty ? "Unnamed Weapon" : weapon.name)
             _itemDescription = State(initialValue: "") // Weapons don't have descriptions in equipment section
+            _category = State(initialValue: weapon.category.isEmpty ? WeaponCategories.ranged : weapon.category)
             _specialization = State(initialValue: weapon.specialization.isEmpty ? WeaponSpecializations.none : weapon.specialization)
             _damage = State(initialValue: weapon.damage)
             _range = State(initialValue: weapon.range.isEmpty ? WeaponRanges.short : weapon.range)
@@ -392,6 +425,7 @@ struct ComprehensiveEquipmentSheet: View {
             _selectedQualities = State(initialValue: [])
             _selectedFlaws = State(initialValue: [])
             _selectedTraits = State(initialValue: [])
+            _category = State(initialValue: WeaponCategories.ranged)
             _specialization = State(initialValue: WeaponSpecializations.none)
             _damage = State(initialValue: "")
             _range = State(initialValue: WeaponRanges.short)
@@ -412,6 +446,12 @@ struct ComprehensiveEquipmentSheet: View {
                 
                 if isWeapon {
                     Section("Weapon Properties") {
+                        Picker("Category", selection: $category) {
+                            ForEach(WeaponCategories.all, id: \.self) { cat in
+                                Text(cat).tag(cat)
+                            }
+                        }
+                        
                         Picker("Specialization", selection: $specialization) {
                             ForEach(WeaponSpecializations.all, id: \.self) { spec in
                                 Text(spec).tag(spec)
@@ -420,16 +460,18 @@ struct ComprehensiveEquipmentSheet: View {
                         
                         TextField("Damage", text: $damage)
                         
-                        Picker("Range", selection: $range) {
-                            ForEach(WeaponRanges.all, id: \.self) { rangeType in
-                                Text(rangeType).tag(rangeType)
+                        if category != WeaponCategories.melee {
+                            Picker("Range", selection: $range) {
+                                ForEach(WeaponRanges.all, id: \.self) { rangeType in
+                                    Text(rangeType).tag(rangeType)
+                                }
                             }
-                        }
-                        
-                        HStack {
-                            Text("Magazine")
-                            Spacer()
-                            Stepper("\(magazine)", value: $magazine, in: 0...999)
+                            
+                            HStack {
+                                Text("Magazine")
+                                Spacer()
+                                Stepper("\(magazine)", value: $magazine, in: 0...999)
+                            }
                         }
                     }
                 }
@@ -575,6 +617,7 @@ struct ComprehensiveEquipmentSheet: View {
         if isWeapon {
             let weapon = Weapon(
                 name: trimmedName,
+                category: category,
                 specialization: specialization,
                 damage: damage,
                 range: range,
@@ -626,6 +669,174 @@ struct ComprehensiveEquipmentSheet: View {
         
         character.lastModified = Date()
         store.saveChanges()
+        dismiss()
+    }
+}
+
+// MARK: - Weapon Selection Popup
+struct WeaponSelectionPopupView: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    @Binding var showingCustomWeaponSheet: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var selectedCategory: String = WeaponCategories.ranged
+    @State private var selectionMode: SelectionMode = .category
+    
+    enum SelectionMode {
+        case category
+        case weapon
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if selectionMode == .category {
+                    categorySelectionView
+                } else {
+                    weaponSelectionView
+                }
+            }
+            .navigationTitle("Add Weapon")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add Custom") {
+                        dismiss()
+                        showingCustomWeaponSheet = true
+                    }
+                }
+            }
+        }
+    }
+    
+    private var categorySelectionView: some View {
+        List {
+            Section {
+                ForEach(WeaponCategories.all, id: \.self) { category in
+                    let weaponsInCategory = WeaponTemplateDefinitions.getWeaponsByCategory(category)
+                    
+                    Button(action: {
+                        selectedCategory = category
+                        selectionMode = .weapon
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(category)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text("\(weaponsInCategory.count) weapons available")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            } header: {
+                Text("Select Weapon Category")
+            } footer: {
+                Text("Choose a category to see available weapon templates.")
+            }
+        }
+    }
+    
+    private var weaponSelectionView: some View {
+        List {
+            Section {
+                Button(action: {
+                    selectionMode = .category
+                }) {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.blue)
+                        Text("Back to Categories")
+                            .foregroundColor(.blue)
+                        Spacer()
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            
+            Section {
+                let weaponsInCategory = WeaponTemplateDefinitions.getWeaponsByCategory(selectedCategory)
+                
+                ForEach(weaponsInCategory, id: \.name) { template in
+                    Button(action: {
+                        addWeaponFromTemplate(template)
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(template.name)
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                
+                                HStack {
+                                    Text("Damage: \(template.damage)")
+                                    
+                                    if template.category != WeaponCategories.melee {
+                                        Text("Range: \(template.range)")
+                                        Text("Mag: \(template.magazine)")
+                                    }
+                                }
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                
+                                if !template.traits.isEmpty {
+                                    Text("Traits: \(template.traits.joined(separator: ", "))")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                }
+                                
+                                HStack {
+                                    Text("Cost: \(template.cost)")
+                                    Text("Encumbrance: \(template.encumbrance)")
+                                    Text(template.availability)
+                                }
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            } header: {
+                Text("\(selectedCategory) Weapons")
+            } footer: {
+                Text("Tap a weapon to add it to your character, or use 'Add Custom' for a custom weapon.")
+            }
+        }
+    }
+    
+    private func addWeaponFromTemplate(_ template: WeaponTemplate) {
+        let weapon = template.createWeapon()
+        
+        var weaponList = character.weaponList
+        weaponList.append(weapon)
+        character.weaponList = weaponList
+        character.lastModified = Date()
+        store.saveChanges()
+        
         dismiss()
     }
 }

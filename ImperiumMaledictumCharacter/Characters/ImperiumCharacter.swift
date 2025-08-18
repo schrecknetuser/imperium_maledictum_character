@@ -637,6 +637,11 @@ class ImperiumCharacter: BaseCharacter {
             // Keep old data for backward compatibility
         }
         
+        // Migrate categories for existing weapons
+        for weapon in weaponList {
+            weapon.migrateCategory()
+        }
+        
         lastModified = Date()
     }
     
@@ -704,7 +709,13 @@ class ImperiumCharacter: BaseCharacter {
         let baseName = parseBaseName(fullName)
         let parenthesesContent = parseParenthesesContent(fullName)
         
-        let weapon = Weapon(name: baseName)
+        // Try to get weapon from template first
+        let weapon: Weapon
+        if let template = WeaponTemplateDefinitions.getTemplate(for: baseName) {
+            weapon = template.createWeapon()
+        } else {
+            weapon = Weapon(name: baseName)
+        }
         
         // Parse modifications, qualities, flaws, and traits from parentheses
         for content in parenthesesContent {
