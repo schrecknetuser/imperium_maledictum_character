@@ -196,21 +196,14 @@ struct FactionReputationCard: View {
                     Button(action: {
                         onValueChanged(max(-100, reputation - 1))
                     }) {
-                        ZStack {
-                            Rectangle()
-                                .fill(Color.clear)
-                                .frame(width: 24, height: 24)
-                            
-                            Image(systemName: "minus")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                        }
+                        Image(systemName: "minus")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                            .frame(width: 24, height: 24)
+                            .background(Color(.systemGray5))
+                            .cornerRadius(4)
                     }
-                    .buttonStyle(PlainButtonStyle())
-                    .frame(width: 24, height: 24)
-                    .background(Color(.systemGray5))
-                    .foregroundColor(.primary)
-                    .cornerRadius(4)
                     .disabled(reputation <= -100)
                     
                     Text("\(reputation)")
@@ -222,21 +215,14 @@ struct FactionReputationCard: View {
                     Button(action: {
                         onValueChanged(min(100, reputation + 1))
                     }) {
-                        ZStack {
-                            Rectangle()
-                                .fill(Color.clear)
-                                .frame(width: 24, height: 24)
-                            
-                            Image(systemName: "plus")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                        }
+                        Image(systemName: "plus")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                            .frame(width: 24, height: 24)
+                            .background(Color(.systemGray5))
+                            .cornerRadius(4)
                     }
-                    .buttonStyle(PlainButtonStyle())
-                    .frame(width: 24, height: 24)
-                    .background(Color(.systemGray5))
-                    .foregroundColor(.primary)
-                    .cornerRadius(4)
                     .disabled(reputation >= 100)
                 }
             }
@@ -318,21 +304,14 @@ struct IndividualReputationRow: View {
                     Button(action: {
                         onValueChanged(max(-100, individual.value - 1))
                     }) {
-                        ZStack {
-                            Rectangle()
-                                .fill(Color.clear)
-                                .frame(width: 24, height: 24)
-                            
-                            Image(systemName: "minus")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                        }
+                        Image(systemName: "minus")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                            .frame(width: 24, height: 24)
+                            .background(Color(.systemGray5))
+                            .cornerRadius(4)
                     }
-                    .buttonStyle(PlainButtonStyle())
-                    .frame(width: 24, height: 24)
-                    .background(Color(.systemGray5))
-                    .foregroundColor(.primary)
-                    .cornerRadius(4)
                     .disabled(individual.value <= -100)
                     
                     Text("\(individual.value)")
@@ -344,54 +323,33 @@ struct IndividualReputationRow: View {
                     Button(action: {
                         onValueChanged(min(100, individual.value + 1))
                     }) {
-                        ZStack {
-                            Rectangle()
-                                .fill(Color.clear)
-                                .frame(width: 24, height: 24)
-                            
-                            Image(systemName: "plus")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                        }
+                        Image(systemName: "plus")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                            .frame(width: 24, height: 24)
+                            .background(Color(.systemGray5))
+                            .cornerRadius(4)
                     }
-                    .buttonStyle(PlainButtonStyle())
-                    .frame(width: 24, height: 24)
-                    .background(Color(.systemGray5))
-                    .foregroundColor(.primary)
-                    .cornerRadius(4)
                     .disabled(individual.value >= 100)
                     
                     Button(action: onEdit) {
-                        ZStack {
-                            Rectangle()
-                                .fill(Color.clear)
-                                .frame(width: 24, height: 24)
-                            
-                            Image(systemName: "pencil")
-                                .font(.caption2)
-                        }
+                        Image(systemName: "pencil")
+                            .font(.caption2)
+                            .foregroundColor(.blue)
+                            .frame(width: 24, height: 24)
+                            .background(Color(.systemBlue).opacity(0.2))
+                            .cornerRadius(4)
                     }
-                    .buttonStyle(PlainButtonStyle())
-                    .frame(width: 24, height: 24)
-                    .background(Color(.systemBlue).opacity(0.2))
-                    .foregroundColor(.blue)
-                    .cornerRadius(4)
                     
                     Button(action: onDelete) {
-                        ZStack {
-                            Rectangle()
-                                .fill(Color.clear)
-                                .frame(width: 24, height: 24)
-                            
-                            Image(systemName: "trash")
-                                .font(.caption2)
-                        }
+                        Image(systemName: "trash")
+                            .font(.caption2)
+                            .foregroundColor(.red)
+                            .frame(width: 24, height: 24)
+                            .background(Color(.systemRed).opacity(0.2))
+                            .cornerRadius(4)
                     }
-                    .buttonStyle(PlainButtonStyle())
-                    .frame(width: 24, height: 24)
-                    .background(Color(.systemRed).opacity(0.2))
-                    .foregroundColor(.red)
-                    .cornerRadius(4)
                 }
             } else {
                 Text("\(individual.value)")
@@ -458,21 +416,14 @@ struct AddIndividualReputationSheet: View {
                             Button(action: {
                                 reputationValue = max(-100, reputationValue - 1)
                             }) {
-                                ZStack {
-                                    Rectangle()
-                                        .fill(Color.clear)
-                                        .frame(width: 32, height: 32)
-                                    
-                                    Image(systemName: "minus")
-                                        .font(.caption)
-                                        .fontWeight(.bold)
-                                }
+                                Image(systemName: "minus")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                    .frame(width: 32, height: 32)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(6)
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .frame(width: 32, height: 32)
-                            .background(Color(.systemGray5))
-                            .foregroundColor(.primary)
-                            .cornerRadius(6)
                             .disabled(reputationValue <= -100)
                             
                             
@@ -484,21 +435,14 @@ struct AddIndividualReputationSheet: View {
                             Button(action: {
                                 reputationValue = min(100, reputationValue + 1)
                             }) {
-                                ZStack {
-                                    Rectangle()
-                                        .fill(Color.clear)
-                                        .frame(width: 32, height: 32)
-                                    
-                                    Image(systemName: "plus")
-                                        .font(.caption)
-                                        .fontWeight(.bold)
-                                }
+                                Image(systemName: "plus")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                    .frame(width: 32, height: 32)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(6)
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .frame(width: 32, height: 32)
-                            .background(Color(.systemGray5))
-                            .foregroundColor(.primary)
-                            .cornerRadius(6)
                             .disabled(reputationValue >= 100)
                             
                         }
@@ -586,21 +530,14 @@ struct EditIndividualReputationSheet: View {
                             Button(action: {
                                 reputationValue = max(-100, reputationValue - 1)
                             }) {
-                                ZStack {
-                                    Rectangle()
-                                        .fill(Color.clear)
-                                        .frame(width: 32, height: 32)
-                                    
-                                    Image(systemName: "minus")
-                                        .font(.caption)
-                                        .fontWeight(.bold)
-                                }
+                                Image(systemName: "minus")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                    .frame(width: 32, height: 32)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(6)
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .frame(width: 32, height: 32)
-                            .background(Color(.systemGray5))
-                            .foregroundColor(.primary)
-                            .cornerRadius(6)
                             .disabled(reputationValue <= -100)
                             
                             
@@ -612,21 +549,14 @@ struct EditIndividualReputationSheet: View {
                             Button(action: {
                                 reputationValue = min(100, reputationValue + 1)
                             }) {
-                                ZStack {
-                                    Rectangle()
-                                        .fill(Color.clear)
-                                        .frame(width: 32, height: 32)
-                                    
-                                    Image(systemName: "plus")
-                                        .font(.caption)
-                                        .fontWeight(.bold)
-                                }
+                                Image(systemName: "plus")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                    .frame(width: 32, height: 32)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(6)
                             }
-                            .buttonStyle(PlainButtonStyle())
-                            .frame(width: 32, height: 32)
-                            .background(Color(.systemGray5))
-                            .foregroundColor(.primary)
-                            .cornerRadius(6)
                             .disabled(reputationValue >= 100)
                             
                         }
