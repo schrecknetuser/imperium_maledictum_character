@@ -1400,10 +1400,8 @@ struct EquipmentTab: View {
             }
         }
         .sheet(isPresented: $showingEditEquipmentSheet) {
-            if let imperium = imperiumCharacter {
-                // Always provide a valid Equipment object to prevent blank screens
-                let equipmentToEdit = editingEquipment ?? Equipment(name: "New Equipment", equipmentDescription: "", encumbrance: 0, cost: 0, availability: AvailabilityLevels.common)
-                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, editingEquipment: equipmentToEdit)
+            if let imperium = imperiumCharacter, let equipment = editingEquipment {
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, editingEquipment: equipment)
                     .onDisappear {
                         // Clear editing state when sheet is dismissed
                         editingEquipment = nil
@@ -1411,10 +1409,8 @@ struct EquipmentTab: View {
             }
         }
         .sheet(isPresented: $showingEditWeaponSheet) {
-            if let imperium = imperiumCharacter {
-                // Always provide a valid Weapon object to prevent blank screens
-                let weaponToEdit = editingWeapon ?? Weapon(name: "New Weapon", specialization: WeaponSpecializations.none, damage: "", range: WeaponRanges.short, magazine: 0, encumbrance: 0, availability: AvailabilityLevels.common, cost: 0)
-                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weaponToEdit)
+            if let imperium = imperiumCharacter, let weapon = editingWeapon {
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon)
                     .onDisappear {
                         // Clear editing state when sheet is dismissed
                         editingWeapon = nil
@@ -1468,11 +1464,9 @@ struct EquipmentTab: View {
         showingEditWeaponSheet = false
         editingWeapon = nil
         
-        // Use DispatchQueue to ensure state updates are properly sequenced
-        DispatchQueue.main.async {
-            self.editingEquipment = equipment
-            self.showingEditEquipmentSheet = true
-        }
+        // Set the editing equipment first, then show the sheet
+        editingEquipment = equipment
+        showingEditEquipmentSheet = true
     }
     
     private func editWeapon(_ weapon: Weapon) {
@@ -1480,11 +1474,9 @@ struct EquipmentTab: View {
         showingEditEquipmentSheet = false
         editingEquipment = nil
         
-        // Use DispatchQueue to ensure state updates are properly sequenced
-        DispatchQueue.main.async {
-            self.editingWeapon = weapon
-            self.showingEditWeaponSheet = true
-        }
+        // Set the editing weapon first, then show the sheet
+        editingWeapon = weapon
+        showingEditWeaponSheet = true
     }
     
     private func removeEquipment(_ equipment: Equipment) {
