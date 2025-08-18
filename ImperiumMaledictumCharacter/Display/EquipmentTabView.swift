@@ -474,35 +474,6 @@ struct ComprehensiveEquipmentSheet: View {
                             }
                         }
                     }
-                    
-                    Section("Weapon Presets") {
-                        let categoryWeapons = WeaponTemplateDefinitions.getWeaponsByCategory(category)
-                        if !categoryWeapons.isEmpty {
-                            ForEach(categoryWeapons, id: \.name) { template in
-                                Button(action: {
-                                    loadWeaponTemplate(template)
-                                }) {
-                                    HStack {
-                                        VStack(alignment: .leading) {
-                                            Text(template.name)
-                                                .foregroundColor(.primary)
-                                            Text("Damage: \(template.damage), Cost: \(template.cost)")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                        Spacer()
-                                        Image(systemName: "arrow.down.circle")
-                                            .foregroundColor(.blue)
-                                    }
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                            }
-                        } else {
-                            Text("No presets available for this category")
-                                .foregroundColor(.secondary)
-                                .italic()
-                        }
-                    }
                 }
                 
                 Section("Physical Properties") {
@@ -700,24 +671,6 @@ struct ComprehensiveEquipmentSheet: View {
         store.saveChanges()
         dismiss()
     }
-    
-    private func loadWeaponTemplate(_ template: WeaponTemplate) {
-        itemName = template.name
-        category = template.category
-        specialization = template.specialization
-        damage = template.damage
-        range = template.range
-        magazine = template.magazine
-        encumbrance = template.encumbrance
-        cost = template.cost
-        availability = template.availability
-        selectedWeaponTraits = Set(template.traits)
-        
-        // Clear other selections when loading template
-        selectedQualities = []
-        selectedFlaws = []
-        selectedModifications = []
-    }
 }
 
 // MARK: - Weapon Selection Popup
@@ -753,12 +706,10 @@ struct WeaponSelectionPopupView: View {
                     }
                 }
                 
-                if selectionMode == .weapon {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Add Custom") {
-                            dismiss()
-                            showingCustomWeaponSheet = true
-                        }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add Custom") {
+                        dismiss()
+                        showingCustomWeaponSheet = true
                     }
                 }
             }
