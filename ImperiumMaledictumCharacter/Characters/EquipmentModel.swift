@@ -261,7 +261,7 @@ struct EquipmentTemplateDefinitions {
             availability: AvailabilityLevels.common
         ),
         EquipmentTemplate(
-            name: "Photo-Visors/Contacts",
+            name: "Photo-Visors",
             category: EquipmentCategories.clothingPersonalGear,
             description: "Worn either as covering over both eyes or directly on the cornea (where they might be less obvious to others), these devices amplify ambient light to a degree similar to normal illumination.\nWhile wearing Photo-Visors or Photo-Contacts, you ignore penalties from Zones with the Poorly Lit and Dark Environmental Traits, and gain Advantage on Tests to resist effects that cause the Blinded Condition.",
             encumbrance: 0,
@@ -277,7 +277,7 @@ struct EquipmentTemplateDefinitions {
             availability: AvailabilityLevels.scarce
         ),
         EquipmentTemplate(
-            name: "Respirator/Gas Mask",
+            name: "Respirator",
             category: EquipmentCategories.clothingPersonalGear,
             description: "A basic item for operating for extended durations in toxic atmospheres, respirators and gas masks cover the majority of the face and offer much greater protection than Filtration Plugs, at the cost of being bulky and obscuring the senses.\nWhile wearing a Respirator, you automatically pass any Tests to resist the effects of airborne pathogens but suffer Disadvantage on Awareness (Sight) Tests.",
             encumbrance: 0,
@@ -313,7 +313,7 @@ struct EquipmentTemplateDefinitions {
     // MARK: - Tools
     static let tools: [EquipmentTemplate] = [
         EquipmentTemplate(
-            name: "Auspex/Scanner",
+            name: "Auspex",
             category: EquipmentCategories.tools,
             description: "A standard tool of many Imperial agents and warriors, these sensory devices can detect motion, energy emissions, light outside of Human vision, signs of life, and more. They are generally easy to use and invaluable when scouting unfamiliar terrain.\nAn Auspex or Scanner can reveal energy, life signs, movement, and other data within Medium Range. The GM may call for a Tech Test to detect specific phenomena or overcome interference, with the GM making the final determination of Test Difficulty based on the distance to and strength of the source.",
             encumbrance: 1,
@@ -417,7 +417,7 @@ struct EquipmentTemplateDefinitions {
             availability: AvailabilityLevels.rare
         ),
         EquipmentTemplate(
-            name: "Glow-Globe/Stablight",
+            name: "Glow-Globe",
             category: EquipmentCategories.tools,
             description: "The dark spaces within the Macharian Sector demand purifying light, both figuratively and literally. Stablights are hand held and dependable, having illuminated caverns and voidship underdecks for millennia, while glow globes are usually mounted in ceilings or along walls.\nUsing this device removes the Poorly Lit and Dark Traits from your Zone. The device can shine for 5 hours and recharges after 2 hours of non-use, or almost immediately when connected to a standard Imperial power source.",
             encumbrance: 0,
@@ -489,7 +489,7 @@ struct EquipmentTemplateDefinitions {
             availability: AvailabilityLevels.common
         ),
         EquipmentTemplate(
-            name: "Micro-Bead/Vox Bead",
+            name: "Vox Bead",
             category: EquipmentCategories.tools,
             description: "Designed to fit inside the user's ear, these communication tools let someone effortlessly talk to and hear others on the same vox channel. As their range is far beyond shouting, and work in situations where shouting would call dangerous attention, they are almost essential for mission outfitting.\nThis item allows the wearer to communicate with other users on the same channel within a mile, though dense metallic obstructions and violent weather can lessen or disrupt the ability.",
             encumbrance: 0,
