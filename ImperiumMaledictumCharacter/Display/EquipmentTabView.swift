@@ -128,66 +128,80 @@ struct EquipmentTab: View {
                     }
                     
                     Section("Weapons") {
-                        ForEach(imperium.weaponList, id: \.name) { weapon in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(weapon.name)
-                                        .font(.body)
-                                    
-                                    // Show weapon stats
-                                    Text("Category: \(weapon.category)")
+                        let groupedWeapons = Dictionary(grouping: imperium.weaponList) { $0.category }
+                        
+                        ForEach(WeaponCategories.all, id: \.self) { category in
+                            if let weaponsInCategory = groupedWeapons[category], !weaponsInCategory.isEmpty {
+                                // Category header
+                                HStack {
+                                    Text(category)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    Text("(\(weaponsInCategory.count))")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    
-                                    if weapon.category == WeaponCategories.melee {
-                                        Text("Damage: \(weapon.damage)")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    } else {
-                                        Text("Damage: \(weapon.damage), Range: \(weapon.range), Magazine: \(weapon.magazine)")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    // Show specialization
-                                    Text("Specialization: \(weapon.specialization)")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                    
-                                    // Show traits, qualities, flaws, and modifications
-                                    let details = buildWeaponDetails(weapon)
-                                    if !details.isEmpty {
-                                        Text(details)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .italic()
-                                    }
-                                    
-                                    // Show other stats
-                                    Text("Encumbrance: \(weapon.encumbrance), Cost: \(weapon.cost), \(weapon.availability)")
-                                        .font(.caption2)
                                         .foregroundColor(.secondary)
                                 }
+                                .padding(.vertical, 4)
                                 
-                                Spacer()
-                                
-                                if isEditMode {
-                                    HStack(spacing: 8) {
-                                        Button(action: {
-                                            editWeapon(weapon)
-                                        }) {
-                                            Image(systemName: "pencil.circle.fill")
-                                                .foregroundColor(.blue)
+                                ForEach(weaponsInCategory, id: \.name) { weapon in
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(weapon.name)
+                                                .font(.body)
+                                            
+                                            // Show weapon stats based on category
+                                            if weapon.category == WeaponCategories.melee {
+                                                Text("Damage: \(weapon.damage)")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            } else {
+                                                Text("Damage: \(weapon.damage), Range: \(weapon.range), Magazine: \(weapon.magazine)")
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            // Show specialization
+                                            Text("Specialization: \(weapon.specialization)")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            
+                                            // Show traits, qualities, flaws, and modifications
+                                            let details = buildWeaponDetails(weapon)
+                                            if !details.isEmpty {
+                                                Text(details)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .italic()
+                                            }
+                                            
+                                            // Show other stats
+                                            Text("Encumbrance: \(weapon.encumbrance), Cost: \(weapon.cost), \(weapon.availability)")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
                                         }
-                                        .buttonStyle(PlainButtonStyle())
                                         
-                                        Button(action: {
-                                            removeWeapon(weapon)
-                                        }) {
-                                            Image(systemName: "minus.circle.fill")
-                                                .foregroundColor(.red)
+                                        Spacer()
+                                        
+                                        if isEditMode {
+                                            HStack(spacing: 8) {
+                                                Button(action: {
+                                                    editWeapon(weapon)
+                                                }) {
+                                                    Image(systemName: "pencil.circle.fill")
+                                                        .foregroundColor(.blue)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                                
+                                                Button(action: {
+                                                    removeWeapon(weapon)
+                                                }) {
+                                                    Image(systemName: "minus.circle.fill")
+                                                        .foregroundColor(.red)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                            }
                                         }
-                                        .buttonStyle(PlainButtonStyle())
                                     }
                                 }
                             }

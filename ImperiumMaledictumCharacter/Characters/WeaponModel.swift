@@ -97,6 +97,28 @@ class Weapon: Codable {
         self.qualitiesData = ""
         self.flawsData = ""
     }
+    
+    // Migration method to handle existing weapons without category
+    func migrateCategory() {
+        if category.isEmpty {
+            // Try to determine category from weapon name or specialization
+            let name = self.name.lowercased()
+            if name.contains("grenade") || name.contains("explosive") || name.contains("mine") {
+                category = WeaponCategories.grenades
+            } else if specialization == WeaponSpecializations.pistol || 
+                      specialization == WeaponSpecializations.longGun || 
+                      specialization == WeaponSpecializations.ordnance {
+                category = WeaponCategories.ranged
+            } else if specialization == WeaponSpecializations.oneHanded || 
+                      specialization == WeaponSpecializations.twoHanded || 
+                      specialization == WeaponSpecializations.brawling {
+                category = WeaponCategories.melee
+            } else {
+                // Default to ranged for unknown
+                category = WeaponCategories.ranged
+            }
+        }
+    }
 }
 
 struct WeaponTrait: Codable {

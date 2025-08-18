@@ -637,6 +637,11 @@ class ImperiumCharacter: BaseCharacter {
             // Keep old data for backward compatibility
         }
         
+        // Migrate categories for existing weapons
+        for weapon in weaponList {
+            weapon.migrateCategory()
+        }
+        
         lastModified = Date()
     }
     
