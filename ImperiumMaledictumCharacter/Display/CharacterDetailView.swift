@@ -1207,19 +1207,56 @@ struct AddTalentSheet: View {
 
 // MARK: - Equipment Tab
 
+enum EditingEquipmentState {
+    case none
+    case editing(Equipment)
+}
+
+enum EditingWeaponState {
+    case none
+    case editing(Weapon)
+}
+
 struct EquipmentTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
     @Binding var isEditMode: Bool
     @State private var showingAddEquipmentSheet = false
     @State private var showingAddWeaponSheet = false
-    @State private var showingEditEquipmentSheet = false
-    @State private var showingEditWeaponSheet = false
-    @State private var editingEquipment: Equipment?
-    @State private var editingWeapon: Weapon?
+    @State private var editingEquipmentState: EditingEquipmentState = .none
+    @State private var editingWeaponState: EditingWeaponState = .none
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
+    }
+    
+    // Computed properties for sheet presentation
+    private var showingEditEquipmentSheet: Binding<Bool> {
+        Binding(
+            get: { 
+                if case .editing = editingEquipmentState { return true }
+                return false
+            },
+            set: { isPresented in
+                if !isPresented {
+                    editingEquipmentState = .none
+                }
+            }
+        )
+    }
+    
+    private var showingEditWeaponSheet: Binding<Bool> {
+        Binding(
+            get: { 
+                if case .editing = editingWeaponState { return true }
+                return false
+            },
+            set: { isPresented in
+                if !isPresented {
+                    editingWeaponState = .none
+                }
+            }
+        )
     }
     
     var body: some View {
@@ -1399,22 +1436,14 @@ struct EquipmentTab: View {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true)
             }
         }
-        .sheet(isPresented: $showingEditEquipmentSheet) {
-            if let imperium = imperiumCharacter, let equipment = editingEquipment {
+        .sheet(isPresented: showingEditEquipmentSheet) {
+            if let imperium = imperiumCharacter, case .editing(let equipment) = editingEquipmentState {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, editingEquipment: equipment)
-                    .onDisappear {
-                        // Clear editing state when sheet is dismissed
-                        editingEquipment = nil
-                    }
             }
         }
-        .sheet(isPresented: $showingEditWeaponSheet) {
-            if let imperium = imperiumCharacter, let weapon = editingWeapon {
+        .sheet(isPresented: showingEditWeaponSheet) {
+            if let imperium = imperiumCharacter, case .editing(let weapon) = editingWeaponState {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon)
-                    .onDisappear {
-                        // Clear editing state when sheet is dismissed
-                        editingWeapon = nil
-                    }
             }
         }
     }
@@ -1460,23 +1489,19 @@ struct EquipmentTab: View {
     }
     
     private func editEquipment(_ equipment: Equipment) {
-        // Ensure we close any other sheets and clear conflicting state first
-        showingEditWeaponSheet = false
-        editingWeapon = nil
+        // Clear any other editing state first
+        editingWeaponState = .none
         
-        // Set the editing equipment first, then show the sheet
-        editingEquipment = equipment
-        showingEditEquipmentSheet = true
+        // Set the editing equipment atomically
+        editingEquipmentState = .editing(equipment)
     }
     
     private func editWeapon(_ weapon: Weapon) {
-        // Ensure we close any other sheets and clear conflicting state first
-        showingEditEquipmentSheet = false
-        editingEquipment = nil
+        // Clear any other editing state first
+        editingEquipmentState = .none
         
-        // Set the editing weapon first, then show the sheet
-        editingWeapon = weapon
-        showingEditWeaponSheet = true
+        // Set the editing weapon atomically
+        editingWeaponState = .editing(weapon)
     }
     
     private func removeEquipment(_ equipment: Equipment) {
