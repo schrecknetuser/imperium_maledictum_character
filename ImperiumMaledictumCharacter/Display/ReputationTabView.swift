@@ -183,38 +183,39 @@ struct FactionReputationCard: View {
     let onValueChanged: (Int) -> Void
     
     var body: some View {
-        HStack(spacing: 4) {
-            Text(faction)
-                .font(.caption)
-                .fontWeight(.medium)
-                .multilineTextAlignment(.leading)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            Spacer()
-            
-            if isEditMode {
-                HStack(spacing: 4) {
+        if isEditMode {
+            // Use vertical layout in edit mode for better readability
+            VStack(spacing: 6) {
+                Text(faction)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
+                    .frame(maxWidth: .infinity)
+                
+                HStack(spacing: 6) {
                     Button(action: {
                         onValueChanged(max(-100, reputation - 1))
                     }) {
                         Image(systemName: "minus")
                             .font(.caption2)
                             .fontWeight(.bold)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .frame(width: 20, height: 20)
+                    .frame(width: 24, height: 24)
                     .background(Color(.systemGray5))
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                     .disabled(reputation <= -100)
+                    .contentShape(Rectangle())
                     
                     Text("\(reputation)")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(reputationColor(reputation))
-                        .frame(minWidth: 25)
+                        .frame(minWidth: 30)
                     
                     Button(action: {
                         onValueChanged(min(100, reputation + 1))
@@ -222,25 +223,44 @@ struct FactionReputationCard: View {
                         Image(systemName: "plus")
                             .font(.caption2)
                             .fontWeight(.bold)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .frame(width: 20, height: 20)
+                    .frame(width: 24, height: 24)
                     .background(Color(.systemGray5))
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                     .disabled(reputation >= 100)
+                    .contentShape(Rectangle())
                 }
-            } else {
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 8)
+            .background(Color(.systemGray6))
+            .cornerRadius(8)
+        } else {
+            // Use horizontal layout in view mode for compactness
+            HStack(spacing: 4) {
+                Text(faction)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Spacer()
+                
                 Text("\(reputation)")
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundColor(reputationColor(reputation))
             }
+            .padding(.vertical, 6)
+            .padding(.horizontal, 8)
+            .background(Color(.systemGray6))
+            .cornerRadius(8)
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 8)
-        .background(Color(.systemGray6))
-        .cornerRadius(8)
     }
     
     private func reputationColor(_ value: Int) -> Color {
@@ -295,19 +315,21 @@ struct IndividualReputationRow: View {
                         Image(systemName: "minus")
                             .font(.caption2)
                             .fontWeight(.bold)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .frame(width: 20, height: 20)
+                    .frame(width: 24, height: 24)
                     .background(Color(.systemGray5))
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                     .disabled(individual.value <= -100)
+                    .contentShape(Rectangle())
                     
                     Text("\(individual.value)")
                         .font(.caption)
                         .fontWeight(.bold)
                         .foregroundColor(reputationColor(individual.value))
-                        .frame(minWidth: 25)
+                        .frame(minWidth: 30)
                     
                     Button(action: {
                         onValueChanged(min(100, individual.value + 1))
@@ -315,33 +337,39 @@ struct IndividualReputationRow: View {
                         Image(systemName: "plus")
                             .font(.caption2)
                             .fontWeight(.bold)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .frame(width: 20, height: 20)
+                    .frame(width: 24, height: 24)
                     .background(Color(.systemGray5))
                     .foregroundColor(.primary)
                     .cornerRadius(4)
                     .disabled(individual.value >= 100)
+                    .contentShape(Rectangle())
                     
                     Button(action: onEdit) {
                         Image(systemName: "pencil")
                             .font(.caption2)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .frame(width: 20, height: 20)
+                    .frame(width: 24, height: 24)
                     .background(Color(.systemBlue).opacity(0.2))
                     .foregroundColor(.blue)
                     .cornerRadius(4)
+                    .contentShape(Rectangle())
                     
                     Button(action: onDelete) {
                         Image(systemName: "trash")
                             .font(.caption2)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .frame(width: 20, height: 20)
+                    .frame(width: 24, height: 24)
                     .background(Color(.systemRed).opacity(0.2))
                     .foregroundColor(.red)
                     .cornerRadius(4)
+                    .contentShape(Rectangle())
                 }
             } else {
                 Text("\(individual.value)")
@@ -411,18 +439,20 @@ struct AddIndividualReputationSheet: View {
                                 Image(systemName: "minus")
                                     .font(.caption)
                                     .fontWeight(.bold)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                             }
                             .buttonStyle(PlainButtonStyle())
-                            .frame(width: 28, height: 28)
+                            .frame(width: 32, height: 32)
                             .background(Color(.systemGray5))
                             .foregroundColor(.primary)
                             .cornerRadius(6)
                             .disabled(reputationValue <= -100)
+                            .contentShape(Rectangle())
                             
                             Text("\(reputationValue)")
                                 .font(.headline)
                                 .fontWeight(.bold)
-                                .frame(minWidth: 40)
+                                .frame(minWidth: 50)
                             
                             Button(action: {
                                 reputationValue = min(100, reputationValue + 1)
@@ -430,13 +460,15 @@ struct AddIndividualReputationSheet: View {
                                 Image(systemName: "plus")
                                     .font(.caption)
                                     .fontWeight(.bold)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                             }
                             .buttonStyle(PlainButtonStyle())
-                            .frame(width: 28, height: 28)
+                            .frame(width: 32, height: 32)
                             .background(Color(.systemGray5))
                             .foregroundColor(.primary)
                             .cornerRadius(6)
                             .disabled(reputationValue >= 100)
+                            .contentShape(Rectangle())
                         }
                     }
                 }
@@ -525,18 +557,20 @@ struct EditIndividualReputationSheet: View {
                                 Image(systemName: "minus")
                                     .font(.caption)
                                     .fontWeight(.bold)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                             }
                             .buttonStyle(PlainButtonStyle())
-                            .frame(width: 28, height: 28)
+                            .frame(width: 32, height: 32)
                             .background(Color(.systemGray5))
                             .foregroundColor(.primary)
                             .cornerRadius(6)
                             .disabled(reputationValue <= -100)
+                            .contentShape(Rectangle())
                             
                             Text("\(reputationValue)")
                                 .font(.headline)
                                 .fontWeight(.bold)
-                                .frame(minWidth: 40)
+                                .frame(minWidth: 50)
                             
                             Button(action: {
                                 reputationValue = min(100, reputationValue + 1)
@@ -544,13 +578,16 @@ struct EditIndividualReputationSheet: View {
                                 Image(systemName: "plus")
                                     .font(.caption)
                                     .fontWeight(.bold)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                             }
                             .buttonStyle(PlainButtonStyle())
-                            .frame(width: 28, height: 28)
+                            .frame(width: 32, height: 32)
                             .background(Color(.systemGray5))
                             .foregroundColor(.primary)
                             .cornerRadius(6)
                             .disabled(reputationValue >= 100)
+                            .contentShape(Rectangle())
+                        }
                         }
                     }
                 }
