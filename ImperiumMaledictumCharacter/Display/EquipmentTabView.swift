@@ -56,52 +56,73 @@ struct EquipmentTab: View {
             List {
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
-                        ForEach(imperium.equipmentList, id: \.name) { equipment in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(equipment.name)
-                                        .font(.body)
-                                    
-                                    if !equipment.equipmentDescription.isEmpty {
-                                        Text(equipment.equipmentDescription)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    // Show traits, qualities, and flaws
-                                    let details = buildEquipmentDetails(equipment)
-                                    if !details.isEmpty {
-                                        Text(details)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .italic()
-                                    }
-                                    
-                                    // Show stats
-                                    Text("Encumbrance: \(equipment.encumbrance), Cost: \(equipment.cost), \(equipment.availability)")
-                                        .font(.caption2)
+                        let groupedEquipment = Dictionary(grouping: imperium.equipmentList) { equipment in
+                            EquipmentTemplateDefinitions.getCategoryForEquipment(equipment.name)
+                        }
+                        
+                        ForEach(EquipmentCategories.all + ["Other"], id: \.self) { category in
+                            if let equipmentInCategory = groupedEquipment[category], !equipmentInCategory.isEmpty {
+                                // Category header
+                                HStack {
+                                    Text(category)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    Text("(\(equipmentInCategory.count))")
+                                        .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
+                                .padding(.vertical, 4)
                                 
-                                Spacer()
-                                
-                                if isEditMode {
-                                    HStack(spacing: 8) {
-                                        Button(action: {
-                                            editEquipment(equipment)
-                                        }) {
-                                            Image(systemName: "pencil.circle.fill")
-                                                .foregroundColor(.blue)
+                                ForEach(equipmentInCategory, id: \.name) { equipment in
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(equipment.name)
+                                                .font(.body)
+                                            
+                                            if !equipment.equipmentDescription.isEmpty {
+                                                Text(equipment.equipmentDescription)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .lineLimit(3)
+                                            }
+                                            
+                                            // Show traits, qualities, and flaws
+                                            let details = buildEquipmentDetails(equipment)
+                                            if !details.isEmpty {
+                                                Text(details)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .italic()
+                                            }
+                                            
+                                            // Show stats
+                                            Text("Encumbrance: \(equipment.encumbrance), Cost: \(equipment.cost), \(equipment.availability)")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
                                         }
-                                        .buttonStyle(PlainButtonStyle())
                                         
-                                        Button(action: {
-                                            removeEquipment(equipment)
-                                        }) {
-                                            Image(systemName: "minus.circle.fill")
-                                                .foregroundColor(.red)
+                                        Spacer()
+                                        
+                                        if isEditMode {
+                                            HStack(spacing: 8) {
+                                                Button(action: {
+                                                    editEquipment(equipment)
+                                                }) {
+                                                    Image(systemName: "pencil.circle.fill")
+                                                        .foregroundColor(.blue)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                                
+                                                Button(action: {
+                                                    removeEquipment(equipment)
+                                                }) {
+                                                    Image(systemName: "minus.circle.fill")
+                                                        .foregroundColor(.red)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                            }
                                         }
-                                        .buttonStyle(PlainButtonStyle())
                                     }
                                 }
                             }

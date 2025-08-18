@@ -600,4 +600,11 @@ struct EquipmentTemplateDefinitions {
     static func getEquipmentByCategory(_ category: String) -> [EquipmentTemplate] {
         return allEquipment.filter { $0.category == category }
     }
+    
+    static func getCategoryForEquipment(_ equipmentName: String) -> String {
+        if let template = getTemplate(for: equipmentName) {
+            return template.category
+        }
+        return "Other"
+    }
 }
