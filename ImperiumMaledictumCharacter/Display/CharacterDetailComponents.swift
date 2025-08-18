@@ -71,30 +71,6 @@ struct CharacteristicDisplay: View {
     }
 }
 
-// MARK: - Data Structures
-
-struct CharacteristicRowData {
-    let abbreviation: String
-    let name: String
-    let baseValue: Int
-    let advances: Int
-    let totalValue: Int
-}
-
-struct SkillRowData {
-    let name: String
-    let characteristicAbbreviation: String
-    let advances: Int
-    let totalValue: Int
-}
-
-struct SpecializationRowData {
-    let name: String
-    let skillName: String
-    let advances: Int
-    let totalValue: Int
-}
-
 // MARK: - Equipment Editing States
 
 enum EditingEquipmentState {
