@@ -519,7 +519,7 @@ struct OriginStage: View {
                             .font(.subheadline)
                             .fontWeight(.semibold)
                         
-                        ForEach(origin.grantedEquipment, id: \.self) { equipment in
+                        ForEach(Array(origin.grantedEquipment.enumerated()), id: \.offset) { index, equipment in
                             Text("• \(equipment)")
                                 .font(.subheadline)
                         }
@@ -778,7 +778,7 @@ struct FactionStage: View {
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                             
-                            ForEach(faction.equipment, id: \.self) { equipment in
+                            ForEach(Array(faction.equipment.enumerated()), id: \.offset) { index, equipment in
                                 Text("• \(equipment)")
                                     .font(.subheadline)
                             }
@@ -1335,7 +1335,7 @@ struct RoleStage: View {
                                         
                                         ScrollView(.horizontal, showsIndicators: false) {
                                             HStack {
-                                                ForEach(equipmentOptions, id: \.self) { equipment in
+                                                ForEach(Array(equipmentOptions.enumerated()), id: \.offset) { equipmentIndex, equipment in
                                                     Button(action: {
                                                         selectEquipment(equipment, forChoice: choiceIndex)
                                                     }) {
@@ -1368,7 +1368,7 @@ struct RoleStage: View {
                             Text("Granted Equipment:")
                                 .font(.headline)
                             
-                            ForEach(role.equipment, id: \.self) { equipment in
+                            ForEach(Array(role.equipment.enumerated()), id: \.offset) { index, equipment in
                                 Text("• \(equipment)")
                                     .font(.subheadline)
                             }
