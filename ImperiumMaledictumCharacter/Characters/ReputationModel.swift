@@ -7,7 +7,8 @@
 
 import Foundation
 
-struct Reputation: Codable {
+struct Reputation: Codable, Identifiable {
+    var id: String { "\(faction)-\(individual)" }
     var faction: String
     var individual: String // Empty string if it's general faction reputation
     var value: Int
@@ -26,20 +27,14 @@ struct Reputation: Codable {
 // MARK: - Faction Constants
 struct ImperiumFactionsList {
     static let factions = [
-        "Adeptus Administratum",
-        "Adeptus Arbites",
-        "Adeptus Astra Telepathica", 
+        "Adeptus Astra Telepathica",
         "Adeptus Mechanicus",
+        "Adeptus Administratum",
         "Astra Militarum",
-        "Ecclesiarchy",
-        "Imperial Navy",
+        "Adeptus Ministorum",
         "Inquisition",
-        "Rogue Trader Dynasty",
-        "Adeptus Astartes",
-        "Local Planetary Governor",
-        "Merchants Guild",
-        "Criminal Organizations",
-        "Chaos Cults",
-        "Xenos Traders"
+        "Navis Imperialis",
+        "Rogue Trader Dynasties",
+        "Infractionists"
     ]
 }

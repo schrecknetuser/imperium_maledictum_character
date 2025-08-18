@@ -941,6 +941,20 @@ struct FactionStage: View {
         
         character.characteristics = characteristics
         
+        // Apply reputation influence bonus
+        var reputations = character.reputations
+        let influenceFaction = faction.influenceBonus
+        
+        // Check if there's already a reputation entry for this faction
+        if let index = reputations.firstIndex(where: { $0.faction == influenceFaction && $0.individual.isEmpty }) {
+            // Increase existing reputation by 1 (influence represents +1 reputation)
+            reputations[index].value += 1
+        } else {
+            // Create new reputation entry with +1 value
+            reputations.append(Reputation(faction: influenceFaction, individual: "", value: 1))
+        }
+        character.reputations = reputations
+        
         // Mark this faction as having bonuses applied
         appliedBonuses[factionKey] = true
         character.appliedFactionBonusesTracker = appliedBonuses

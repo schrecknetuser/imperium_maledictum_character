@@ -35,19 +35,26 @@ struct CharacterDetailView: View {
                 }
                 .tag(1)
             
+            ReputationTab(character: character, store: store, isEditMode: $isEditMode)
+                .tabItem {
+                    Image(systemName: "person.2.circle")
+                    Text("Reputation")
+                }
+                .tag(2)
+            
             TalentsTab(character: character, store: store, isEditMode: $isEditMode)
                 .tabItem {
                     Image(systemName: "star.circle")
                     Text("Talents")
                 }
-                .tag(2)
+                .tag(3)
             
             EquipmentTab(character: character, store: store, isEditMode: $isEditMode)
                 .tabItem {
                     Image(systemName: "bag")
                     Text("Equipment")
                 }
-                .tag(3)
+                .tag(4)
             
             if imperiumCharacter?.role.lowercased().contains("psyker") == true {
                 PsychicPowersTab(character: character, store: store, isEditMode: $isEditMode)
@@ -55,7 +62,7 @@ struct CharacterDetailView: View {
                         Image(systemName: "brain")
                         Text("Psychic")
                     }
-                    .tag(4)
+                    .tag(5)
             }
         }
         .navigationTitle(character.name.isEmpty ? "Unnamed Character" : character.name)
