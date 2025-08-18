@@ -135,9 +135,19 @@ struct EquipmentTab: View {
                                         .font(.body)
                                     
                                     // Show weapon stats
-                                    Text("Damage: \(weapon.damage), Range: \(weapon.range), Magazine: \(weapon.magazine)")
+                                    Text("Category: \(weapon.category)")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
+                                    
+                                    if weapon.category == WeaponCategories.melee {
+                                        Text("Damage: \(weapon.damage)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    } else {
+                                        Text("Damage: \(weapon.damage), Range: \(weapon.range), Magazine: \(weapon.magazine)")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
                                     
                                     // Show specialization
                                     Text("Specialization: \(weapon.specialization)")
@@ -329,6 +339,7 @@ struct ComprehensiveEquipmentSheet: View {
     @State private var selectedTraits: Set<String> = []
     
     // Weapon-specific properties
+    @State private var category = WeaponCategories.ranged
     @State private var specialization = WeaponSpecializations.none
     @State private var damage = ""
     @State private var range = WeaponRanges.short
@@ -359,6 +370,7 @@ struct ComprehensiveEquipmentSheet: View {
             _selectedFlaws = State(initialValue: Set(equipment.flaws))
             _selectedTraits = State(initialValue: Set(equipment.traits.map { $0.name }))
             // Set default weapon values for consistency
+            _category = State(initialValue: WeaponCategories.ranged)
             _specialization = State(initialValue: WeaponSpecializations.none)
             _damage = State(initialValue: "")
             _range = State(initialValue: WeaponRanges.short)
@@ -369,6 +381,7 @@ struct ComprehensiveEquipmentSheet: View {
             // Editing existing weapon
             _itemName = State(initialValue: weapon.name.isEmpty ? "Unnamed Weapon" : weapon.name)
             _itemDescription = State(initialValue: "") // Weapons don't have descriptions in equipment section
+            _category = State(initialValue: weapon.category.isEmpty ? WeaponCategories.ranged : weapon.category)
             _specialization = State(initialValue: weapon.specialization.isEmpty ? WeaponSpecializations.none : weapon.specialization)
             _damage = State(initialValue: weapon.damage)
             _range = State(initialValue: weapon.range.isEmpty ? WeaponRanges.short : weapon.range)
@@ -392,6 +405,7 @@ struct ComprehensiveEquipmentSheet: View {
             _selectedQualities = State(initialValue: [])
             _selectedFlaws = State(initialValue: [])
             _selectedTraits = State(initialValue: [])
+            _category = State(initialValue: WeaponCategories.ranged)
             _specialization = State(initialValue: WeaponSpecializations.none)
             _damage = State(initialValue: "")
             _range = State(initialValue: WeaponRanges.short)
@@ -412,6 +426,12 @@ struct ComprehensiveEquipmentSheet: View {
                 
                 if isWeapon {
                     Section("Weapon Properties") {
+                        Picker("Category", selection: $category) {
+                            ForEach(WeaponCategories.all, id: \.self) { cat in
+                                Text(cat).tag(cat)
+                            }
+                        }
+                        
                         Picker("Specialization", selection: $specialization) {
                             ForEach(WeaponSpecializations.all, id: \.self) { spec in
                                 Text(spec).tag(spec)
@@ -420,16 +440,47 @@ struct ComprehensiveEquipmentSheet: View {
                         
                         TextField("Damage", text: $damage)
                         
-                        Picker("Range", selection: $range) {
-                            ForEach(WeaponRanges.all, id: \.self) { rangeType in
-                                Text(rangeType).tag(rangeType)
+                        if category != WeaponCategories.melee {
+                            Picker("Range", selection: $range) {
+                                ForEach(WeaponRanges.all, id: \.self) { rangeType in
+                                    Text(rangeType).tag(rangeType)
+                                }
+                            }
+                            
+                            HStack {
+                                Text("Magazine")
+                                Spacer()
+                                Stepper("\(magazine)", value: $magazine, in: 0...999)
                             }
                         }
-                        
-                        HStack {
-                            Text("Magazine")
-                            Spacer()
-                            Stepper("\(magazine)", value: $magazine, in: 0...999)
+                    }
+                    
+                    Section("Weapon Presets") {
+                        let categoryWeapons = WeaponTemplateDefinitions.getWeaponsByCategory(category)
+                        if !categoryWeapons.isEmpty {
+                            ForEach(categoryWeapons, id: \.name) { template in
+                                Button(action: {
+                                    loadWeaponTemplate(template)
+                                }) {
+                                    HStack {
+                                        VStack(alignment: .leading) {
+                                            Text(template.name)
+                                                .foregroundColor(.primary)
+                                            Text("Damage: \(template.damage), Cost: \(template.cost)")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "arrow.down.circle")
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        } else {
+                            Text("No presets available for this category")
+                                .foregroundColor(.secondary)
+                                .italic()
                         }
                     }
                 }
@@ -575,6 +626,7 @@ struct ComprehensiveEquipmentSheet: View {
         if isWeapon {
             let weapon = Weapon(
                 name: trimmedName,
+                category: category,
                 specialization: specialization,
                 damage: damage,
                 range: range,
@@ -627,5 +679,23 @@ struct ComprehensiveEquipmentSheet: View {
         character.lastModified = Date()
         store.saveChanges()
         dismiss()
+    }
+    
+    private func loadWeaponTemplate(_ template: WeaponTemplate) {
+        itemName = template.name
+        category = template.category
+        specialization = template.specialization
+        damage = template.damage
+        range = template.range
+        magazine = template.magazine
+        encumbrance = template.encumbrance
+        cost = template.cost
+        availability = template.availability
+        selectedWeaponTraits = Set(template.traits)
+        
+        // Clear other selections when loading template
+        selectedQualities = []
+        selectedFlaws = []
+        selectedModifications = []
     }
 }
