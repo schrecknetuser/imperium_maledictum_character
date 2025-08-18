@@ -1451,10 +1451,7 @@ struct EquipmentTab: View {
     private func buildEquipmentDetails(_ equipment: Equipment) -> String {
         var details: [String] = []
         
-        if !equipment.traits.isEmpty {
-            details.append("Traits: " + equipment.traits.map { $0.displayName }.joined(separator: ", "))
-        }
-        
+        // Equipment should not show weapon traits - only qualities and flaws
         if !equipment.qualities.isEmpty {
             details.append("Qualities: " + equipment.qualities.joined(separator: ", "))
         }
