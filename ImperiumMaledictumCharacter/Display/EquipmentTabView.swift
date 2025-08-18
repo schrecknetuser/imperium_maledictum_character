@@ -14,6 +14,7 @@ struct EquipmentTab: View {
     @State private var showingAddEquipmentSheet = false
     @State private var showingAddWeaponSheet = false
     @State private var showingWeaponSelectionPopup = false
+    @State private var showingEquipmentSelectionPopup = false
     @State private var editingEquipmentState: EditingEquipmentState = .none
     @State private var editingWeaponState: EditingWeaponState = .none
     
@@ -108,7 +109,7 @@ struct EquipmentTab: View {
                         
                         if isEditMode {
                             Button(action: {
-                                showingAddEquipmentSheet = true
+                                showingEquipmentSelectionPopup = true
                             }) {
                                 HStack {
                                     Image(systemName: "plus.circle.fill")
@@ -254,6 +255,11 @@ struct EquipmentTab: View {
         .sheet(isPresented: $showingWeaponSelectionPopup) {
             if let imperium = imperiumCharacter {
                 WeaponSelectionPopupView(character: imperium, store: store, showingCustomWeaponSheet: $showingAddWeaponSheet)
+            }
+        }
+        .sheet(isPresented: $showingEquipmentSelectionPopup) {
+            if let imperium = imperiumCharacter {
+                EquipmentSelectionPopupView(character: imperium, store: store, showingCustomEquipmentSheet: $showingAddEquipmentSheet)
             }
         }
         .sheet(isPresented: showingEditEquipmentSheet) {
@@ -834,6 +840,170 @@ struct WeaponSelectionPopupView: View {
         var weaponList = character.weaponList
         weaponList.append(weapon)
         character.weaponList = weaponList
+        character.lastModified = Date()
+        store.saveChanges()
+        
+        dismiss()
+    }
+}
+
+// MARK: - Equipment Selection Popup
+struct EquipmentSelectionPopupView: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    @Binding var showingCustomEquipmentSheet: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var selectedCategory: String = EquipmentCategories.clothingPersonalGear
+    @State private var selectionMode: SelectionMode = .category
+    
+    enum SelectionMode {
+        case category
+        case equipment
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if selectionMode == .category {
+                    categorySelectionView
+                } else {
+                    equipmentSelectionView
+                }
+            }
+            .navigationTitle("Add Equipment")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add Custom") {
+                        dismiss()
+                        showingCustomEquipmentSheet = true
+                    }
+                }
+            }
+        }
+    }
+    
+    private var categorySelectionView: some View {
+        List {
+            Section {
+                ForEach(EquipmentCategories.all, id: \.self) { category in
+                    let equipmentInCategory = EquipmentTemplateDefinitions.getEquipmentByCategory(category)
+                    
+                    Button(action: {
+                        selectedCategory = category
+                        selectionMode = .equipment
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(category)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text("\(equipmentInCategory.count) items available")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            } header: {
+                Text("Select Equipment Category")
+            } footer: {
+                Text("Choose a category to see available equipment templates.")
+            }
+        }
+    }
+    
+    private var equipmentSelectionView: some View {
+        List {
+            Section {
+                Button(action: {
+                    selectionMode = .category
+                }) {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.blue)
+                        Text("Back to Categories")
+                            .foregroundColor(.blue)
+                        Spacer()
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            
+            Section {
+                let equipmentInCategory = EquipmentTemplateDefinitions.getEquipmentByCategory(selectedCategory)
+                
+                ForEach(equipmentInCategory, id: \.name) { template in
+                    Button(action: {
+                        addEquipmentFromTemplate(template)
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(template.name)
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                
+                                if !template.description.isEmpty {
+                                    Text(template.description)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(3)
+                                }
+                                
+                                if !template.traits.isEmpty {
+                                    Text("Traits: \(template.traits.map { $0.displayName }.joined(separator: ", "))")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                }
+                                
+                                HStack {
+                                    Text("Cost: \(template.cost)")
+                                    Text("Encumbrance: \(template.encumbrance)")
+                                    Text(template.availability)
+                                }
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            } header: {
+                Text("\(selectedCategory)")
+            } footer: {
+                Text("Tap equipment to add it to your character, or use 'Add Custom' for custom equipment.")
+            }
+        }
+    }
+    
+    private func addEquipmentFromTemplate(_ template: EquipmentTemplate) {
+        let equipment = template.createEquipment()
+        
+        var equipmentList = character.equipmentList
+        equipmentList.append(equipment)
+        character.equipmentList = equipmentList
         character.lastModified = Date()
         store.saveChanges()
         

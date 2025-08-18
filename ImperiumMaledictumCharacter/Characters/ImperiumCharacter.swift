@@ -683,7 +683,13 @@ class ImperiumCharacter: BaseCharacter {
         let baseName = parseBaseName(fullName)
         let parenthesesContent = parseParenthesesContent(fullName)
         
-        let equipment = Equipment(name: baseName)
+        // Try to get equipment from template first
+        let equipment: Equipment
+        if let template = EquipmentTemplateDefinitions.getTemplate(for: baseName) {
+            equipment = template.createEquipment()
+        } else {
+            equipment = Equipment(name: baseName)
+        }
         
         // Parse qualities, flaws, and traits from parentheses
         for content in parenthesesContent {
