@@ -7,7 +7,8 @@
 
 import Foundation
 
-struct Reputation: Codable {
+struct Reputation: Codable, Identifiable {
+    var id: String { "\(faction)-\(individual)" }
     var faction: String
     var individual: String // Empty string if it's general faction reputation
     var value: Int
