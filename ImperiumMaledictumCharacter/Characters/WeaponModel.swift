@@ -6,10 +6,8 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-class Weapon {
+class Weapon: Codable {
     var name: String
     var specialization: String
     var damage: String
@@ -20,6 +18,8 @@ class Weapon {
     var cost: Int
     var weaponTraitsData: String // JSON array of WeaponTrait
     var modificationsData: String // JSON array of strings
+    var qualitiesData: String // JSON array of strings
+    var flawsData: String // JSON array of strings
     
     var weaponTraits: [WeaponTrait] {
         get {
@@ -51,7 +51,37 @@ class Weapon {
         }
     }
     
-    init(name: String, specialization: String = "", damage: String = "", range: String = "Short", magazine: Int = 0, encumbrance: Int = 0, availability: String = "Common", cost: Int = 0) {
+    var qualities: [String] {
+        get {
+            guard let data = qualitiesData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                qualitiesData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+        }
+    }
+    
+    var flaws: [String] {
+        get {
+            guard let data = flawsData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                flawsData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+        }
+    }
+    
+    init(name: String, specialization: String = WeaponSpecializations.none, damage: String = "", range: String = "Short", magazine: Int = 0, encumbrance: Int = 0, availability: String = "Common", cost: Int = 0) {
         self.name = name
         self.specialization = specialization
         self.damage = damage
@@ -62,6 +92,8 @@ class Weapon {
         self.cost = cost
         self.weaponTraitsData = ""
         self.modificationsData = ""
+        self.qualitiesData = ""
+        self.flawsData = ""
     }
 }
 
@@ -106,5 +138,47 @@ struct WeaponModifications {
         exterminatorCartridge, meleeAttachment, monoEdge, photoSight,
         laserSight, telescopicSight, backpackAmmoSupply, bipod,
         fireSelector, silencer
+    ]
+}
+
+struct WeaponSpecializations {
+    static let none = "None"
+    static let oneHanded = "One-handed"
+    static let twoHanded = "Two-handed"
+    static let brawling = "Brawling"
+    static let pistol = "Pistol"
+    static let longGun = "Long Gun"
+    static let ordnance = "Ordnance"
+    
+    static let all = [none, oneHanded, twoHanded, brawling, pistol, longGun, ordnance]
+}
+
+struct WeaponTraitNames {
+    static let blast = "Blast"
+    static let burst = "Burst"
+    static let close = "Close"
+    static let defensive = "Defensive"
+    static let flamer = "Flamer"
+    static let heavy = "Heavy"
+    static let ineffective = "Ineffective"
+    static let inflict = "Inflict"
+    static let loud = "Loud"
+    static let penetrating = "Penetrating"
+    static let rapidFire = "Rapid Fire"
+    static let reach = "Reach"
+    static let reliable = "Reliable"
+    static let rend = "Rend"
+    static let shield = "Shield"
+    static let spread = "Spread"
+    static let subtle = "Subtle"
+    static let supercharge = "Supercharge"
+    static let thrown = "Thrown"
+    static let twoHanded = "Two-handed"
+    static let unstable = "Unstable"
+    
+    static let all = [
+        blast, burst, close, defensive, flamer, heavy, ineffective,
+        inflict, loud, penetrating, rapidFire, reach, reliable, rend,
+        shield, spread, subtle, supercharge, thrown, twoHanded, unstable
     ]
 }

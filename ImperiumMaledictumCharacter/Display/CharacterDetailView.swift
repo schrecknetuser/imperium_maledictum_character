@@ -13,7 +13,7 @@ struct CharacterDetailView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedTab: Int = 0
-    @State private var showingEditSheet = false
+    @State private var isEditMode = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -21,61 +21,62 @@ struct CharacterDetailView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            OverviewTab(character: $character, store: store)
+            OverviewTab(character: $character, store: store, isEditMode: $isEditMode)
                 .tabItem {
                     Image(systemName: "person.circle")
                     Text("Overview")
                 }
                 .tag(0)
             
-            CharacteristicsTab(character: character)
+            CharacteristicsTab(character: character, store: store, isEditMode: $isEditMode)
                 .tabItem {
                     Image(systemName: "chart.bar")
                     Text("Stats")
                 }
                 .tag(1)
             
-            SkillsTab(character: character, store: store)
-                .tabItem {
-                    Image(systemName: "brain.head.profile")
-                    Text("Skills")
-                }
-                .tag(2)
-            
-            TalentsTab(character: character, store: store)
+            TalentsTab(character: character, store: store, isEditMode: $isEditMode)
                 .tabItem {
                     Image(systemName: "star.circle")
                     Text("Talents")
                 }
-                .tag(3)
+                .tag(2)
             
-            EquipmentTab(character: character, store: store)
+            EquipmentTab(character: character, store: store, isEditMode: $isEditMode)
                 .tabItem {
                     Image(systemName: "bag")
                     Text("Equipment")
                 }
-                .tag(4)
+                .tag(3)
             
             if imperiumCharacter?.role.lowercased().contains("psyker") == true {
-                PsychicPowersTab(character: character, store: store)
+                PsychicPowersTab(character: character, store: store, isEditMode: $isEditMode)
                     .tabItem {
                         Image(systemName: "brain")
                         Text("Psychic")
                     }
-                    .tag(5)
+                    .tag(4)
             }
         }
         .navigationTitle(character.name.isEmpty ? "Unnamed Character" : character.name)
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Edit") {
-                    showingEditSheet = true
+                if isEditMode {
+                    Button("Done") {
+                        // Save all changes
+                        if let imperium = character as? ImperiumCharacter {
+                            imperium.lastModified = Date()
+                        }
+                        store.saveChanges()
+                        isEditMode = false
+                    }
+                } else {
+                    Button("Edit") {
+                        isEditMode = true
+                    }
                 }
             }
-        }
-        .sheet(isPresented: $showingEditSheet) {
-            EditCharacterSheet(character: $character, store: store)
         }
     }
 }
@@ -85,6 +86,7 @@ struct CharacterDetailView: View {
 struct OverviewTab: View {
     @Binding var character: any BaseCharacter
     @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
     @State private var showingStatusPopup = false
     @State private var showingInjuriesPopup = false
     @State private var showingConditionsPopup = false
@@ -113,33 +115,62 @@ struct OverviewTab: View {
                             .font(.largeTitle)
                         
                         VStack(alignment: .leading) {
-                            Text(character.name.isEmpty ? "Unnamed Character" : character.name)
-                                .font(.title)
-                                .fontWeight(.bold)
+                            if isEditMode {
+                                TextField("Character Name", text: $character.name)
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            } else {
+                                Text(character.name.isEmpty ? "Unnamed Character" : character.name)
+                                    .font(.title)
+                                    .fontWeight(.bold)
+                            }
                             
-                            if !character.faction.isEmpty {
+                            if isEditMode {
+                                TextField("Faction", text: $character.faction)
+                                    .font(.headline)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            } else if !character.faction.isEmpty {
                                 Text(character.faction)
                                     .font(.headline)
                                     .foregroundColor(.secondary)
                             }
                             
-                            if !character.role.isEmpty {
+                            if isEditMode {
+                                TextField("Role", text: $character.role)
+                                    .font(.subheadline)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            } else if !character.role.isEmpty {
                                 Text(character.role)
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                             }
                             
-                            if let imperium = imperiumCharacter, !imperium.homeworld.isEmpty {
-                                Text(imperium.homeworld)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                            if let imperium = imperiumCharacter {
+                                if isEditMode {
+                                    let homeworldBinding = Binding<String>(
+                                        get: { imperium.homeworld },
+                                        set: { imperium.homeworld = $0 }
+                                    )
+                                    TextField("Homeworld", text: homeworldBinding)
+                                        .font(.subheadline)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                } else if !imperium.homeworld.isEmpty {
+                                    Text(imperium.homeworld)
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
                             }
                         }
                         
                         Spacer()
                     }
                     
-                    if !character.campaign.isEmpty {
+                    if isEditMode {
+                        TextField("Campaign", text: $character.campaign)
+                            .font(.caption)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                    } else if !character.campaign.isEmpty {
                         Text("Campaign: \(character.campaign)")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -155,23 +186,64 @@ struct OverviewTab: View {
                         Text("Character Information")
                             .font(.headline)
                         
-                        if !imperium.shortTermGoal.isEmpty {
-                            DetailRow(title: "Short-term Goal", value: imperium.shortTermGoal)
-                        }
-                        
-                        if !imperium.longTermGoal.isEmpty {
-                            DetailRow(title: "Long-term Goal", value: imperium.longTermGoal)
-                        }
-                        
-                        if !imperium.characterDescription.isEmpty {
-                            DetailRow(title: "Description", value: imperium.characterDescription)
-                        }
-                        
-                        if imperium.shortTermGoal.isEmpty && imperium.longTermGoal.isEmpty && imperium.characterDescription.isEmpty {
-                            Text("No character information provided")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .italic()
+                        if isEditMode {
+                            let shortTermGoalBinding = Binding<String>(
+                                get: { imperium.shortTermGoal },
+                                set: { imperium.shortTermGoal = $0 }
+                            )
+                            VStack(alignment: .leading) {
+                                Text("Short-term Goal")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                TextField("Short-term Goal", text: shortTermGoalBinding, axis: .vertical)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .lineLimit(2...4)
+                            }
+                            
+                            let longTermGoalBinding = Binding<String>(
+                                get: { imperium.longTermGoal },
+                                set: { imperium.longTermGoal = $0 }
+                            )
+                            VStack(alignment: .leading) {
+                                Text("Long-term Goal")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                TextField("Long-term Goal", text: longTermGoalBinding, axis: .vertical)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .lineLimit(2...4)
+                            }
+                            
+                            let descriptionBinding = Binding<String>(
+                                get: { imperium.characterDescription },
+                                set: { imperium.characterDescription = $0 }
+                            )
+                            VStack(alignment: .leading) {
+                                Text("Description")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                TextField("Character Description", text: descriptionBinding, axis: .vertical)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .lineLimit(3...6)
+                            }
+                        } else {
+                            if !imperium.shortTermGoal.isEmpty {
+                                DetailRow(title: "Short-term Goal", value: imperium.shortTermGoal)
+                            }
+                            
+                            if !imperium.longTermGoal.isEmpty {
+                                DetailRow(title: "Long-term Goal", value: imperium.longTermGoal)
+                            }
+                            
+                            if !imperium.characterDescription.isEmpty {
+                                DetailRow(title: "Description", value: imperium.characterDescription)
+                            }
+                            
+                            if imperium.shortTermGoal.isEmpty && imperium.longTermGoal.isEmpty && imperium.characterDescription.isEmpty {
+                                Text("No character information provided")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                            }
                         }
                     }
                     .padding()
@@ -219,36 +291,81 @@ struct OverviewTab: View {
                         Text("Experience")
                             .font(.headline)
                         
-                        HStack(spacing: 20) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Total XP")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("\(imperium.totalExperience)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                        if isEditMode {
+                            VStack(spacing: 8) {
+                                let totalExperienceBinding = Binding<Int>(
+                                    get: { imperium.totalExperience },
+                                    set: { imperium.totalExperience = $0 }
+                                )
+                                HStack {
+                                    Text("Total XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    TextField("Total", value: totalExperienceBinding, format: .number)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                        .frame(width: 80)
+                                        .keyboardType(.numberPad)
+                                }
+                                
+                                let spentExperienceBinding = Binding<Int>(
+                                    get: { imperium.spentExperience },
+                                    set: { imperium.spentExperience = $0 }
+                                )
+                                HStack {
+                                    Text("Spent XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    TextField("Spent", value: spentExperienceBinding, format: .number)
+                                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                                        .frame(width: 80)
+                                        .keyboardType(.numberPad)
+                                }
+                                
+                                HStack {
+                                    Text("Available XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text("\(imperium.availableExperience)")
+                                        .font(.title3)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.green)
+                                }
                             }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Spent XP")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("\(imperium.spentExperience)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                        } else {
+                            HStack(spacing: 20) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Total XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("\(imperium.totalExperience)")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Spent XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("\(imperium.spentExperience)")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Available XP")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    Text("\(imperium.availableExperience)")
+                                        .font(.title2)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(.green)
+                                }
+                                
+                                Spacer()
                             }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Available XP")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text("\(imperium.availableExperience)")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.green)
-                            }
-                            
-                            Spacer()
                         }
                     }
                     .padding()
@@ -363,6 +480,9 @@ struct DetailRow: View {
 
 struct CharacteristicsTab: View {
     let character: any BaseCharacter
+    @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
+    @State private var showingAddSpecializationSheet = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -410,9 +530,22 @@ struct CharacteristicsTab: View {
                                 Text("\(characteristic.baseValue)")
                                     .font(.caption)
                                     .frame(width: 40, alignment: .center)
-                                Text("\(characteristic.advances)")
-                                    .font(.caption)
-                                    .frame(width: 40, alignment: .center)
+                                
+                                if isEditMode {
+                                    // Editable dropdown for advances
+                                    Picker("Advances", selection: getCharacteristicAdvanceBinding(for: characteristic.name)) {
+                                        ForEach(0...4, id: \.self) { value in
+                                            Text("\(value)").tag(value)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .frame(width: 40)
+                                } else {
+                                    Text("\(characteristic.advances)")
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .center)
+                                }
+                                
                                 Text("\(characteristic.totalValue)")
                                     .font(.caption)
                                     .fontWeight(.medium)
@@ -466,9 +599,22 @@ struct CharacteristicsTab: View {
                                 Text(skill.characteristicAbbreviation)
                                     .font(.caption)
                                     .frame(width: 40, alignment: .center)
-                                Text("\(skill.advances)")
-                                    .font(.caption)
-                                    .frame(width: 40, alignment: .center)
+                                
+                                if isEditMode {
+                                    // Editable dropdown for advances
+                                    Picker("Advances", selection: getSkillAdvanceBinding(for: skill.name)) {
+                                        ForEach(0...4, id: \.self) { value in
+                                            Text("\(value)").tag(value)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .frame(width: 40)
+                                } else {
+                                    Text("\(skill.advances)")
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .center)
+                                }
+                                
                                 Text("\(skill.totalValue)")
                                     .font(.caption)
                                     .fontWeight(.medium)
@@ -521,9 +667,22 @@ struct CharacteristicsTab: View {
                                 Text(specialization.skillName)
                                     .font(.caption)
                                     .frame(width: 60, alignment: .center)
-                                Text("\(specialization.advances)")
-                                    .font(.caption)
-                                    .frame(width: 40, alignment: .center)
+                                
+                                if isEditMode {
+                                    // Editable dropdown for advances
+                                    Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name)) {
+                                        ForEach(0...4, id: \.self) { value in
+                                            Text("\(value)").tag(value)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .frame(width: 40)
+                                } else {
+                                    Text("\(specialization.advances)")
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .center)
+                                }
+                                
                                 Text("\(specialization.totalValue)")
                                     .font(.caption)
                                     .fontWeight(.medium)
@@ -533,6 +692,25 @@ struct CharacteristicsTab: View {
                             .padding(.vertical, 6)
                             .background(Color(.systemGray6).opacity(0.5))
                         }
+                        
+                        // Add new specialization button in edit mode
+                        if isEditMode {
+                            Button(action: {
+                                showingAddSpecializationSheet = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus")
+                                        .font(.caption)
+                                    Text("Add Specialization")
+                                        .font(.caption)
+                                    Spacer()
+                                }
+                                .padding(.horizontal)
+                                .padding(.vertical, 6)
+                                .background(Color(.systemBlue).opacity(0.1))
+                                .foregroundColor(.blue)
+                            }
+                        }
                     }
                     .background(Color(.systemGray6))
                     .cornerRadius(8)
@@ -540,6 +718,62 @@ struct CharacteristicsTab: View {
             }
             .padding()
         }
+        .sheet(isPresented: $showingAddSpecializationSheet) {
+            if let imperium = imperiumCharacter {
+                AddSpecializationSheet(character: imperium, store: store)
+            }
+        }
+    }
+    
+    private func getCharacteristicAdvanceBinding(for characteristicName: String) -> Binding<Int> {
+        return Binding<Int>(
+            get: {
+                guard let imperium = imperiumCharacter else { return 0 }
+                return imperium.characteristics[characteristicName]?.advances ?? 0
+            },
+            set: { newValue in
+                guard let imperium = imperiumCharacter else { return }
+                var characteristics = imperium.characteristics
+                if var characteristic = characteristics[characteristicName] {
+                    characteristic.advances = newValue
+                    characteristics[characteristicName] = characteristic
+                    imperium.characteristics = characteristics
+                    store.saveChanges()
+                }
+            }
+        )
+    }
+    
+    private func getSkillAdvanceBinding(for skillName: String) -> Binding<Int> {
+        return Binding<Int>(
+            get: {
+                guard let imperium = imperiumCharacter else { return 0 }
+                return imperium.skillAdvances[skillName] ?? 0
+            },
+            set: { newValue in
+                guard let imperium = imperiumCharacter else { return }
+                var skillAdvances = imperium.skillAdvances
+                skillAdvances[skillName] = newValue
+                imperium.skillAdvances = skillAdvances
+                store.saveChanges()
+            }
+        )
+    }
+    
+    private func getSpecializationAdvanceBinding(for specializationName: String) -> Binding<Int> {
+        return Binding<Int>(
+            get: {
+                guard let imperium = imperiumCharacter else { return 0 }
+                return imperium.specializationAdvances[specializationName] ?? 0
+            },
+            set: { newValue in
+                guard let imperium = imperiumCharacter else { return }
+                var specializationAdvances = imperium.specializationAdvances
+                specializationAdvances[specializationName] = newValue
+                imperium.specializationAdvances = specializationAdvances
+                store.saveChanges()
+            }
+        )
     }
     
     private func getCharacteristicsList() -> [CharacteristicRowData] {
@@ -640,7 +874,7 @@ struct CharacteristicsTab: View {
             }
             
             for (specializationName, advances) in specializationAdvances {
-                if advances > 0 {
+                if advances > 0 || isEditMode {
                     // Find skill name by lookup in specializations map
                     let skillName = specializationToSkillMap[specializationName] ?? "Unknown"
                     
@@ -732,34 +966,97 @@ struct CharacteristicDisplay: View {
 
 // MARK: - Skills Tab
 
-struct SkillsTab: View {
-    let character: any BaseCharacter
+// MARK: - Add Specialization Sheet
+
+struct AddSpecializationSheet: View {
+    let character: ImperiumCharacter
     @ObservedObject var store: CharacterStore
+    @Environment(\.dismiss) private var dismiss
     
-    var imperiumCharacter: ImperiumCharacter? {
-        return character as? ImperiumCharacter
+    @State private var selectedSkill = ""
+    @State private var selectedSpecialization = ""
+    
+    var availableSkills: [String] {
+        SkillSpecializations.specializations.keys.sorted()
+    }
+    
+    var availableSpecializations: [String] {
+        guard !selectedSkill.isEmpty,
+              let skillSpecializations = SkillSpecializations.specializations[selectedSkill] else {
+            return []
+        }
+        
+        // Filter out specializations that already have advances > 0
+        let currentSpecializations = character.specializationAdvances
+        return skillSpecializations.filter { specialization in
+            (currentSpecializations[specialization] ?? 0) == 0
+        }
     }
     
     var body: some View {
-        NavigationView {
-            List {
-                if let imperium = imperiumCharacter {
-                    ForEach(Array(imperium.skills.keys.sorted()), id: \.self) { skill in
-                        HStack {
-                            Text(skill)
-                            Spacer()
-                            Text("\(imperium.skills[skill] ?? 0)")
-                                .foregroundColor(.secondary)
+        NavigationStack {
+            Form {
+                Section("Select Skill") {
+                    Picker("Skill", selection: $selectedSkill) {
+                        Text("Choose a skill...").tag("")
+                        ForEach(availableSkills, id: \.self) { skill in
+                            Text(skill).tag(skill)
                         }
                     }
-                } else {
-                    Text("Skills not available for this character type")
-                        .foregroundColor(.secondary)
+                    .pickerStyle(.menu)
+                    .onChange(of: selectedSkill) { _ in
+                        selectedSpecialization = ""
+                    }
+                }
+                
+                if !selectedSkill.isEmpty {
+                    Section("Select Specialization") {
+                        Picker("Specialization", selection: $selectedSpecialization) {
+                            Text("Choose a specialization...").tag("")
+                            ForEach(availableSpecializations, id: \.self) { specialization in
+                                Text(specialization).tag(specialization)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                    }
+                }
+                
+                if !availableSpecializations.isEmpty && availableSpecializations.count == 0 {
+                    Section {
+                        Text("All specializations for \(selectedSkill) are already added.")
+                            .foregroundColor(.secondary)
+                            .italic()
+                    }
                 }
             }
-            .navigationTitle("Skills")
+            .navigationTitle("Add Specialization")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add") {
+                        addSpecialization()
+                    }
+                    .disabled(selectedSpecialization.isEmpty)
+                }
+            }
         }
+    }
+    
+    private func addSpecialization() {
+        guard !selectedSpecialization.isEmpty else { return }
+        
+        var specializations = character.specializationAdvances
+        specializations[selectedSpecialization] = 0
+        character.specializationAdvances = specializations
+        character.lastModified = Date()
+        store.saveChanges()
+        dismiss()
     }
 }
 
@@ -768,6 +1065,8 @@ struct SkillsTab: View {
 struct TalentsTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
+    @State private var showingAddTalentSheet = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -778,10 +1077,50 @@ struct TalentsTab: View {
             List {
                 if let imperium = imperiumCharacter {
                     ForEach(imperium.talentNames, id: \.self) { talent in
-                        Text(talent)
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(talent)
+                                    .font(.body)
+                                
+                                if let description = TalentDefinitions.talents[talent] {
+                                    Text(description)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .multilineTextAlignment(.leading)
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            if isEditMode {
+                                Button(action: {
+                                    removeTalent(talent)
+                                }) {
+                                    Image(systemName: "minus.circle.fill")
+                                        .foregroundColor(.red)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        }
+                        .padding(.vertical, 2)
                     }
                     
-                    if imperium.talentNames.isEmpty {
+                    if isEditMode {
+                        Button(action: {
+                            showingAddTalentSheet = true
+                        }) {
+                            HStack {
+                                Image(systemName: "plus.circle.fill")
+                                    .foregroundColor(.blue)
+                                Text("Add Talent")
+                                    .foregroundColor(.blue)
+                                Spacer()
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    
+                    if imperium.talentNames.isEmpty && !isEditMode {
                         Text("No talents selected")
                             .foregroundColor(.secondary)
                             .italic()
@@ -794,93 +1133,130 @@ struct TalentsTab: View {
             .navigationTitle("Talents")
             .navigationBarTitleDisplayMode(.inline)
         }
+        .sheet(isPresented: $showingAddTalentSheet) {
+            if let imperium = imperiumCharacter {
+                AddTalentSheet(character: imperium, store: store)
+            }
+        }
+    }
+    
+    private func removeTalent(_ talent: String) {
+        guard let imperium = imperiumCharacter else { return }
+        var talents = imperium.talentNames
+        talents.removeAll { $0 == talent }
+        imperium.talentNames = talents
+        imperium.lastModified = Date()
+        store.saveChanges()
+    }
+}
+
+struct AddTalentSheet: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    @Environment(\.dismiss) private var dismiss
+    
+    var availableTalents: [String] {
+        TalentDefinitions.allTalents.filter { talent in
+            !character.talentNames.contains(talent)
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            List(availableTalents, id: \.self) { talent in
+                Button(action: {
+                    addTalent(talent)
+                }) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(talent)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        if let description = TalentDefinitions.talents[talent] {
+                            Text(description)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.leading)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            .navigationTitle("Add Talent")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func addTalent(_ talent: String) {
+        var talents = character.talentNames
+        talents.append(talent)
+        character.talentNames = talents
+        character.lastModified = Date()
+        store.saveChanges()
+        dismiss()
     }
 }
 
 // MARK: - Equipment Tab
 
-struct EquipmentDisplayItem {
-    let baseName: String
-    let modifications: [String]
-    let traits: [String]
-    
-    init(from fullName: String) {
-        var working = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
-        var modifications: [String] = []
-        var traits: [String] = []
-        
-        // Known traits that should be separated (order matters for longest-first matching)
-        let knownTraits = ["Master Crafted", "Mono-Edge", "Shoddy", "Ugly", "Bulky", "Lightweight", "Ornamental", "Durable", "Razor Sharp", "Well Balanced", "Power Field"]
-        
-        // First, extract content from parentheses
-        let modificationPattern = #"\(([^)]+)\)"#
-        var parenthesesContent: [String] = []
-        
-        if let regex = try? NSRegularExpression(pattern: modificationPattern) {
-            let matches = regex.matches(in: working, range: NSRange(working.startIndex..., in: working))
-            for match in matches.reversed() {
-                if let range = Range(match.range(at: 1), in: working) {
-                    let content = String(working[range]).trimmingCharacters(in: .whitespacesAndNewlines)
-                    parenthesesContent.append(content)
-                }
-                if let fullRange = Range(match.range, in: working) {
-                    working.removeSubrange(fullRange)
-                    working = working.trimmingCharacters(in: .whitespacesAndNewlines)
-                }
-            }
-        }
-        
-        // Now extract traits from both the main name and parentheses content
-        for trait in knownTraits {
-            // Check main name
-            if working.lowercased().contains(trait.lowercased()) {
-                traits.append(trait)
-                let regex = try! NSRegularExpression(pattern: "\\b" + NSRegularExpression.escapedPattern(for: trait) + "\\b", options: .caseInsensitive)
-                working = regex.stringByReplacingMatches(in: working, options: [], range: NSRange(location: 0, length: working.count), withTemplate: "")
-                working = working.trimmingCharacters(in: .whitespacesAndNewlines)
-                working = working.replacingOccurrences(of: "  +", with: " ", options: .regularExpression)
-            }
-            
-            // Check parentheses content and separate traits from other modifications
-            parenthesesContent = parenthesesContent.compactMap { content in
-                if content.lowercased() == trait.lowercased() {
-                    if !traits.contains(trait) {
-                        traits.append(trait)
-                    }
-                    return nil // Remove this content as it's now a trait
-                } else {
-                    return content
-                }
-            }
-        }
-        
-        // Remaining parentheses content are modifications
-        modifications = parenthesesContent.filter { !$0.isEmpty }
-        
-        self.baseName = working.trimmingCharacters(in: .whitespacesAndNewlines)
-        self.modifications = modifications
-        self.traits = traits
-    }
-    
-    var displayText: String {
-        var result = baseName
-        if !modifications.isEmpty {
-            result += " (" + modifications.joined(separator: ", ") + ")"
-        }
-        return result
-    }
-    
-    var traitsText: String {
-        return traits.isEmpty ? "" : "Traits: " + traits.joined(separator: ", ")
-    }
+enum EditingEquipmentState {
+    case none
+    case editing(Equipment)
+}
+
+enum EditingWeaponState {
+    case none
+    case editing(Weapon)
 }
 
 struct EquipmentTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
+    @State private var showingAddEquipmentSheet = false
+    @State private var showingAddWeaponSheet = false
+    @State private var editingEquipmentState: EditingEquipmentState = .none
+    @State private var editingWeaponState: EditingWeaponState = .none
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
+    }
+    
+    // Computed properties for sheet presentation
+    private var showingEditEquipmentSheet: Binding<Bool> {
+        Binding(
+            get: { 
+                if case .editing = editingEquipmentState { return true }
+                return false
+            },
+            set: { isPresented in
+                if !isPresented {
+                    editingEquipmentState = .none
+                }
+            }
+        )
+    }
+    
+    private var showingEditWeaponSheet: Binding<Bool> {
+        Binding(
+            get: { 
+                if case .editing = editingWeaponState { return true }
+                return false
+            },
+            set: { isPresented in
+                if !isPresented {
+                    editingWeaponState = .none
+                }
+            }
+        )
     }
     
     var body: some View {
@@ -888,21 +1264,73 @@ struct EquipmentTab: View {
             List {
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
-                        ForEach(imperium.equipmentNames, id: \.self) { item in
-                            let equipmentItem = EquipmentDisplayItem(from: item)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(equipmentItem.displayText)
-                                    .font(.body)
-                                if !equipmentItem.traitsText.isEmpty {
-                                    Text(equipmentItem.traitsText)
-                                        .font(.caption)
+                        ForEach(imperium.equipmentList, id: \.name) { equipment in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(equipment.name)
+                                        .font(.body)
+                                    
+                                    if !equipment.equipmentDescription.isEmpty {
+                                        Text(equipment.equipmentDescription)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    
+                                    // Show traits, qualities, and flaws
+                                    let details = buildEquipmentDetails(equipment)
+                                    if !details.isEmpty {
+                                        Text(details)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .italic()
+                                    }
+                                    
+                                    // Show stats
+                                    Text("Encumbrance: \(equipment.encumbrance), Cost: \(equipment.cost), \(equipment.availability)")
+                                        .font(.caption2)
                                         .foregroundColor(.secondary)
-                                        .italic()
+                                }
+                                
+                                Spacer()
+                                
+                                if isEditMode {
+                                    HStack(spacing: 8) {
+                                        Button(action: {
+                                            editEquipment(equipment)
+                                        }) {
+                                            Image(systemName: "pencil.circle.fill")
+                                                .foregroundColor(.blue)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                        
+                                        Button(action: {
+                                            removeEquipment(equipment)
+                                        }) {
+                                            Image(systemName: "minus.circle.fill")
+                                                .foregroundColor(.red)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                    }
                                 }
                             }
                         }
                         
-                        if imperium.equipmentNames.isEmpty {
+                        if isEditMode {
+                            Button(action: {
+                                showingAddEquipmentSheet = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundColor(.blue)
+                                    Text("Add Equipment")
+                                        .foregroundColor(.blue)
+                                    Spacer()
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        
+                        if imperium.equipmentList.isEmpty && !isEditMode {
                             Text("No equipment")
                                 .foregroundColor(.secondary)
                                 .italic()
@@ -910,21 +1338,77 @@ struct EquipmentTab: View {
                     }
                     
                     Section("Weapons") {
-                        ForEach(imperium.weaponNames, id: \.self) { weapon in
-                            let weaponItem = EquipmentDisplayItem(from: weapon)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(weaponItem.displayText)
-                                    .font(.body)
-                                if !weaponItem.traitsText.isEmpty {
-                                    Text(weaponItem.traitsText)
+                        ForEach(imperium.weaponList, id: \.name) { weapon in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(weapon.name)
+                                        .font(.body)
+                                    
+                                    // Show weapon stats
+                                    Text("Damage: \(weapon.damage), Range: \(weapon.range), Magazine: \(weapon.magazine)")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-                                        .italic()
+                                    
+                                    // Show specialization
+                                    Text("Specialization: \(weapon.specialization)")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                    
+                                    // Show traits, qualities, flaws, and modifications
+                                    let details = buildWeaponDetails(weapon)
+                                    if !details.isEmpty {
+                                        Text(details)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .italic()
+                                    }
+                                    
+                                    // Show other stats
+                                    Text("Encumbrance: \(weapon.encumbrance), Cost: \(weapon.cost), \(weapon.availability)")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                if isEditMode {
+                                    HStack(spacing: 8) {
+                                        Button(action: {
+                                            editWeapon(weapon)
+                                        }) {
+                                            Image(systemName: "pencil.circle.fill")
+                                                .foregroundColor(.blue)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                        
+                                        Button(action: {
+                                            removeWeapon(weapon)
+                                        }) {
+                                            Image(systemName: "minus.circle.fill")
+                                                .foregroundColor(.red)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                    }
                                 }
                             }
                         }
                         
-                        if imperium.weaponNames.isEmpty {
+                        if isEditMode {
+                            Button(action: {
+                                showingAddWeaponSheet = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundColor(.blue)
+                                    Text("Add Weapon")
+                                        .foregroundColor(.blue)
+                                    Spacer()
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        
+                        if imperium.weaponList.isEmpty && !isEditMode {
                             Text("No weapons")
                                 .foregroundColor(.secondary)
                                 .italic()
@@ -937,7 +1421,422 @@ struct EquipmentTab: View {
             }
             .navigationTitle("Equipment")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                // Migrate old string-based data to new object-based system
+                imperiumCharacter?.migrateEquipmentAndWeapons()
+            }
         }
+        .sheet(isPresented: $showingAddEquipmentSheet) {
+            if let imperium = imperiumCharacter {
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false)
+            }
+        }
+        .sheet(isPresented: $showingAddWeaponSheet) {
+            if let imperium = imperiumCharacter {
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true)
+            }
+        }
+        .sheet(isPresented: showingEditEquipmentSheet) {
+            if let imperium = imperiumCharacter, case .editing(let equipment) = editingEquipmentState {
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, editingEquipment: equipment)
+            }
+        }
+        .sheet(isPresented: showingEditWeaponSheet) {
+            if let imperium = imperiumCharacter, case .editing(let weapon) = editingWeaponState {
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon)
+            }
+        }
+    }
+    
+    private func buildEquipmentDetails(_ equipment: Equipment) -> String {
+        var details: [String] = []
+        
+        // Equipment should not show weapon traits - only qualities and flaws
+        if !equipment.qualities.isEmpty {
+            details.append("Qualities: " + equipment.qualities.joined(separator: ", "))
+        }
+        
+        if !equipment.flaws.isEmpty {
+            details.append("Flaws: " + equipment.flaws.joined(separator: ", "))
+        }
+        
+        return details.joined(separator: "\n")
+    }
+    
+    private func buildWeaponDetails(_ weapon: Weapon) -> String {
+        var details: [String] = []
+        
+        if !weapon.weaponTraits.isEmpty {
+            details.append("Traits: " + weapon.weaponTraits.map { $0.displayName }.joined(separator: ", "))
+        }
+        
+        if !weapon.modifications.isEmpty {
+            details.append("Modifications: " + weapon.modifications.joined(separator: ", "))
+        }
+        
+        if !weapon.qualities.isEmpty {
+            details.append("Qualities: " + weapon.qualities.joined(separator: ", "))
+        }
+        
+        if !weapon.flaws.isEmpty {
+            details.append("Flaws: " + weapon.flaws.joined(separator: ", "))
+        }
+        
+        return details.joined(separator: "\n")
+    }
+    
+    private func editEquipment(_ equipment: Equipment) {
+        // Clear any other editing state first
+        editingWeaponState = .none
+        
+        // Set the editing equipment atomically
+        editingEquipmentState = .editing(equipment)
+    }
+    
+    private func editWeapon(_ weapon: Weapon) {
+        // Clear any other editing state first
+        editingEquipmentState = .none
+        
+        // Set the editing weapon atomically
+        editingWeaponState = .editing(weapon)
+    }
+    
+    private func removeEquipment(_ equipment: Equipment) {
+        guard let imperium = imperiumCharacter else { return }
+        var equipmentList = imperium.equipmentList
+        equipmentList.removeAll { $0.name == equipment.name }
+        imperium.equipmentList = equipmentList
+        imperium.lastModified = Date()
+        store.saveChanges()
+    }
+    
+    private func removeWeapon(_ weapon: Weapon) {
+        guard let imperium = imperiumCharacter else { return }
+        var weaponList = imperium.weaponList
+        weaponList.removeAll { $0.name == weapon.name }
+        imperium.weaponList = weaponList
+        imperium.lastModified = Date()
+        store.saveChanges()
+    }
+}
+
+struct ComprehensiveEquipmentSheet: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    let isWeapon: Bool
+    let editingEquipment: Equipment?
+    let editingWeapon: Weapon?
+    @Environment(\.dismiss) private var dismiss
+    
+    // Equipment properties
+    @State private var itemName = ""
+    @State private var itemDescription = ""
+    @State private var encumbrance = 0
+    @State private var cost = 0
+    @State private var availability = AvailabilityLevels.common
+    @State private var selectedQualities: Set<String> = []
+    @State private var selectedFlaws: Set<String> = []
+    @State private var selectedTraits: Set<String> = []
+    
+    // Weapon-specific properties
+    @State private var specialization = WeaponSpecializations.none
+    @State private var damage = ""
+    @State private var range = WeaponRanges.short
+    @State private var magazine = 0
+    @State private var selectedWeaponTraits: Set<String> = []
+    @State private var selectedModifications: Set<String> = []
+    
+    // UI state
+    @State private var showingTraitPicker = false
+    @State private var showingWeaponTraitPicker = false
+    
+    init(character: ImperiumCharacter, store: CharacterStore, isWeapon: Bool, editingEquipment: Equipment? = nil, editingWeapon: Weapon? = nil) {
+        self.character = character
+        self.store = store
+        self.isWeapon = isWeapon
+        self.editingEquipment = editingEquipment
+        self.editingWeapon = editingWeapon
+        
+        // Initialize state variables with proper defensive checks
+        if let equipment = editingEquipment, !isWeapon {
+            // Editing existing equipment
+            _itemName = State(initialValue: equipment.name.isEmpty ? "Unnamed Equipment" : equipment.name)
+            _itemDescription = State(initialValue: equipment.equipmentDescription)
+            _encumbrance = State(initialValue: max(0, equipment.encumbrance))
+            _cost = State(initialValue: max(0, equipment.cost))
+            _availability = State(initialValue: equipment.availability.isEmpty ? AvailabilityLevels.common : equipment.availability)
+            _selectedQualities = State(initialValue: Set(equipment.qualities))
+            _selectedFlaws = State(initialValue: Set(equipment.flaws))
+            _selectedTraits = State(initialValue: Set(equipment.traits.map { $0.name }))
+            // Set default weapon values for consistency
+            _specialization = State(initialValue: WeaponSpecializations.none)
+            _damage = State(initialValue: "")
+            _range = State(initialValue: WeaponRanges.short)
+            _magazine = State(initialValue: 0)
+            _selectedWeaponTraits = State(initialValue: [])
+            _selectedModifications = State(initialValue: [])
+        } else if let weapon = editingWeapon, isWeapon {
+            // Editing existing weapon
+            _itemName = State(initialValue: weapon.name.isEmpty ? "Unnamed Weapon" : weapon.name)
+            _itemDescription = State(initialValue: "") // Weapons don't have descriptions in equipment section
+            _specialization = State(initialValue: weapon.specialization.isEmpty ? WeaponSpecializations.none : weapon.specialization)
+            _damage = State(initialValue: weapon.damage)
+            _range = State(initialValue: weapon.range.isEmpty ? WeaponRanges.short : weapon.range)
+            _magazine = State(initialValue: max(0, weapon.magazine))
+            _encumbrance = State(initialValue: max(0, weapon.encumbrance))
+            _cost = State(initialValue: max(0, weapon.cost))
+            _availability = State(initialValue: weapon.availability.isEmpty ? AvailabilityLevels.common : weapon.availability)
+            _selectedQualities = State(initialValue: Set(weapon.qualities))
+            _selectedFlaws = State(initialValue: Set(weapon.flaws))
+            _selectedWeaponTraits = State(initialValue: Set(weapon.weaponTraits.map { $0.name }))
+            _selectedModifications = State(initialValue: Set(weapon.modifications))
+            // Set default equipment values for consistency
+            _selectedTraits = State(initialValue: [])
+        } else {
+            // Default values for new items
+            _itemName = State(initialValue: "")
+            _itemDescription = State(initialValue: "")
+            _encumbrance = State(initialValue: 0)
+            _cost = State(initialValue: 0)
+            _availability = State(initialValue: AvailabilityLevels.common)
+            _selectedQualities = State(initialValue: [])
+            _selectedFlaws = State(initialValue: [])
+            _selectedTraits = State(initialValue: [])
+            _specialization = State(initialValue: WeaponSpecializations.none)
+            _damage = State(initialValue: "")
+            _range = State(initialValue: WeaponRanges.short)
+            _magazine = State(initialValue: 0)
+            _selectedWeaponTraits = State(initialValue: [])
+            _selectedModifications = State(initialValue: [])
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Basic Information") {
+                    TextField(isWeapon ? "Weapon Name" : "Equipment Name", text: $itemName)
+                    TextField("Description", text: $itemDescription, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+                
+                if isWeapon {
+                    Section("Weapon Properties") {
+                        Picker("Specialization", selection: $specialization) {
+                            ForEach(WeaponSpecializations.all, id: \.self) { spec in
+                                Text(spec).tag(spec)
+                            }
+                        }
+                        
+                        TextField("Damage", text: $damage)
+                        
+                        Picker("Range", selection: $range) {
+                            ForEach(WeaponRanges.all, id: \.self) { rangeType in
+                                Text(rangeType).tag(rangeType)
+                            }
+                        }
+                        
+                        HStack {
+                            Text("Magazine")
+                            Spacer()
+                            Stepper("\(magazine)", value: $magazine, in: 0...999)
+                        }
+                    }
+                }
+                
+                Section("Physical Properties") {
+                    HStack {
+                        Text("Encumbrance")
+                        Spacer()
+                        Stepper("\(encumbrance)", value: $encumbrance, in: 0...50)
+                    }
+                    
+                    HStack {
+                        Text("Cost")
+                        Spacer()
+                        TextField("Cost", value: $cost, format: .number)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .frame(width: 100)
+                            .keyboardType(.numberPad)
+                    }
+                    
+                    Picker("Availability", selection: $availability) {
+                        ForEach(AvailabilityLevels.all, id: \.self) { level in
+                            Text(level).tag(level)
+                        }
+                    }
+                }
+                
+                Section("Qualities") {
+                    ForEach(EquipmentQualities.all, id: \.self) { quality in
+                        HStack {
+                            Text(quality)
+                            Spacer()
+                            if selectedQualities.contains(quality) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if selectedQualities.contains(quality) {
+                                selectedQualities.remove(quality)
+                            } else {
+                                selectedQualities.insert(quality)
+                            }
+                        }
+                    }
+                }
+                
+                Section("Flaws") {
+                    ForEach(EquipmentFlaws.all, id: \.self) { flaw in
+                        HStack {
+                            Text(flaw)
+                            Spacer()
+                            if selectedFlaws.contains(flaw) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if selectedFlaws.contains(flaw) {
+                                selectedFlaws.remove(flaw)
+                            } else {
+                                selectedFlaws.insert(flaw)
+                            }
+                        }
+                    }
+                }
+                
+                if isWeapon {
+                    Section("Weapon Traits") {
+                        ForEach(WeaponTraitNames.all, id: \.self) { trait in
+                            HStack {
+                                Text(trait)
+                                Spacer()
+                                if selectedWeaponTraits.contains(trait) {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if selectedWeaponTraits.contains(trait) {
+                                    selectedWeaponTraits.remove(trait)
+                                } else {
+                                    selectedWeaponTraits.insert(trait)
+                                }
+                            }
+                        }
+                    }
+                    
+                    Section("Modifications") {
+                        ForEach(WeaponModifications.all, id: \.self) { modification in
+                            HStack {
+                                Text(modification)
+                                Spacer()
+                                if selectedModifications.contains(modification) {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if selectedModifications.contains(modification) {
+                                    selectedModifications.remove(modification)
+                                } else {
+                                    selectedModifications.insert(modification)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Section {
+                    Text("Tap on items to select/deselect them for your \(isWeapon ? "weapon" : "equipment").")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .navigationTitle(editingEquipment != nil || editingWeapon != nil ? "Edit \(isWeapon ? "Weapon" : "Equipment")" : "Add \(isWeapon ? "Weapon" : "Equipment")")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(editingEquipment != nil || editingWeapon != nil ? "Save" : "Add") {
+                        saveItem()
+                    }
+                    .disabled(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+    
+    private func saveItem() {
+        let trimmedName = itemName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+        
+        if isWeapon {
+            let weapon = Weapon(
+                name: trimmedName,
+                specialization: specialization,
+                damage: damage,
+                range: range,
+                magazine: magazine,
+                encumbrance: encumbrance,
+                availability: availability,
+                cost: cost
+            )
+            
+            // Set weapon traits
+            weapon.weaponTraits = selectedWeaponTraits.map { WeaponTrait(name: $0) }
+            weapon.modifications = Array(selectedModifications)
+            weapon.qualities = Array(selectedQualities)
+            weapon.flaws = Array(selectedFlaws)
+            
+            var weaponList = character.weaponList
+            
+            if let editingWeapon = editingWeapon {
+                // Remove the old weapon and add the new one
+                weaponList.removeAll { $0.name == editingWeapon.name }
+            }
+            
+            weaponList.append(weapon)
+            character.weaponList = weaponList
+        } else {
+            let equipment = Equipment(
+                name: trimmedName,
+                equipmentDescription: itemDescription,
+                encumbrance: encumbrance,
+                cost: cost,
+                availability: availability
+            )
+            
+            // Set equipment properties (equipment should not have weapon traits)
+            equipment.traits = []
+            equipment.qualities = Array(selectedQualities)
+            equipment.flaws = Array(selectedFlaws)
+            
+            var equipmentList = character.equipmentList
+            
+            if let editingEquipment = editingEquipment {
+                // Remove the old equipment and add the new one
+                equipmentList.removeAll { $0.name == editingEquipment.name }
+            }
+            
+            equipmentList.append(equipment)
+            character.equipmentList = equipmentList
+        }
+        
+        character.lastModified = Date()
+        store.saveChanges()
+        dismiss()
     }
 }
 
@@ -946,6 +1845,7 @@ struct EquipmentTab: View {
 struct PsychicPowersTab: View {
     let character: any BaseCharacter
     @ObservedObject var store: CharacterStore
+    @Binding var isEditMode: Bool
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -969,131 +1869,6 @@ struct PsychicPowersTab: View {
     }
 }
 
-// MARK: - Edit Character Sheet
-
-struct EditCharacterSheet: View {
-    @Binding var character: any BaseCharacter
-    @ObservedObject var store: CharacterStore
-    @Environment(\.dismiss) private var dismiss
-    
-    var imperiumCharacter: ImperiumCharacter? {
-        return character as? ImperiumCharacter
-    }
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Basic Information") {
-                    TextField("Name", text: $character.name)
-                    TextField("Player", text: $character.player)
-                    TextField("Campaign", text: $character.campaign)
-                }
-                
-                Section("Faction & Role") {
-                    TextField("Faction", text: $character.faction)
-                    TextField("Role", text: $character.role)
-                    
-                    if let imperium = imperiumCharacter {
-                        let homeworldBinding = Binding<String>(
-                            get: { imperium.homeworld },
-                            set: { imperium.homeworld = $0 }
-                        )
-                        TextField("Homeworld", text: homeworldBinding)
-                    }
-                }
-                
-                if let imperium = imperiumCharacter {
-                    Section("Character Information") {
-                        let shortTermGoalBinding = Binding<String>(
-                            get: { imperium.shortTermGoal },
-                            set: { imperium.shortTermGoal = $0 }
-                        )
-                        TextField("Short-term Goal", text: shortTermGoalBinding, axis: .vertical)
-                            .lineLimit(2...4)
-                        
-                        let longTermGoalBinding = Binding<String>(
-                            get: { imperium.longTermGoal },
-                            set: { imperium.longTermGoal = $0 }
-                        )
-                        TextField("Long-term Goal", text: longTermGoalBinding, axis: .vertical)
-                            .lineLimit(2...4)
-                        
-                        let descriptionBinding = Binding<String>(
-                            get: { imperium.characterDescription },
-                            set: { imperium.characterDescription = $0 }
-                        )
-                        TextField("Character Description", text: descriptionBinding, axis: .vertical)
-                            .lineLimit(3...6)
-                    }
-                }
-                
-                Section("Status") {
-                    HStack {
-                        Text("Wounds")
-                        Spacer()
-                        TextField("Current", value: $character.wounds, format: .number)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 60)
-                        Text("/")
-                        if let imperium = imperiumCharacter {
-                            Text("\(imperium.calculateMaxWounds())")
-                                .frame(width: 60)
-                        } else {
-                            TextField("Max", value: $character.maxWounds, format: .number)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(width: 60)
-                        }
-                    }
-                    
-                    HStack {
-                        Text("Corruption")
-                        Spacer()
-                        TextField("Corruption", value: $character.corruption, format: .number)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 80)
-                        
-                        if let imperium = imperiumCharacter {
-                            Text("/ 100 (Threshold: \(imperium.calculateCorruptionThreshold()))")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    if let imperium = imperiumCharacter {
-                        HStack {
-                            Text("Critical Wounds")
-                            Spacer()
-                            let criticalWoundsBinding = Binding<Int>(
-                                get: { imperium.criticalWounds },
-                                set: { imperium.criticalWounds = $0 }
-                            )
-                            TextField("Count", value: criticalWoundsBinding, format: .number)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(width: 60)
-                        }
-                    }
-                }
-            }
-            .navigationTitle("Edit Character")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        store.saveChanges()
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-}
-
 // MARK: - Status Popup View
 
 struct StatusPopupView: View {
@@ -1106,8 +1881,6 @@ struct StatusPopupView: View {
     @State private var corruption: Int = 0
     @State private var fate: Int = 0
     @State private var spentFate: Int = 0
-    @State private var totalExperience: Int = 0
-    @State private var spentExperience: Int = 0
     
     var body: some View {
         NavigationStack {
@@ -1313,38 +2086,6 @@ struct StatusPopupView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                
-                Section("Experience") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Total Experience")
-                            .font(.headline)
-                        
-                        TextField("Total Experience", value: $totalExperience, formatter: NumberFormatter())
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.numberPad)
-                            .onChange(of: totalExperience) { _ in
-                                if totalExperience < 0 {
-                                    totalExperience = 0
-                                }
-                                updateCharacter()
-                            }
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Spent Experience")
-                            .font(.headline)
-                        
-                        TextField("Spent Experience", value: $spentExperience, formatter: NumberFormatter())
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.numberPad)
-                            .onChange(of: spentExperience) { _ in
-                                if spentExperience < 0 {
-                                    spentExperience = 0
-                                }
-                                updateCharacter()
-                            }
-                    }
-                }
             }
             .navigationTitle("Character Status")
             .navigationBarTitleDisplayMode(.inline)
@@ -1362,8 +2103,6 @@ struct StatusPopupView: View {
                 corruption = character.corruption
                 fate = character.fate
                 spentFate = character.spentFate
-                totalExperience = character.totalExperience
-                spentExperience = character.spentExperience
             }
         }
     }
@@ -1373,8 +2112,6 @@ struct StatusPopupView: View {
         character.corruption = corruption
         character.fate = fate
         character.spentFate = spentFate
-        character.totalExperience = totalExperience
-        character.spentExperience = spentExperience
         character.lastModified = Date()
         store.saveChanges()
     }

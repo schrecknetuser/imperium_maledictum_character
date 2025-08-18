@@ -6,10 +6,8 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-class Equipment {
+class Equipment: Codable {
     var name: String
     var equipmentDescription: String
     var encumbrance: Int
@@ -139,4 +137,13 @@ struct EquipmentTraitNames {
         inflict, loud, penetrating, rapidFire, reach, reliable, rend,
         shield, spread, subtle, supercharge, thrown, twoHanded, unstable
     ]
+}
+
+struct AvailabilityLevels {
+    static let common = "Common"
+    static let rare = "Rare"
+    static let scarce = "Scarce"
+    static let exotic = "Exotic"
+    
+    static let all = [common, rare, scarce, exotic]
 }

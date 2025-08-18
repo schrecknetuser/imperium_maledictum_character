@@ -47,8 +47,10 @@ class ImperiumCharacter: BaseCharacter {
     var factionSkillAdvancesData: String = "" // JSON data for faction-specific skill advances
     var specializationAdvancesData: String = "" // JSON data for specialization advances
     var talentNamesData: String = "" // JSON array of talent names
-    var equipmentNamesData: String = "" // JSON array of equipment names  
-    var weaponNamesData: String = "" // JSON array of weapon names
+    var equipmentNamesData: String = "" // JSON array of equipment names - DEPRECATED
+    var weaponNamesData: String = "" // JSON array of weapon names - DEPRECATED
+    var equipmentListData: String = "" // JSON array of Equipment objects
+    var weaponListData: String = "" // JSON array of Weapon objects
     var reputationData: String = "" // JSON data for reputation
     
     // Bonus tracking to prevent double application
@@ -159,6 +161,8 @@ class ImperiumCharacter: BaseCharacter {
         talentNamesData = ""
         equipmentNamesData = ""
         weaponNamesData = ""
+        equipmentListData = ""
+        weaponListData = ""
         reputationData = ""
         appliedOriginBonuses = ""
         appliedFactionBonuses = ""
@@ -387,6 +391,38 @@ class ImperiumCharacter: BaseCharacter {
         }
     }
     
+    var equipmentList: [Equipment] {
+        get {
+            guard let data = equipmentListData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([Equipment].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                equipmentListData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
+    var weaponList: [Weapon] {
+        get {
+            guard let data = weaponListData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([Weapon].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                weaponListData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            lastModified = Date()
+        }
+    }
+    
     var reputations: [Reputation] {
         get {
             guard let data = reputationData.data(using: .utf8),
@@ -556,5 +592,141 @@ class ImperiumCharacter: BaseCharacter {
             }
             lastModified = Date()
         }
+    }
+    
+    // MARK: - Migration Methods
+    
+    /// Migrates equipment and weapons from string arrays to proper Equipment/Weapon objects
+    func migrateEquipmentAndWeapons() {
+        // Only migrate if we have old data and no new data
+        if !equipmentNames.isEmpty && equipmentList.isEmpty {
+            var newEquipmentList: [Equipment] = []
+            
+            for equipmentName in equipmentNames {
+                if isWeaponItem(equipmentName) {
+                    // This should be a weapon, add it to weapon list instead
+                    if weaponList.isEmpty || !weaponList.contains(where: { $0.name == parseBaseName(equipmentName) }) {
+                        let weapon = parseWeaponFromName(equipmentName)
+                        var currentWeaponList = weaponList
+                        currentWeaponList.append(weapon)
+                        weaponList = currentWeaponList
+                    }
+                } else {
+                    // Parse equipment from name
+                    let equipment = parseEquipmentFromName(equipmentName)
+                    newEquipmentList.append(equipment)
+                }
+            }
+            
+            if !newEquipmentList.isEmpty {
+                equipmentList = newEquipmentList
+            }
+            // Keep old data for backward compatibility
+        }
+        
+        if !weaponNames.isEmpty && weaponList.isEmpty {
+            var newWeaponList: [Weapon] = []
+            
+            for weaponName in weaponNames {
+                // Parse weapon from name
+                let weapon = parseWeaponFromName(weaponName)
+                newWeaponList.append(weapon)
+            }
+            
+            weaponList = newWeaponList
+            // Keep old data for backward compatibility
+        }
+        
+        lastModified = Date()
+    }
+    
+    private func isWeaponItem(_ itemName: String) -> Bool {
+        let baseName = parseBaseName(itemName).lowercased()
+        let weaponKeywords = ["knife", "sword", "gun", "pistol", "rifle", "blade", "axe", "hammer", "mace", "spear", "staff", "bow", "crossbow", "grenade", "launcher", "cannon"]
+        
+        return weaponKeywords.contains { baseName.contains($0) }
+    }
+    
+    private func parseBaseName(_ fullName: String) -> String {
+        // Extract the base name before any parentheses
+        if let range = fullName.range(of: " (") {
+            return String(fullName[..<range.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    private func parseParenthesesContent(_ fullName: String) -> [String] {
+        // Extract content from parentheses
+        var content: [String] = []
+        var currentIndex = fullName.startIndex
+        
+        while currentIndex < fullName.endIndex {
+            if let openRange = fullName.range(of: "(", range: currentIndex..<fullName.endIndex),
+               let closeRange = fullName.range(of: ")", range: openRange.upperBound..<fullName.endIndex) {
+                let contentString = String(fullName[openRange.upperBound..<closeRange.lowerBound])
+                content.append(contentString.trimmingCharacters(in: .whitespacesAndNewlines))
+                currentIndex = closeRange.upperBound
+            } else {
+                break
+            }
+        }
+        
+        return content
+    }
+    
+    private func parseEquipmentFromName(_ fullName: String) -> Equipment {
+        let baseName = parseBaseName(fullName)
+        let parenthesesContent = parseParenthesesContent(fullName)
+        
+        let equipment = Equipment(name: baseName)
+        
+        // Parse qualities, flaws, and traits from parentheses
+        for content in parenthesesContent {
+            if EquipmentQualities.all.contains(content) {
+                var qualities = equipment.qualities
+                qualities.append(content)
+                equipment.qualities = qualities
+            } else if EquipmentFlaws.all.contains(content) {
+                var flaws = equipment.flaws
+                flaws.append(content)
+                equipment.flaws = flaws
+            } else if EquipmentTraitNames.all.contains(content) {
+                var traits = equipment.traits
+                traits.append(EquipmentTrait(name: content))
+                equipment.traits = traits
+            }
+        }
+        
+        return equipment
+    }
+    
+    private func parseWeaponFromName(_ fullName: String) -> Weapon {
+        let baseName = parseBaseName(fullName)
+        let parenthesesContent = parseParenthesesContent(fullName)
+        
+        let weapon = Weapon(name: baseName)
+        
+        // Parse modifications, qualities, flaws, and traits from parentheses
+        for content in parenthesesContent {
+            if WeaponModifications.all.contains(content) {
+                var modifications = weapon.modifications
+                modifications.append(content)
+                weapon.modifications = modifications
+            } else if EquipmentQualities.all.contains(content) {
+                var qualities = weapon.qualities
+                qualities.append(content)
+                weapon.qualities = qualities
+            } else if EquipmentFlaws.all.contains(content) {
+                var flaws = weapon.flaws
+                flaws.append(content)
+                weapon.flaws = flaws
+            } else if WeaponTraitNames.all.contains(content) {
+                var traits = weapon.weaponTraits
+                traits.append(WeaponTrait(name: content))
+                weapon.weaponTraits = traits
+            }
+        }
+        
+        return weapon
     }
 }
