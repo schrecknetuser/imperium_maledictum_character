@@ -1751,27 +1751,6 @@ struct ComprehensiveEquipmentSheet: View {
                             }
                         }
                     }
-                } else {
-                    Section("Equipment Traits") {
-                        ForEach(EquipmentTraitNames.all, id: \.self) { trait in
-                            HStack {
-                                Text(trait)
-                                Spacer()
-                                if selectedTraits.contains(trait) {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                if selectedTraits.contains(trait) {
-                                    selectedTraits.remove(trait)
-                                } else {
-                                    selectedTraits.insert(trait)
-                                }
-                            }
-                        }
-                    }
                 }
                 
                 Section {
@@ -1839,8 +1818,8 @@ struct ComprehensiveEquipmentSheet: View {
                 availability: availability
             )
             
-            // Set equipment properties
-            equipment.traits = selectedTraits.map { EquipmentTrait(name: $0) }
+            // Set equipment properties (equipment should not have weapon traits)
+            equipment.traits = []
             equipment.qualities = Array(selectedQualities)
             equipment.flaws = Array(selectedFlaws)
             
