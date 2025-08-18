@@ -27,20 +27,14 @@ struct Reputation: Codable, Identifiable {
 // MARK: - Faction Constants
 struct ImperiumFactionsList {
     static let factions = [
-        "Adeptus Administratum",
-        "Adeptus Arbites",
-        "Adeptus Astra Telepathica", 
+        "Adeptus Astra Telepathica",
         "Adeptus Mechanicus",
+        "Adeptus Administratum",
         "Astra Militarum",
-        "Ecclesiarchy",
-        "Imperial Navy",
+        "Adeptus Ministorum",
         "Inquisition",
-        "Rogue Trader Dynasty",
-        "Adeptus Astartes",
-        "Local Planetary Governor",
-        "Merchants Guild",
-        "Criminal Organizations",
-        "Chaos Cults",
-        "Xenos Traders"
+        "Navis Imperialis",
+        "Rogue Trader Dynasties",
+        "Infractionists"
     ]
 }
