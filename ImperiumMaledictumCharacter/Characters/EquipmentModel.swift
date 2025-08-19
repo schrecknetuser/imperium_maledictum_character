@@ -613,9 +613,131 @@ struct EquipmentTemplateDefinitions {
         )
     ]
     
-    // MARK: - Augmetics (placeholder - can be expanded later)
+    // MARK: - Augmetics
     static let augmetics: [EquipmentTemplate] = [
-        // Placeholder for future augmetic templates
+        // Augmetic Replacements
+        EquipmentTemplate(
+            name: "Augmetic Arm",
+            category: EquipmentCategories.augmetics,
+            description: "Grants +1 Armour (added to any other Armour in the location). Provides +1 SL to all Strength-based Tests using the arm, and melee attacks with the arm deal +1 Damage. If both arms are augmetic, gain +2 SL to Strength-based Tests and +2 Damage with Two-handed melee weapons.",
+            encumbrance: 0,
+            cost: 1000,
+            availability: AvailabilityLevels.scarce
+        ),
+        EquipmentTemplate(
+            name: "Augmetic Heart",
+            category: EquipmentCategories.augmetics,
+            description: "Rare outside of the Adeptus Mechanicus. As an Action, you may make a Challenging (+0) Fortitude Test to remove the Bleeding (Minor) Condition. As an Action, you may make a Hard (–20) Fortitude Test to remove the Bleeding (Major) Condition.",
+            encumbrance: 0,
+            cost: 3000,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Augmetic Leg",
+            category: EquipmentCategories.augmetics,
+            description: "Grants +1 Armour (added to any other Armour in the location). Provides +1 SL to all Strength-based Tests using the leg (e.g., kicking in a door).",
+            encumbrance: 0,
+            cost: 1000,
+            availability: AvailabilityLevels.scarce
+        ),
+        EquipmentTemplate(
+            name: "Augmetic Respiratory System",
+            category: EquipmentCategories.augmetics,
+            description: "Artificial lungs and filtration systems. Provides +2 SL to Fortitude Tests to resist airborne toxins and poisonous gases.",
+            encumbrance: 0,
+            cost: 2000,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Augmetic Sensory Organs",
+            category: EquipmentCategories.augmetics,
+            description: "Replaces lost or damaged sensory organs. Grants +1 SL to Tests using that sense. If two sensory augmetics of the same type are installed, grants +2 SL instead.",
+            encumbrance: 0,
+            cost: 4000,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Augmetic Tracks/Wheels",
+            category: EquipmentCategories.augmetics,
+            description: "Seen on Servitors for mobility. Grants +1 Armour (added to any other Armour in the location). In clear Zones, speed is Fast, but cluttered Zones count as Difficult Terrain.",
+            encumbrance: 0,
+            cost: 1500,
+            availability: AvailabilityLevels.scarce
+        ),
+        
+        // Augmetics
+        EquipmentTemplate(
+            name: "Augur Array",
+            category: EquipmentCategories.augmetics,
+            description: "Complex cortical implant. Grants abilities of an Auspex, revealing energy, life signs, movement, and other data within Medium Range. Also grants +5 Perception.",
+            encumbrance: 0,
+            cost: 6000,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Ballistic Mechadendrite",
+            category: EquipmentCategories.augmetics,
+            description: "Snake-like implant. Fitted with a Laspistol that never needs reloading.",
+            encumbrance: 0,
+            cost: 2000,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Calculus Logi Upgrade",
+            category: EquipmentCategories.augmetics,
+            description: "Augments the brain with cogitator mechanisms. Grants +1 SL on Logic (Mathematics) Tests and +5 Intelligence.",
+            encumbrance: 0,
+            cost: 10000,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Manipulator Mechadendrite",
+            category: EquipmentCategories.augmetics,
+            description: "Heavy lifter. Grants +2 SL to Strength-based Tests and –1 SL to Dexterity Tests. Can be used as an Improvised Melee Weapon (Two-handed).",
+            encumbrance: 0,
+            cost: 1400,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Medicae Mechadendrite",
+            category: EquipmentCategories.augmetics,
+            description: "Contains scalpels, bonesaws, and surgical tools. Functions as a Chirurgeon's Kit for medical Tests. Unlike standard kits, tools do not run out but must be replaced if broken.",
+            encumbrance: 0,
+            cost: 1400,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Mind Impulse Unit",
+            category: EquipmentCategories.augmetics,
+            description: "Allows control of systems such as cogitator arrays, industrial equipment, and Servitors. Grants +1 SL to Tech Tests when operating connected machines or cybernetic servants.",
+            encumbrance: 0,
+            cost: 10000,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Optical Mechadendrite",
+            category: EquipmentCategories.augmetics,
+            description: "Longer than standard mechadendrites. Provides +1 SL to Awareness (Sight) Tests, ignores Poorly Lit and Dark Zone penalties, and functions as integrated Stablight. Can be used creatively (e.g., looking around corners).",
+            encumbrance: 0,
+            cost: 1200,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Utility Mechadendrite",
+            category: EquipmentCategories.augmetics,
+            description: "Fitted with tools for repairing and maintaining machines. Counts as a Standard Quality Combi-Tool, grants +2 SL to Tech Tests, and can be used in melee combat as an Improvised Weapon (One-handed).",
+            encumbrance: 0,
+            cost: 1000,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Vocal Implant",
+            category: EquipmentCategories.augmetics,
+            description: "Enhances vocal effects, useful for priests or Enforcers. Voice or other generated sounds can be heard up to 100 meters away.",
+            encumbrance: 0,
+            cost: 400,
+            availability: AvailabilityLevels.rare
+        )
     ]
     
     static let allEquipment: [EquipmentTemplate] = forceFields + clothingPersonalGear + tools + augmetics

@@ -105,7 +105,7 @@ struct FactionDefinitions {
             skillAdvances: ["Dexterity", "Logic", "Lore", "Medicae", "Piloting", "Tech"],
             influenceBonus: "Adeptus Mechanicus",
             talents: [],
-            equipment: ["Robes", "Dataslate", "Sacred Unguents", "Augury Array"], // Plus augmetic choices
+            equipment: ["Robes", "Dataslate", "Sacred Unguents", "Augur Array"], // Plus augmetic choices
             solars: 100,
             description: "The technological priesthood of Mars"
         ),
