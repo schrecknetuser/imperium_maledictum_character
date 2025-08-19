@@ -14,8 +14,13 @@ struct EquipmentTab: View {
     @State private var showingAddEquipmentSheet = false
     @State private var showingAddWeaponSheet = false
     @State private var showingWeaponSelectionPopup = false
+    @State private var showingEquipmentSelectionPopup = false
     @State private var editingEquipmentState: EditingEquipmentState = .none
     @State private var editingWeaponState: EditingWeaponState = .none
+    @State private var showingEquipmentDeleteConfirmation = false
+    @State private var showingWeaponDeleteConfirmation = false
+    @State private var equipmentToDelete: Equipment?
+    @State private var weaponToDelete: Weapon?
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -55,52 +60,74 @@ struct EquipmentTab: View {
             List {
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
-                        ForEach(imperium.equipmentList, id: \.name) { equipment in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(equipment.name)
-                                        .font(.body)
-                                    
-                                    if !equipment.equipmentDescription.isEmpty {
-                                        Text(equipment.equipmentDescription)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                    }
-                                    
-                                    // Show traits, qualities, and flaws
-                                    let details = buildEquipmentDetails(equipment)
-                                    if !details.isEmpty {
-                                        Text(details)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .italic()
-                                    }
-                                    
-                                    // Show stats
-                                    Text("Encumbrance: \(equipment.encumbrance), Cost: \(equipment.cost), \(equipment.availability)")
-                                        .font(.caption2)
+                        let groupedEquipment = Dictionary(grouping: imperium.equipmentList) { equipment in
+                            EquipmentTemplateDefinitions.getCategoryForEquipment(equipment.name)
+                        }
+                        
+                        ForEach(EquipmentCategories.all + ["Other"], id: \.self) { category in
+                            if let equipmentInCategory = groupedEquipment[category], !equipmentInCategory.isEmpty {
+                                // Category header
+                                HStack {
+                                    Text(category)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    Text("(\(equipmentInCategory.count))")
+                                        .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
+                                .padding(.vertical, 4)
                                 
-                                Spacer()
-                                
-                                if isEditMode {
-                                    HStack(spacing: 8) {
-                                        Button(action: {
-                                            editEquipment(equipment)
-                                        }) {
-                                            Image(systemName: "pencil.circle.fill")
-                                                .foregroundColor(.blue)
+                                ForEach(Array(equipmentInCategory.enumerated()), id: \.offset) { index, equipment in
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(equipment.name)
+                                                .font(.body)
+                                            
+                                            if !equipment.equipmentDescription.isEmpty {
+                                                Text(equipment.equipmentDescription)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .lineLimit(3)
+                                            }
+                                            
+                                            // Show traits, qualities, and flaws
+                                            let details = buildEquipmentDetails(equipment)
+                                            if !details.isEmpty {
+                                                Text(details)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .italic()
+                                            }
+                                            
+                                            // Show stats
+                                            Text("Encumbrance: \(equipment.encumbrance), Cost: \(equipment.cost), \(equipment.availability)")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
                                         }
-                                        .buttonStyle(PlainButtonStyle())
                                         
-                                        Button(action: {
-                                            removeEquipment(equipment)
-                                        }) {
-                                            Image(systemName: "minus.circle.fill")
-                                                .foregroundColor(.red)
+                                        Spacer()
+                                        
+                                        if isEditMode {
+                                            HStack(spacing: 8) {
+                                                Button(action: {
+                                                    editEquipment(equipment)
+                                                }) {
+                                                    Image(systemName: "pencil.circle.fill")
+                                                        .foregroundColor(.blue)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                                
+                                                Button(action: {
+                                                    equipmentToDelete = equipment
+                                                    showingEquipmentDeleteConfirmation = true
+                                                }) {
+                                                    Image(systemName: "minus.circle.fill")
+                                                        .foregroundColor(.red)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                            }
                                         }
-                                        .buttonStyle(PlainButtonStyle())
                                     }
                                 }
                             }
@@ -108,7 +135,7 @@ struct EquipmentTab: View {
                         
                         if isEditMode {
                             Button(action: {
-                                showingAddEquipmentSheet = true
+                                showingEquipmentSelectionPopup = true
                             }) {
                                 HStack {
                                     Image(systemName: "plus.circle.fill")
@@ -145,11 +172,18 @@ struct EquipmentTab: View {
                                 }
                                 .padding(.vertical, 4)
                                 
-                                ForEach(weaponsInCategory, id: \.name) { weapon in
+                                ForEach(Array(weaponsInCategory.enumerated()), id: \.offset) { index, weapon in
                                     HStack {
                                         VStack(alignment: .leading, spacing: 2) {
                                             Text(weapon.name)
                                                 .font(.body)
+                                            
+                                            if !weapon.weaponDescription.isEmpty {
+                                                Text(weapon.weaponDescription)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .lineLimit(3)
+                                            }
                                             
                                             // Show weapon stats based on category
                                             if weapon.category == WeaponCategories.melee {
@@ -195,7 +229,8 @@ struct EquipmentTab: View {
                                                 .buttonStyle(PlainButtonStyle())
                                                 
                                                 Button(action: {
-                                                    removeWeapon(weapon)
+                                                    weaponToDelete = weapon
+                                                    showingWeaponDeleteConfirmation = true
                                                 }) {
                                                     Image(systemName: "minus.circle.fill")
                                                         .foregroundColor(.red)
@@ -256,6 +291,11 @@ struct EquipmentTab: View {
                 WeaponSelectionPopupView(character: imperium, store: store, showingCustomWeaponSheet: $showingAddWeaponSheet)
             }
         }
+        .sheet(isPresented: $showingEquipmentSelectionPopup) {
+            if let imperium = imperiumCharacter {
+                EquipmentSelectionPopupView(character: imperium, store: store, showingCustomEquipmentSheet: $showingAddEquipmentSheet)
+            }
+        }
         .sheet(isPresented: showingEditEquipmentSheet) {
             if let imperium = imperiumCharacter, case .editing(let equipment) = editingEquipmentState {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, editingEquipment: equipment)
@@ -264,6 +304,36 @@ struct EquipmentTab: View {
         .sheet(isPresented: showingEditWeaponSheet) {
             if let imperium = imperiumCharacter, case .editing(let weapon) = editingWeaponState {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon)
+            }
+        }
+        .alert("Delete Equipment", isPresented: $showingEquipmentDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                equipmentToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let equipment = equipmentToDelete {
+                    removeEquipment(equipment)
+                }
+                equipmentToDelete = nil
+            }
+        } message: {
+            if let equipment = equipmentToDelete {
+                Text("Are you sure you want to delete '\(equipment.name)'? This action cannot be undone.")
+            }
+        }
+        .alert("Delete Weapon", isPresented: $showingWeaponDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                weaponToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let weapon = weaponToDelete {
+                    removeWeapon(weapon)
+                }
+                weaponToDelete = nil
+            }
+        } message: {
+            if let weapon = weaponToDelete {
+                Text("Are you sure you want to delete '\(weapon.name)'? This action cannot be undone.")
             }
         }
     }
@@ -324,7 +394,10 @@ struct EquipmentTab: View {
     private func removeEquipment(_ equipment: Equipment) {
         guard let imperium = imperiumCharacter else { return }
         var equipmentList = imperium.equipmentList
-        equipmentList.removeAll { $0.name == equipment.name }
+        // Remove the specific equipment instance using ID
+        if let index = equipmentList.firstIndex(where: { $0.id == equipment.id }) {
+            equipmentList.remove(at: index)
+        }
         imperium.equipmentList = equipmentList
         imperium.lastModified = Date()
         store.saveChanges()
@@ -333,7 +406,10 @@ struct EquipmentTab: View {
     private func removeWeapon(_ weapon: Weapon) {
         guard let imperium = imperiumCharacter else { return }
         var weaponList = imperium.weaponList
-        weaponList.removeAll { $0.name == weapon.name }
+        // Remove the specific weapon instance using ID
+        if let index = weaponList.firstIndex(where: { $0.id == weapon.id }) {
+            weaponList.remove(at: index)
+        }
         imperium.weaponList = weaponList
         imperium.lastModified = Date()
         store.saveChanges()
@@ -400,7 +476,7 @@ struct ComprehensiveEquipmentSheet: View {
         } else if let weapon = editingWeapon, isWeapon {
             // Editing existing weapon
             _itemName = State(initialValue: weapon.name.isEmpty ? "Unnamed Weapon" : weapon.name)
-            _itemDescription = State(initialValue: "") // Weapons don't have descriptions in equipment section
+            _itemDescription = State(initialValue: weapon.weaponDescription)
             _category = State(initialValue: weapon.category.isEmpty ? WeaponCategories.ranged : weapon.category)
             _specialization = State(initialValue: weapon.specialization.isEmpty ? WeaponSpecializations.none : weapon.specialization)
             _damage = State(initialValue: weapon.damage)
@@ -617,6 +693,7 @@ struct ComprehensiveEquipmentSheet: View {
         if isWeapon {
             let weapon = Weapon(
                 name: trimmedName,
+                weaponDescription: itemDescription,
                 category: category,
                 specialization: specialization,
                 damage: damage,
@@ -636,8 +713,10 @@ struct ComprehensiveEquipmentSheet: View {
             var weaponList = character.weaponList
             
             if let editingWeapon = editingWeapon {
-                // Remove the old weapon and add the new one
-                weaponList.removeAll { $0.name == editingWeapon.name }
+                // Remove only the specific weapon instance being edited using ID
+                if let index = weaponList.firstIndex(where: { $0.id == editingWeapon.id }) {
+                    weaponList.remove(at: index)
+                }
             }
             
             weaponList.append(weapon)
@@ -659,8 +738,10 @@ struct ComprehensiveEquipmentSheet: View {
             var equipmentList = character.equipmentList
             
             if let editingEquipment = editingEquipment {
-                // Remove the old equipment and add the new one
-                equipmentList.removeAll { $0.name == editingEquipment.name }
+                // Remove only the specific equipment instance being edited using ID
+                if let index = equipmentList.firstIndex(where: { $0.id == editingEquipment.id }) {
+                    equipmentList.remove(at: index)
+                }
             }
             
             equipmentList.append(equipment)
@@ -774,7 +855,7 @@ struct WeaponSelectionPopupView: View {
             Section {
                 let weaponsInCategory = WeaponTemplateDefinitions.getWeaponsByCategory(selectedCategory)
                 
-                ForEach(weaponsInCategory, id: \.name) { template in
+                ForEach(Array(weaponsInCategory.enumerated()), id: \.offset) { index, template in
                     Button(action: {
                         addWeaponFromTemplate(template)
                     }) {
@@ -834,6 +915,170 @@ struct WeaponSelectionPopupView: View {
         var weaponList = character.weaponList
         weaponList.append(weapon)
         character.weaponList = weaponList
+        character.lastModified = Date()
+        store.saveChanges()
+        
+        dismiss()
+    }
+}
+
+// MARK: - Equipment Selection Popup
+struct EquipmentSelectionPopupView: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    @Binding var showingCustomEquipmentSheet: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var selectedCategory: String = EquipmentCategories.clothingPersonalGear
+    @State private var selectionMode: SelectionMode = .category
+    
+    enum SelectionMode {
+        case category
+        case equipment
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if selectionMode == .category {
+                    categorySelectionView
+                } else {
+                    equipmentSelectionView
+                }
+            }
+            .navigationTitle("Add Equipment")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add Custom") {
+                        dismiss()
+                        showingCustomEquipmentSheet = true
+                    }
+                }
+            }
+        }
+    }
+    
+    private var categorySelectionView: some View {
+        List {
+            Section {
+                ForEach(EquipmentCategories.all, id: \.self) { category in
+                    let equipmentInCategory = EquipmentTemplateDefinitions.getEquipmentByCategory(category)
+                    
+                    Button(action: {
+                        selectedCategory = category
+                        selectionMode = .equipment
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(category)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text("\(equipmentInCategory.count) items available")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            } header: {
+                Text("Select Equipment Category")
+            } footer: {
+                Text("Choose a category to see available equipment templates.")
+            }
+        }
+    }
+    
+    private var equipmentSelectionView: some View {
+        List {
+            Section {
+                Button(action: {
+                    selectionMode = .category
+                }) {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.blue)
+                        Text("Back to Categories")
+                            .foregroundColor(.blue)
+                        Spacer()
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            
+            Section {
+                let equipmentInCategory = EquipmentTemplateDefinitions.getEquipmentByCategory(selectedCategory)
+                
+                ForEach(Array(equipmentInCategory.enumerated()), id: \.offset) { index, template in
+                    Button(action: {
+                        addEquipmentFromTemplate(template)
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(template.name)
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                
+                                if !template.description.isEmpty {
+                                    Text(template.description)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(3)
+                                }
+                                
+                                if !template.traits.isEmpty {
+                                    Text("Traits: \(template.traits.map { $0.displayName }.joined(separator: ", "))")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                }
+                                
+                                HStack {
+                                    Text("Cost: \(template.cost)")
+                                    Text("Encumbrance: \(template.encumbrance)")
+                                    Text(template.availability)
+                                }
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            } header: {
+                Text("\(selectedCategory)")
+            } footer: {
+                Text("Tap equipment to add it to your character, or use 'Add Custom' for custom equipment.")
+            }
+        }
+    }
+    
+    private func addEquipmentFromTemplate(_ template: EquipmentTemplate) {
+        let equipment = template.createEquipment()
+        
+        var equipmentList = character.equipmentList
+        equipmentList.append(equipment)
+        character.equipmentList = equipmentList
         character.lastModified = Date()
         store.saveChanges()
         

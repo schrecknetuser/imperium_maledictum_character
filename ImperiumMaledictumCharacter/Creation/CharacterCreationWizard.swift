@@ -519,7 +519,7 @@ struct OriginStage: View {
                             .font(.subheadline)
                             .fontWeight(.semibold)
                         
-                        ForEach(origin.grantedEquipment, id: \.self) { equipment in
+                        ForEach(Array(origin.grantedEquipment.enumerated()), id: \.offset) { index, equipment in
                             Text("• \(equipment)")
                                 .font(.subheadline)
                         }
@@ -606,9 +606,7 @@ struct OriginStage: View {
         // Add granted equipment
         var allEquipment = character.equipmentNames
         for equipment in origin.grantedEquipment {
-            if !allEquipment.contains(equipment) {
-                allEquipment.append(equipment)
-            }
+            allEquipment.append(equipment)
         }
         character.equipmentNames = allEquipment
     }
@@ -778,7 +776,7 @@ struct FactionStage: View {
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                             
-                            ForEach(faction.equipment, id: \.self) { equipment in
+                            ForEach(Array(faction.equipment.enumerated()), id: \.offset) { index, equipment in
                                 Text("• \(equipment)")
                                     .font(.subheadline)
                             }
@@ -882,9 +880,7 @@ struct FactionStage: View {
         // Add faction equipment
         var allEquipment = character.equipmentNames
         for equipment in faction.equipment {
-            if !allEquipment.contains(equipment) {
-                allEquipment.append(equipment)
-            }
+            allEquipment.append(equipment)
         }
         character.equipmentNames = allEquipment
         
@@ -1335,7 +1331,7 @@ struct RoleStage: View {
                                         
                                         ScrollView(.horizontal, showsIndicators: false) {
                                             HStack {
-                                                ForEach(equipmentOptions, id: \.self) { equipment in
+                                                ForEach(Array(equipmentOptions.enumerated()), id: \.offset) { equipmentIndex, equipment in
                                                     Button(action: {
                                                         selectEquipment(equipment, forChoice: choiceIndex)
                                                     }) {
@@ -1368,7 +1364,7 @@ struct RoleStage: View {
                             Text("Granted Equipment:")
                                 .font(.headline)
                             
-                            ForEach(role.equipment, id: \.self) { equipment in
+                            ForEach(Array(role.equipment.enumerated()), id: \.offset) { index, equipment in
                                 Text("• \(equipment)")
                                     .font(.subheadline)
                             }
@@ -1560,9 +1556,7 @@ struct RoleStage: View {
         
         // Add granted equipment from role
         for equipment in role.equipment {
-            if !allEquipment.contains(equipment) {
-                allEquipment.append(equipment)
-            }
+            allEquipment.append(equipment)
         }
         
         character.equipmentNames = allEquipment

@@ -598,19 +598,17 @@ class ImperiumCharacter: BaseCharacter {
     
     /// Migrates equipment and weapons from string arrays to proper Equipment/Weapon objects
     func migrateEquipmentAndWeapons() {
-        // Only migrate if we have old data and no new data
+        // Migrate from old string-based data to new object-based system
         if !equipmentNames.isEmpty && equipmentList.isEmpty {
             var newEquipmentList: [Equipment] = []
             
             for equipmentName in equipmentNames {
                 if isWeaponItem(equipmentName) {
                     // This should be a weapon, add it to weapon list instead
-                    if weaponList.isEmpty || !weaponList.contains(where: { $0.name == parseBaseName(equipmentName) }) {
-                        let weapon = parseWeaponFromName(equipmentName)
-                        var currentWeaponList = weaponList
-                        currentWeaponList.append(weapon)
-                        weaponList = currentWeaponList
-                    }
+                    let weapon = parseWeaponFromName(equipmentName)
+                    var currentWeaponList = weaponList
+                    currentWeaponList.append(weapon)
+                    weaponList = currentWeaponList
                 } else {
                     // Parse equipment from name
                     let equipment = parseEquipmentFromName(equipmentName)
@@ -637,10 +635,48 @@ class ImperiumCharacter: BaseCharacter {
             // Keep old data for backward compatibility
         }
         
+        // Fix existing Equipment objects that might have full names instead of base names
+        var updatedEquipmentList: [Equipment] = []
+        for equipment in equipmentList {
+            if equipment.name.contains("(") && equipment.name.contains(")") {
+                // This equipment has a full name like "Writing Kit (Shoddy)"
+                // Re-parse it to extract base name and traits
+                let reparsedEquipment = parseEquipmentFromName(equipment.name)
+                updatedEquipmentList.append(reparsedEquipment)
+            } else {
+                // This equipment already has a base name, keep it as is
+                updatedEquipmentList.append(equipment)
+            }
+        }
+        
+        if updatedEquipmentList.count > 0 {
+            equipmentList = updatedEquipmentList
+        }
+        
+        // Fix existing Weapon objects that might have full names instead of base names
+        var updatedWeaponList: [Weapon] = []
+        for weapon in weaponList {
+            if weapon.name.contains("(") && weapon.name.contains(")") {
+                // This weapon has a full name, re-parse it
+                let reparsedWeapon = parseWeaponFromName(weapon.name)
+                updatedWeaponList.append(reparsedWeapon)
+            } else {
+                // This weapon already has a base name, keep it as is
+                updatedWeaponList.append(weapon)
+            }
+        }
+        
+        if updatedWeaponList.count > 0 {
+            weaponList = updatedWeaponList
+        }
+        
         // Migrate categories for existing weapons
         for weapon in weaponList {
             weapon.migrateCategory()
         }
+        
+        // Note: Equipment and Weapon objects created before UUID addition will get 
+        // auto-generated UUIDs through the Codable system, so no explicit migration needed
         
         lastModified = Date()
     }
@@ -683,7 +719,15 @@ class ImperiumCharacter: BaseCharacter {
         let baseName = parseBaseName(fullName)
         let parenthesesContent = parseParenthesesContent(fullName)
         
-        let equipment = Equipment(name: baseName)
+        // Try to get equipment from template first
+        let equipment: Equipment
+        if let template = EquipmentTemplateDefinitions.getTemplate(for: baseName) {
+            equipment = template.createEquipment()
+            // Use the base name to keep equipment items with same base name grouped together
+            equipment.name = baseName
+        } else {
+            equipment = Equipment(name: baseName)
+        }
         
         // Parse qualities, flaws, and traits from parentheses
         for content in parenthesesContent {
@@ -713,6 +757,8 @@ class ImperiumCharacter: BaseCharacter {
         let weapon: Weapon
         if let template = WeaponTemplateDefinitions.getTemplate(for: baseName) {
             weapon = template.createWeapon()
+            // Use the base name to keep weapon items with same base name grouped together
+            weapon.name = baseName
         } else {
             weapon = Weapon(name: baseName)
         }
