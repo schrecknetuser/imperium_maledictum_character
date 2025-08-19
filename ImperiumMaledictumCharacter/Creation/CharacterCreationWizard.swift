@@ -1184,20 +1184,19 @@ struct RoleStage: View {
                                 GridItem(.flexible())
                             ], spacing: 8) {
                                 ForEach(role.talentChoices, id: \.self) { talent in
-                                    // Debug output for Psyker talent
-                                    if talent == "Psyker" {
-                                        print("DEBUG UI: Psyker - isAutoGrantedByRole=\(isAutoGrantedByRole(talent, role: role)), isOwnedFromFactionOrAutoGranted=\(allFactionTalents.contains(talent) || isAutoGrantedByRole(talent, role: role)), isSelected=\(selectedTalents.contains(talent))")
-                                        print("DEBUG UI: allFactionTalents.contains(Psyker)=\(allFactionTalents.contains(talent))")
-                                        print("DEBUG UI: autoGrantedRoleTalents.contains(Psyker)=\(autoGrantedRoleTalents.contains(talent))")
-                                        print("DEBUG UI: role.name=\(role.name)")
-                                    }
-                                    
                                     TalentSelectionField(
                                         talentName: talent,
                                         isSelected: selectedTalents.contains(talent),
                                         maxReached: selectedTalents.count >= role.talentCount,
                                         alreadyOwned: allFactionTalents.contains(talent) || isAutoGrantedByRole(talent, role: role),
                                         onSelectionChanged: { isSelected in
+                                            // Debug output for Psyker talent
+                                            if talent == "Psyker" {
+                                                print("DEBUG UI: Psyker - isAutoGrantedByRole=\(isAutoGrantedByRole(talent, role: role)), isOwnedFromFactionOrAutoGranted=\(allFactionTalents.contains(talent) || isAutoGrantedByRole(talent, role: role)), isSelected=\(selectedTalents.contains(talent))")
+                                                print("DEBUG UI: allFactionTalents.contains(Psyker)=\(allFactionTalents.contains(talent))")
+                                                print("DEBUG UI: autoGrantedRoleTalents.contains(Psyker)=\(autoGrantedRoleTalents.contains(talent))")
+                                                print("DEBUG UI: role.name=\(role.name)")
+                                            }
                                             print("DEBUG: onSelectionChanged called for \(talent) with isSelected=\(isSelected)")
                                             if isSelected {
                                                 selectedTalents.insert(talent)
