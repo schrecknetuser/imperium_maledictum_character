@@ -669,8 +669,10 @@ struct ComprehensiveEquipmentSheet: View {
             var weaponList = character.weaponList
             
             if let editingWeapon = editingWeapon {
-                // Remove the old weapon and add the new one
-                weaponList.removeAll { $0.name == editingWeapon.name }
+                // Remove only the specific weapon instance being edited
+                if let index = weaponList.firstIndex(where: { $0 === editingWeapon }) {
+                    weaponList.remove(at: index)
+                }
             }
             
             weaponList.append(weapon)
@@ -692,8 +694,10 @@ struct ComprehensiveEquipmentSheet: View {
             var equipmentList = character.equipmentList
             
             if let editingEquipment = editingEquipment {
-                // Remove the old equipment and add the new one
-                equipmentList.removeAll { $0.name == editingEquipment.name }
+                // Remove only the specific equipment instance being edited
+                if let index = equipmentList.firstIndex(where: { $0 === editingEquipment }) {
+                    equipmentList.remove(at: index)
+                }
             }
             
             equipmentList.append(equipment)
