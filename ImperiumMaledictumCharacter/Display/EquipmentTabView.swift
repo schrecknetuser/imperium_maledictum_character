@@ -807,7 +807,7 @@ struct WeaponSelectionPopupView: View {
             Section {
                 let weaponsInCategory = WeaponTemplateDefinitions.getWeaponsByCategory(selectedCategory)
                 
-                ForEach(weaponsInCategory, id: \.name) { template in
+                ForEach(Array(weaponsInCategory.enumerated()), id: \.offset) { index, template in
                     Button(action: {
                         addWeaponFromTemplate(template)
                     }) {
@@ -975,7 +975,7 @@ struct EquipmentSelectionPopupView: View {
             Section {
                 let equipmentInCategory = EquipmentTemplateDefinitions.getEquipmentByCategory(selectedCategory)
                 
-                ForEach(equipmentInCategory, id: \.name) { template in
+                ForEach(Array(equipmentInCategory.enumerated()), id: \.offset) { index, template in
                     Button(action: {
                         addEquipmentFromTemplate(template)
                     }) {

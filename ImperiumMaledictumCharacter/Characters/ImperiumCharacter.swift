@@ -685,8 +685,10 @@ class ImperiumCharacter: BaseCharacter {
         let equipment: Equipment
         if let template = EquipmentTemplateDefinitions.getTemplate(for: baseName) {
             equipment = template.createEquipment()
+            // Preserve the full name to distinguish between variants
+            equipment.name = fullName
         } else {
-            equipment = Equipment(name: baseName)
+            equipment = Equipment(name: fullName)
         }
         
         // Parse qualities, flaws, and traits from parentheses
@@ -717,8 +719,10 @@ class ImperiumCharacter: BaseCharacter {
         let weapon: Weapon
         if let template = WeaponTemplateDefinitions.getTemplate(for: baseName) {
             weapon = template.createWeapon()
+            // Preserve the full name to distinguish between variants
+            weapon.name = fullName
         } else {
-            weapon = Weapon(name: baseName)
+            weapon = Weapon(name: fullName)
         }
         
         // Parse modifications, qualities, flaws, and traits from parentheses
