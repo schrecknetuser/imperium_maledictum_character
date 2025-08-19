@@ -1184,13 +1184,9 @@ struct RoleStage: View {
                                 GridItem(.flexible())
                             ], spacing: 8) {
                                 ForEach(role.talentChoices, id: \.self) { talent in
-                                    // Compute auto-granted status directly to avoid timing issues
-                                    let isAutoGrantedByRole = isAutoGrantedByRole(talent, role: role)
-                                    let isOwnedFromFactionOrAutoGranted = allFactionTalents.contains(talent) || isAutoGrantedByRole
-                                    let isCurrentlySelected = selectedTalents.contains(talent)
-                                    
+                                    // Debug output for Psyker talent
                                     if talent == "Psyker" {
-                                        print("DEBUG UI: Psyker - isAutoGrantedByRole=\(isAutoGrantedByRole), isOwnedFromFactionOrAutoGranted=\(isOwnedFromFactionOrAutoGranted), isSelected=\(isCurrentlySelected)")
+                                        print("DEBUG UI: Psyker - isAutoGrantedByRole=\(isAutoGrantedByRole(talent, role: role)), isOwnedFromFactionOrAutoGranted=\(allFactionTalents.contains(talent) || isAutoGrantedByRole(talent, role: role)), isSelected=\(selectedTalents.contains(talent))")
                                         print("DEBUG UI: allFactionTalents.contains(Psyker)=\(allFactionTalents.contains(talent))")
                                         print("DEBUG UI: autoGrantedRoleTalents.contains(Psyker)=\(autoGrantedRoleTalents.contains(talent))")
                                         print("DEBUG UI: role.name=\(role.name)")
@@ -1198,9 +1194,9 @@ struct RoleStage: View {
                                     
                                     TalentSelectionField(
                                         talentName: talent,
-                                        isSelected: isCurrentlySelected,
+                                        isSelected: selectedTalents.contains(talent),
                                         maxReached: selectedTalents.count >= role.talentCount,
-                                        alreadyOwned: isOwnedFromFactionOrAutoGranted,
+                                        alreadyOwned: allFactionTalents.contains(talent) || isAutoGrantedByRole(talent, role: role),
                                         onSelectionChanged: { isSelected in
                                             print("DEBUG: onSelectionChanged called for \(talent) with isSelected=\(isSelected)")
                                             if isSelected {
