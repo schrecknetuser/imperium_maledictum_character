@@ -674,12 +674,6 @@ struct AddSpecializationSheet: View {
                             }
                         }
                         .pickerStyle(.menu)
-                        .onChange(of: availableSpecializations) { newSpecializations in
-                            // If current selection is not in the available list, reset it
-                            if !selectedSpecialization.isEmpty && !newSpecializations.contains(selectedSpecialization) {
-                                selectedSpecialization = ""
-                            }
-                        }
                     }
                 }
                 
@@ -735,6 +729,12 @@ struct AddSpecializationSheet: View {
             }
             .navigationTitle("Add Specialization")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                // Reset state when sheet appears to prevent picker validation errors
+                selectedSkill = ""
+                selectedSpecialization = ""
+                initialAdvances = 1
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
