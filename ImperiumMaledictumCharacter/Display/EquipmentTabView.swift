@@ -74,7 +74,7 @@ struct EquipmentTab: View {
                                 }
                                 .padding(.vertical, 4)
                                 
-                                ForEach(equipmentInCategory, id: \.name) { equipment in
+                                ForEach(Array(equipmentInCategory.enumerated()), id: \.offset) { index, equipment in
                                     HStack {
                                         VStack(alignment: .leading, spacing: 2) {
                                             Text(equipment.name)
@@ -167,7 +167,7 @@ struct EquipmentTab: View {
                                 }
                                 .padding(.vertical, 4)
                                 
-                                ForEach(weaponsInCategory, id: \.name) { weapon in
+                                ForEach(Array(weaponsInCategory.enumerated()), id: \.offset) { index, weapon in
                                     HStack {
                                         VStack(alignment: .leading, spacing: 2) {
                                             Text(weapon.name)
@@ -351,7 +351,10 @@ struct EquipmentTab: View {
     private func removeEquipment(_ equipment: Equipment) {
         guard let imperium = imperiumCharacter else { return }
         var equipmentList = imperium.equipmentList
-        equipmentList.removeAll { $0.name == equipment.name }
+        // Remove only the first matching equipment to preserve duplicates
+        if let index = equipmentList.firstIndex(where: { $0.name == equipment.name }) {
+            equipmentList.remove(at: index)
+        }
         imperium.equipmentList = equipmentList
         imperium.lastModified = Date()
         store.saveChanges()
@@ -360,7 +363,10 @@ struct EquipmentTab: View {
     private func removeWeapon(_ weapon: Weapon) {
         guard let imperium = imperiumCharacter else { return }
         var weaponList = imperium.weaponList
-        weaponList.removeAll { $0.name == weapon.name }
+        // Remove only the first matching weapon to preserve duplicates
+        if let index = weaponList.firstIndex(where: { $0.name == weapon.name }) {
+            weaponList.remove(at: index)
+        }
         imperium.weaponList = weaponList
         imperium.lastModified = Date()
         store.saveChanges()
