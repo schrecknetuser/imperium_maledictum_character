@@ -38,11 +38,11 @@ struct CharacteristicsTab: View {
                             Text("Base")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 40, alignment: .center)
+                                .frame(width: isEditMode ? 80 : 40, alignment: .center)
                             Text("Adv.")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 40, alignment: .center)
+                                .frame(width: isEditMode ? 80 : 40, alignment: .center)
                             Text("Total")
                                 .font(.caption)
                                 .fontWeight(.medium)
@@ -58,19 +58,89 @@ struct CharacteristicsTab: View {
                                 Text(characteristic.abbreviation)
                                     .font(.caption)
                                     .frame(width: 40, alignment: .leading)
-                                Text("\(characteristic.baseValue)")
-                                    .font(.caption)
-                                    .frame(width: 40, alignment: .center)
                                 
+                                // Base Value Section
                                 if isEditMode {
-                                    // Editable dropdown for advances
-                                    Picker("Advances", selection: getCharacteristicAdvanceBinding(for: characteristic.name)) {
-                                        ForEach(0...4, id: \.self) { value in
-                                            Text("\(value)").tag(value)
+                                    HStack(spacing: 2) {
+                                        Button(action: {
+                                            let current = imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20
+                                            let binding = getCharacteristicBaseValueBinding(for: characteristic.name)
+                                            binding.wrappedValue = max(1, current - 1)
+                                        }) {
+                                            Image(systemName: "minus")
+                                                .font(.caption2)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.primary)
+                                                .frame(width: 20, height: 20)
+                                                .background(Color(.systemGray5))
+                                                .cornerRadius(3)
                                         }
+                                        .disabled((imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20) <= 1)
+                                        
+                                        Text("\(characteristic.baseValue)")
+                                            .font(.caption)
+                                            .frame(minWidth: 25)
+                                        
+                                        Button(action: {
+                                            let current = imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20
+                                            let binding = getCharacteristicBaseValueBinding(for: characteristic.name)
+                                            binding.wrappedValue = min(100, current + 1)
+                                        }) {
+                                            Image(systemName: "plus")
+                                                .font(.caption2)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.primary)
+                                                .frame(width: 20, height: 20)
+                                                .background(Color(.systemGray5))
+                                                .cornerRadius(3)
+                                        }
+                                        .disabled((imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20) >= 100)
                                     }
-                                    .pickerStyle(MenuPickerStyle())
-                                    .frame(width: 40)
+                                    .frame(width: 80, alignment: .center)
+                                } else {
+                                    Text("\(characteristic.baseValue)")
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .center)
+                                }
+                                
+                                // Advances Section
+                                if isEditMode {
+                                    HStack(spacing: 2) {
+                                        Button(action: {
+                                            let current = imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0
+                                            let binding = getCharacteristicAdvanceBinding(for: characteristic.name)
+                                            binding.wrappedValue = max(0, current - 1)
+                                        }) {
+                                            Image(systemName: "minus")
+                                                .font(.caption2)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.primary)
+                                                .frame(width: 20, height: 20)
+                                                .background(Color(.systemGray5))
+                                                .cornerRadius(3)
+                                        }
+                                        .disabled((imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0) <= 0)
+                                        
+                                        Text("\(characteristic.advances)")
+                                            .font(.caption)
+                                            .frame(minWidth: 25)
+                                        
+                                        Button(action: {
+                                            let current = imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0
+                                            let binding = getCharacteristicAdvanceBinding(for: characteristic.name)
+                                            binding.wrappedValue = min(20, current + 1)
+                                        }) {
+                                            Image(systemName: "plus")
+                                                .font(.caption2)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.primary)
+                                                .frame(width: 20, height: 20)
+                                                .background(Color(.systemGray5))
+                                                .cornerRadius(3)
+                                        }
+                                        .disabled((imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0) >= 20)
+                                    }
+                                    .frame(width: 80, alignment: .center)
                                 } else {
                                     Text("\(characteristic.advances)")
                                         .font(.caption)
@@ -275,6 +345,25 @@ struct CharacteristicsTab: View {
         } message: {
             Text("Are you sure you want to delete the specialization '\(specializationToDelete)'? This action cannot be undone.")
         }
+    }
+    
+    private func getCharacteristicBaseValueBinding(for characteristicName: String) -> Binding<Int> {
+        return Binding<Int>(
+            get: {
+                guard let imperium = imperiumCharacter else { return 20 }
+                return imperium.characteristics[characteristicName]?.initialValue ?? 20
+            },
+            set: { newValue in
+                guard let imperium = imperiumCharacter else { return }
+                var characteristics = imperium.characteristics
+                if var characteristic = characteristics[characteristicName] {
+                    characteristic.initialValue = max(1, newValue) // Minimum value of 1
+                    characteristics[characteristicName] = characteristic
+                    imperium.characteristics = characteristics
+                    store.saveChanges()
+                }
+            }
+        )
     }
     
     private func getCharacteristicAdvanceBinding(for characteristicName: String) -> Binding<Int> {
