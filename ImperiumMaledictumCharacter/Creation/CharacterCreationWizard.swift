@@ -1185,7 +1185,7 @@ struct RoleStage: View {
                             ], spacing: 8) {
                                 ForEach(role.talentChoices, id: \.self) { talent in
                                     // Compute auto-granted status directly to avoid timing issues
-                                    let isAutoGrantedByRole = (role.name == "Mystic" && talent == "Psyker")
+                                    let isAutoGrantedByRole = isAutoGrantedByRole(talent, role: role)
                                     let isOwnedFromFactionOrAutoGranted = allFactionTalents.contains(talent) || isAutoGrantedByRole
                                     let isCurrentlySelected = selectedTalents.contains(talent)
                                     
@@ -1409,6 +1409,11 @@ struct RoleStage: View {
         customSpecializations[anySpecialization] = newName
     }
     
+    // Helper function to determine if a talent is auto-granted by a role
+    private func isAutoGrantedByRole(_ talent: String, role: Role) -> Bool {
+        return role.name == "Mystic" && talent == "Psyker"
+    }
+    
     private func initializeRoleSelections() {
         guard let role = selectedRole else { return }
         
@@ -1458,7 +1463,7 @@ struct RoleStage: View {
         let filteredTalents = character.talentNames.filter { talent in
             let inRoleChoices = role.talentChoices.contains(talent)
             let inFactionTalents = allFactionTalents.contains(talent)
-            let inAutoGranted = (role.name == "Mystic" && talent == "Psyker") // Direct computation instead of relying on array
+            let inAutoGranted = isAutoGrantedByRole(talent, role: role)
             
             print("DEBUG: talent \(talent): inRoleChoices=\(inRoleChoices), inFactionTalents=\(inFactionTalents), inAutoGranted=\(inAutoGranted)")
             
@@ -1557,7 +1562,7 @@ struct RoleStage: View {
         
         // Remove any previously selected role talents to avoid duplication, but preserve auto-granted role talents and faction-granted talents
         let talentsToRemove = allTalents.filter { talent in
-            let isAutoGranted = (role.name == "Mystic" && talent == "Psyker")
+            let isAutoGranted = isAutoGrantedByRole(talent, role: role)
             return role.talentChoices.contains(talent) && 
                    !isAutoGranted && 
                    !factionGrantedTalents.contains(talent)
@@ -1565,7 +1570,7 @@ struct RoleStage: View {
         print("DEBUG SAVE: talentsToRemove = \(talentsToRemove)")
         
         allTalents.removeAll { talent in
-            let isAutoGranted = (role.name == "Mystic" && talent == "Psyker")
+            let isAutoGranted = isAutoGrantedByRole(talent, role: role)
             return role.talentChoices.contains(talent) && 
                    !isAutoGranted && 
                    !factionGrantedTalents.contains(talent)
