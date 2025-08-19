@@ -173,6 +173,13 @@ struct EquipmentTab: View {
                                             Text(weapon.name)
                                                 .font(.body)
                                             
+                                            if !weapon.weaponDescription.isEmpty {
+                                                Text(weapon.weaponDescription)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .lineLimit(3)
+                                            }
+                                            
                                             // Show weapon stats based on category
                                             if weapon.category == WeaponCategories.melee {
                                                 Text("Damage: \(weapon.damage)")
@@ -351,8 +358,8 @@ struct EquipmentTab: View {
     private func removeEquipment(_ equipment: Equipment) {
         guard let imperium = imperiumCharacter else { return }
         var equipmentList = imperium.equipmentList
-        // Remove only the first matching equipment to preserve duplicates
-        if let index = equipmentList.firstIndex(where: { $0.name == equipment.name }) {
+        // Remove the specific equipment instance using ID
+        if let index = equipmentList.firstIndex(where: { $0.id == equipment.id }) {
             equipmentList.remove(at: index)
         }
         imperium.equipmentList = equipmentList
@@ -363,8 +370,8 @@ struct EquipmentTab: View {
     private func removeWeapon(_ weapon: Weapon) {
         guard let imperium = imperiumCharacter else { return }
         var weaponList = imperium.weaponList
-        // Remove only the first matching weapon to preserve duplicates
-        if let index = weaponList.firstIndex(where: { $0.name == weapon.name }) {
+        // Remove the specific weapon instance using ID
+        if let index = weaponList.firstIndex(where: { $0.id == weapon.id }) {
             weaponList.remove(at: index)
         }
         imperium.weaponList = weaponList
@@ -433,7 +440,7 @@ struct ComprehensiveEquipmentSheet: View {
         } else if let weapon = editingWeapon, isWeapon {
             // Editing existing weapon
             _itemName = State(initialValue: weapon.name.isEmpty ? "Unnamed Weapon" : weapon.name)
-            _itemDescription = State(initialValue: "") // Weapons don't have descriptions in equipment section
+            _itemDescription = State(initialValue: weapon.weaponDescription)
             _category = State(initialValue: weapon.category.isEmpty ? WeaponCategories.ranged : weapon.category)
             _specialization = State(initialValue: weapon.specialization.isEmpty ? WeaponSpecializations.none : weapon.specialization)
             _damage = State(initialValue: weapon.damage)
@@ -650,6 +657,7 @@ struct ComprehensiveEquipmentSheet: View {
         if isWeapon {
             let weapon = Weapon(
                 name: trimmedName,
+                weaponDescription: itemDescription,
                 category: category,
                 specialization: specialization,
                 damage: damage,
@@ -669,8 +677,8 @@ struct ComprehensiveEquipmentSheet: View {
             var weaponList = character.weaponList
             
             if let editingWeapon = editingWeapon {
-                // Remove only the specific weapon instance being edited
-                if let index = weaponList.firstIndex(where: { $0 === editingWeapon }) {
+                // Remove only the specific weapon instance being edited using ID
+                if let index = weaponList.firstIndex(where: { $0.id == editingWeapon.id }) {
                     weaponList.remove(at: index)
                 }
             }
@@ -694,8 +702,8 @@ struct ComprehensiveEquipmentSheet: View {
             var equipmentList = character.equipmentList
             
             if let editingEquipment = editingEquipment {
-                // Remove only the specific equipment instance being edited
-                if let index = equipmentList.firstIndex(where: { $0 === editingEquipment }) {
+                // Remove only the specific equipment instance being edited using ID
+                if let index = equipmentList.firstIndex(where: { $0.id == editingEquipment.id }) {
                     equipmentList.remove(at: index)
                 }
             }

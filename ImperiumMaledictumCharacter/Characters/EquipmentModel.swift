@@ -8,6 +8,7 @@
 import Foundation
 
 class Equipment: Codable {
+    var id: UUID
     var name: String
     var equipmentDescription: String
     var encumbrance: Int
@@ -16,6 +17,31 @@ class Equipment: Codable {
     var qualitiesData: String // JSON array of strings
     var flawsData: String // JSON array of strings
     var traitsData: String // JSON array of EquipmentTrait
+    
+    // For backward compatibility with Equipment objects that don't have IDs
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        // Try to decode ID, if it doesn't exist, generate a new one
+        if let decodedId = try? container.decode(UUID.self, forKey: .id) {
+            self.id = decodedId
+        } else {
+            self.id = UUID()
+        }
+        
+        self.name = try container.decode(String.self, forKey: .name)
+        self.equipmentDescription = try container.decode(String.self, forKey: .equipmentDescription)
+        self.encumbrance = try container.decode(Int.self, forKey: .encumbrance)
+        self.cost = try container.decode(Int.self, forKey: .cost)
+        self.availability = try container.decode(String.self, forKey: .availability)
+        self.qualitiesData = try container.decode(String.self, forKey: .qualitiesData)
+        self.flawsData = try container.decode(String.self, forKey: .flawsData)
+        self.traitsData = try container.decode(String.self, forKey: .traitsData)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, equipmentDescription, encumbrance, cost, availability, qualitiesData, flawsData, traitsData
+    }
     
     var qualities: [String] {
         get {
@@ -63,6 +89,7 @@ class Equipment: Codable {
     }
     
     init(name: String, equipmentDescription: String = "", encumbrance: Int = 0, cost: Int = 0, availability: String = "Common") {
+        self.id = UUID()
         self.name = name
         self.equipmentDescription = equipmentDescription
         self.encumbrance = encumbrance

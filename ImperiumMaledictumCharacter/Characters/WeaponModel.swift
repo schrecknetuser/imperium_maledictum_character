@@ -8,7 +8,9 @@
 import Foundation
 
 class Weapon: Codable {
+    var id: UUID
     var name: String
+    var weaponDescription: String
     var category: String // melee/ranged/grenades
     var specialization: String
     var damage: String
@@ -21,6 +23,44 @@ class Weapon: Codable {
     var modificationsData: String // JSON array of strings
     var qualitiesData: String // JSON array of strings
     var flawsData: String // JSON array of strings
+    
+    // For backward compatibility with Weapon objects that don't have IDs
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        // Try to decode ID, if it doesn't exist, generate a new one
+        if let decodedId = try? container.decode(UUID.self, forKey: .id) {
+            self.id = decodedId
+        } else {
+            self.id = UUID()
+        }
+        
+        self.name = try container.decode(String.self, forKey: .name)
+        
+        // Try to decode weaponDescription, if it doesn't exist, use empty string
+        if let decodedDescription = try? container.decode(String.self, forKey: .weaponDescription) {
+            self.weaponDescription = decodedDescription
+        } else {
+            self.weaponDescription = ""
+        }
+        
+        self.category = try container.decode(String.self, forKey: .category)
+        self.specialization = try container.decode(String.self, forKey: .specialization)
+        self.damage = try container.decode(String.self, forKey: .damage)
+        self.range = try container.decode(String.self, forKey: .range)
+        self.magazine = try container.decode(Int.self, forKey: .magazine)
+        self.encumbrance = try container.decode(Int.self, forKey: .encumbrance)
+        self.availability = try container.decode(String.self, forKey: .availability)
+        self.cost = try container.decode(Int.self, forKey: .cost)
+        self.weaponTraitsData = try container.decode(String.self, forKey: .weaponTraitsData)
+        self.modificationsData = try container.decode(String.self, forKey: .modificationsData)
+        self.qualitiesData = try container.decode(String.self, forKey: .qualitiesData)
+        self.flawsData = try container.decode(String.self, forKey: .flawsData)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name, weaponDescription, category, specialization, damage, range, magazine, encumbrance, availability, cost, weaponTraitsData, modificationsData, qualitiesData, flawsData
+    }
     
     var weaponTraits: [WeaponTrait] {
         get {
@@ -82,8 +122,10 @@ class Weapon: Codable {
         }
     }
     
-    init(name: String, category: String = WeaponCategories.ranged, specialization: String = WeaponSpecializations.none, damage: String = "", range: String = "Short", magazine: Int = 0, encumbrance: Int = 0, availability: String = "Common", cost: Int = 0) {
+    init(name: String, weaponDescription: String = "", category: String = WeaponCategories.ranged, specialization: String = WeaponSpecializations.none, damage: String = "", range: String = "Short", magazine: Int = 0, encumbrance: Int = 0, availability: String = "Common", cost: Int = 0) {
+        self.id = UUID()
         self.name = name
+        self.weaponDescription = weaponDescription
         self.category = category
         self.specialization = specialization
         self.damage = damage
@@ -219,6 +261,7 @@ struct WeaponTraitNames {
 // MARK: - Weapon Template System
 struct WeaponTemplate {
     var name: String
+    var description: String
     var category: String
     var specialization: String
     var damage: String
@@ -229,8 +272,9 @@ struct WeaponTemplate {
     var availability: String
     var traits: [String]
     
-    init(name: String, category: String, specialization: String, damage: String, range: String = WeaponRanges.short, magazine: Int = 0, encumbrance: Int = 0, cost: Int = 0, availability: String = "Common", traits: [String] = []) {
+    init(name: String, description: String = "", category: String, specialization: String, damage: String, range: String = WeaponRanges.short, magazine: Int = 0, encumbrance: Int = 0, cost: Int = 0, availability: String = "Common", traits: [String] = []) {
         self.name = name
+        self.description = description
         self.category = category
         self.specialization = specialization
         self.damage = damage
@@ -245,6 +289,7 @@ struct WeaponTemplate {
     func createWeapon() -> Weapon {
         let weapon = Weapon(
             name: name,
+            weaponDescription: description,
             category: category,
             specialization: specialization,
             damage: damage,

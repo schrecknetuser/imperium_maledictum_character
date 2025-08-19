@@ -675,6 +675,9 @@ class ImperiumCharacter: BaseCharacter {
             weapon.migrateCategory()
         }
         
+        // Note: Equipment and Weapon objects created before UUID addition will get 
+        // auto-generated UUIDs through the Codable system, so no explicit migration needed
+        
         lastModified = Date()
     }
     
