@@ -539,10 +539,9 @@ struct CharacteristicsTab: View {
             }
             
             for (specializationName, advances) in specializationAdvances {
-                // Only show specializations with advances > 0
-                if advances > 0 {
-                    // Find skill name using improved lookup
-                    let skillName = findSkillForSpecialization(specializationName)
+                // Show all specializations that exist in the character's data
+                // Find skill name using improved lookup
+                let skillName = findSkillForSpecialization(specializationName)
                     
                     // Calculate total value (skill characteristic + specialization advances * 5)
                     let skillCharacteristicMap = [
@@ -581,7 +580,6 @@ struct CharacteristicsTab: View {
                         advances: advances,
                         totalValue: specializationTotalValue
                     ))
-                }
             }
         }
         
@@ -623,6 +621,7 @@ struct AddSpecializationSheet: View {
     
     @State private var selectedSkill = ""
     @State private var selectedSpecialization = ""
+    @State private var initialAdvances = 1
     
     var availableSkills: [String] {
         SkillSpecializations.specializations.keys.sorted()
@@ -634,10 +633,10 @@ struct AddSpecializationSheet: View {
             return []
         }
         
-        // Filter out specializations that already have advances > 0
+        // Filter out specializations that already exist
         let currentSpecializations = character.specializationAdvances
         return skillSpecializations.filter { specialization in
-            (currentSpecializations[specialization] ?? 0) == 0
+            currentSpecializations[specialization] == nil
         }
     }
     
@@ -669,7 +668,47 @@ struct AddSpecializationSheet: View {
                     }
                 }
                 
-                if !availableSpecializations.isEmpty && availableSpecializations.count == 0 {
+                if !selectedSpecialization.isEmpty {
+                    Section("Initial Advances") {
+                        HStack {
+                            Text("Advances:")
+                            Spacer()
+                            
+                            Button(action: {
+                                initialAdvances = max(0, initialAdvances - 1)
+                            }) {
+                                Image(systemName: "minus")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                    .frame(width: 30, height: 30)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(6)
+                            }
+                            .disabled(initialAdvances <= 0)
+                            
+                            Text("\(initialAdvances)")
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .frame(minWidth: 30)
+                            
+                            Button(action: {
+                                initialAdvances = min(4, initialAdvances + 1)
+                            }) {
+                                Image(systemName: "plus")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                    .frame(width: 30, height: 30)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(6)
+                            }
+                            .disabled(initialAdvances >= 4)
+                        }
+                    }
+                }
+                
+                if !selectedSkill.isEmpty && availableSpecializations.isEmpty {
                     Section {
                         Text("All specializations for \(selectedSkill) are already added.")
                             .foregroundColor(.secondary)
@@ -700,7 +739,7 @@ struct AddSpecializationSheet: View {
         guard !selectedSpecialization.isEmpty else { return }
         
         var specializations = character.specializationAdvances
-        specializations[selectedSpecialization] = 0
+        specializations[selectedSpecialization] = initialAdvances
         character.specializationAdvances = specializations
         character.lastModified = Date()
         store.saveChanges()
