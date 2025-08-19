@@ -635,9 +635,18 @@ struct AddSpecializationSheet: View {
         
         // Filter out specializations that already exist
         let currentSpecializations = character.specializationAdvances
-        return skillSpecializations.filter { specialization in
+        let filtered = skillSpecializations.filter { specialization in
             currentSpecializations[specialization] == nil
         }
+        
+        // If current selection is not available anymore, reset it
+        if !selectedSpecialization.isEmpty && !filtered.contains(selectedSpecialization) {
+            DispatchQueue.main.async {
+                selectedSpecialization = ""
+            }
+        }
+        
+        return filtered
     }
     
     var body: some View {
@@ -665,6 +674,12 @@ struct AddSpecializationSheet: View {
                             }
                         }
                         .pickerStyle(.menu)
+                        .onChange(of: availableSpecializations) { newSpecializations in
+                            // If current selection is not in the available list, reset it
+                            if !selectedSpecialization.isEmpty && !newSpecializations.contains(selectedSpecialization) {
+                                selectedSpecialization = ""
+                            }
+                        }
                     }
                 }
                 
@@ -685,6 +700,7 @@ struct AddSpecializationSheet: View {
                                     .background(Color(.systemGray5))
                                     .cornerRadius(6)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(initialAdvances <= 0)
                             
                             Text("\(initialAdvances)")
@@ -703,6 +719,7 @@ struct AddSpecializationSheet: View {
                                     .background(Color(.systemGray5))
                                     .cornerRadius(6)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(initialAdvances >= 4)
                         }
                     }
