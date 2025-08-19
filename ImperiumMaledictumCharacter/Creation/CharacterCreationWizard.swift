@@ -1434,11 +1434,13 @@ struct RoleStage: View {
         
         // Get auto-granted role talents (like Psyker for Mystic)
         var autoGrantedRoleTalentsList: [String] = []
-        if role.name == "Mystic" && !character.talentNames.contains("Psyker") {
+        if role.name == "Mystic" {
             autoGrantedRoleTalentsList.append("Psyker")
-            var updatedTalents = character.talentNames
-            updatedTalents.append("Psyker")
-            character.talentNames = updatedTalents
+            if !character.talentNames.contains("Psyker") {
+                var updatedTalents = character.talentNames
+                updatedTalents.append("Psyker")
+                character.talentNames = updatedTalents
+            }
         }
         autoGrantedRoleTalents = Set(autoGrantedRoleTalentsList)
         
