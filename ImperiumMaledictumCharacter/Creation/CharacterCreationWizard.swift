@@ -1500,18 +1500,28 @@ struct RoleStage: View {
         // Save specialization advances with custom names for "Any" specializations
         var finalSpecializationAdvances = character.specializationAdvances
         for (specialization, advances) in specializationAdvancesDistribution {
-            if specialization.hasPrefix("Any (") && advances > 0 {
-                // Use custom name if provided
-                if let customName = customSpecializations[specialization], !customName.isEmpty {
-                    // Save specialization without skill name in brackets for clean display
-                    finalSpecializationAdvances[customName] = advances
+            if advances > 0 {
+                if specialization.hasPrefix("Any (") {
+                    // Use custom name if provided
+                    if let customName = customSpecializations[specialization], !customName.isEmpty {
+                        // Save specialization without skill name in brackets for clean display
+                        finalSpecializationAdvances[customName] = advances
+                    } else {
+                        // Don't save if no custom name provided
+                        continue
+                    }
                 } else {
-                    // Don't save if no custom name provided
-                    continue
+                    // Check if it's a predefined specialization with skill in parentheses like "Forbidden (Linguistics)"
+                    if let parenRange = specialization.range(of: " ("),
+                       specialization.hasSuffix(")") {
+                        // Extract just the specialization name without the skill clarification
+                        let specializationName = String(specialization[..<parenRange.lowerBound])
+                        finalSpecializationAdvances[specializationName] = advances
+                    } else {
+                        // Regular specialization
+                        finalSpecializationAdvances[specialization] = advances
+                    }
                 }
-            } else {
-                // Regular specialization
-                finalSpecializationAdvances[specialization] = advances
             }
         }
         character.specializationAdvances = finalSpecializationAdvances
@@ -1985,6 +1995,30 @@ struct CharacterPreviewSheet: View {
         return result
     }
     
+    private func findSkillForSpecialization(_ specializationName: String) -> String {
+        // First try direct lookup
+        for (skillName, specializations) in SkillSpecializations.specializations {
+            if specializations.contains(specializationName) {
+                return skillName
+            }
+        }
+        
+        // If not found, try parsing if it has the format "Name (Skill)"
+        if let parenRange = specializationName.range(of: " ("),
+           specializationName.hasSuffix(")") {
+            let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
+            let skillEnd = specializationName.index(before: specializationName.endIndex)
+            let skillName = String(specializationName[skillStart..<skillEnd])
+            
+            // Validate that this is a real skill
+            if SkillSpecializations.specializations[skillName] != nil {
+                return skillName
+            }
+        }
+        
+        return "Unknown"
+    }
+
     private func getSpecializationsList() -> [SpecializationRowData] {
         var result: [SpecializationRowData] = []
         
@@ -2000,8 +2034,8 @@ struct CharacterPreviewSheet: View {
         
         for (specializationName, advances) in specializationAdvances {
             if advances > 0 {
-                // Find skill name by lookup in specializations map
-                let skillName = specializationToSkillMap[specializationName] ?? "Unknown"
+                // Find skill name using improved lookup
+                let skillName = findSkillForSpecialization(specializationName)
                 
                 // Calculate total value (skill characteristic + specialization advances * 5)
                 let skillCharacteristicMap = [

@@ -500,6 +500,30 @@ struct CharacteristicsTab: View {
         return result
     }
     
+    private func findSkillForSpecialization(_ specializationName: String) -> String {
+        // First try direct lookup
+        for (skillName, specializations) in SkillSpecializations.specializations {
+            if specializations.contains(specializationName) {
+                return skillName
+            }
+        }
+        
+        // If not found, try parsing if it has the format "Name (Skill)"
+        if let parenRange = specializationName.range(of: " ("),
+           specializationName.hasSuffix(")") {
+            let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
+            let skillEnd = specializationName.index(before: specializationName.endIndex)
+            let skillName = String(specializationName[skillStart..<skillEnd])
+            
+            // Validate that this is a real skill
+            if SkillSpecializations.specializations[skillName] != nil {
+                return skillName
+            }
+        }
+        
+        return "Unknown"
+    }
+
     private func getSpecializationsList() -> [SpecializationRowData] {
         var result: [SpecializationRowData] = []
         
@@ -515,10 +539,10 @@ struct CharacteristicsTab: View {
             }
             
             for (specializationName, advances) in specializationAdvances {
-                // Only show specializations with advances > 0, or in edit mode exclude "Any (" entries with 0 advances
-                if advances > 0 || (isEditMode && !(specializationName.hasPrefix("Any (") && advances == 0)) {
-                    // Find skill name by lookup in specializations map
-                    let skillName = specializationToSkillMap[specializationName] ?? "Unknown"
+                // Only show specializations with advances > 0
+                if advances > 0 {
+                    // Find skill name using improved lookup
+                    let skillName = findSkillForSpecialization(specializationName)
                     
                     // Calculate total value (skill characteristic + specialization advances * 5)
                     let skillCharacteristicMap = [
@@ -636,7 +660,7 @@ struct AddSpecializationSheet: View {
                 if !selectedSkill.isEmpty {
                     Section("Select Specialization") {
                         Picker("Specialization", selection: $selectedSpecialization) {
-                            Text("Choose a specialization...").tag("")
+                            Text("Choose...").tag("")
                             ForEach(availableSpecializations, id: \.self) { specialization in
                                 Text(specialization).tag(specialization)
                             }
