@@ -605,12 +605,10 @@ class ImperiumCharacter: BaseCharacter {
             for equipmentName in equipmentNames {
                 if isWeaponItem(equipmentName) {
                     // This should be a weapon, add it to weapon list instead
-                    if weaponList.isEmpty || !weaponList.contains(where: { $0.name == parseBaseName(equipmentName) }) {
-                        let weapon = parseWeaponFromName(equipmentName)
-                        var currentWeaponList = weaponList
-                        currentWeaponList.append(weapon)
-                        weaponList = currentWeaponList
-                    }
+                    let weapon = parseWeaponFromName(equipmentName)
+                    var currentWeaponList = weaponList
+                    currentWeaponList.append(weapon)
+                    weaponList = currentWeaponList
                 } else {
                     // Parse equipment from name
                     let equipment = parseEquipmentFromName(equipmentName)

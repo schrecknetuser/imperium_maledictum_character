@@ -606,9 +606,7 @@ struct OriginStage: View {
         // Add granted equipment
         var allEquipment = character.equipmentNames
         for equipment in origin.grantedEquipment {
-            if !allEquipment.contains(equipment) {
-                allEquipment.append(equipment)
-            }
+            allEquipment.append(equipment)
         }
         character.equipmentNames = allEquipment
     }
