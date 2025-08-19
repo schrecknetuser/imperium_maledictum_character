@@ -635,18 +635,9 @@ struct AddSpecializationSheet: View {
         
         // Filter out specializations that already exist
         let currentSpecializations = character.specializationAdvances
-        let filtered = skillSpecializations.filter { specialization in
+        return skillSpecializations.filter { specialization in
             currentSpecializations[specialization] == nil
         }
-        
-        // If current selection is not available anymore, reset it
-        if !selectedSpecialization.isEmpty && !filtered.contains(selectedSpecialization) {
-            DispatchQueue.main.async {
-                selectedSpecialization = ""
-            }
-        }
-        
-        return filtered
     }
     
     var body: some View {
@@ -738,6 +729,10 @@ struct AddSpecializationSheet: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
+                        // Reset picker state before dismissing to prevent validation errors
+                        selectedSkill = ""
+                        selectedSpecialization = ""
+                        initialAdvances = 1
                         dismiss()
                     }
                 }
@@ -760,6 +755,12 @@ struct AddSpecializationSheet: View {
         character.specializationAdvances = specializations
         character.lastModified = Date()
         store.saveChanges()
+        
+        // Reset picker state before dismissing to prevent validation errors
+        selectedSkill = ""
+        selectedSpecialization = ""
+        initialAdvances = 1
+        
         dismiss()
     }
 }
