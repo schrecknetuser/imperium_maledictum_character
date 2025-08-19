@@ -17,6 +17,10 @@ struct EquipmentTab: View {
     @State private var showingEquipmentSelectionPopup = false
     @State private var editingEquipmentState: EditingEquipmentState = .none
     @State private var editingWeaponState: EditingWeaponState = .none
+    @State private var showingEquipmentDeleteConfirmation = false
+    @State private var showingWeaponDeleteConfirmation = false
+    @State private var equipmentToDelete: Equipment?
+    @State private var weaponToDelete: Weapon?
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -115,7 +119,8 @@ struct EquipmentTab: View {
                                                 .buttonStyle(PlainButtonStyle())
                                                 
                                                 Button(action: {
-                                                    removeEquipment(equipment)
+                                                    equipmentToDelete = equipment
+                                                    showingEquipmentDeleteConfirmation = true
                                                 }) {
                                                     Image(systemName: "minus.circle.fill")
                                                         .foregroundColor(.red)
@@ -224,7 +229,8 @@ struct EquipmentTab: View {
                                                 .buttonStyle(PlainButtonStyle())
                                                 
                                                 Button(action: {
-                                                    removeWeapon(weapon)
+                                                    weaponToDelete = weapon
+                                                    showingWeaponDeleteConfirmation = true
                                                 }) {
                                                     Image(systemName: "minus.circle.fill")
                                                         .foregroundColor(.red)
@@ -298,6 +304,36 @@ struct EquipmentTab: View {
         .sheet(isPresented: showingEditWeaponSheet) {
             if let imperium = imperiumCharacter, case .editing(let weapon) = editingWeaponState {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon)
+            }
+        }
+        .alert("Delete Equipment", isPresented: $showingEquipmentDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                equipmentToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let equipment = equipmentToDelete {
+                    removeEquipment(equipment)
+                }
+                equipmentToDelete = nil
+            }
+        } message: {
+            if let equipment = equipmentToDelete {
+                Text("Are you sure you want to delete '\(equipment.name)'? This action cannot be undone.")
+            }
+        }
+        .alert("Delete Weapon", isPresented: $showingWeaponDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                weaponToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let weapon = weaponToDelete {
+                    removeWeapon(weapon)
+                }
+                weaponToDelete = nil
+            }
+        } message: {
+            if let weapon = weaponToDelete {
+                Text("Are you sure you want to delete '\(weapon.name)'? This action cannot be undone.")
             }
         }
     }
