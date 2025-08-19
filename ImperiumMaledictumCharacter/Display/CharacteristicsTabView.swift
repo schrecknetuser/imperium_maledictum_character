@@ -12,6 +12,8 @@ struct CharacteristicsTab: View {
     @ObservedObject var store: CharacterStore
     @Binding var isEditMode: Bool
     @State private var showingAddSpecializationSheet = false
+    @State private var showingDeleteConfirmation = false
+    @State private var specializationToDelete: String = ""
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -206,6 +208,19 @@ struct CharacteristicsTab: View {
                                     }
                                     .pickerStyle(MenuPickerStyle())
                                     .frame(width: 40)
+                                    
+                                    // Delete button
+                                    Button(action: {
+                                        specializationToDelete = specialization.name
+                                        showingDeleteConfirmation = true
+                                    }) {
+                                        Image(systemName: "trash")
+                                            .font(.caption)
+                                            .foregroundColor(.red)
+                                    }
+                                    .frame(width: 30, height: 30)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(6)
                                 } else {
                                     Text("\(specialization.advances)")
                                         .font(.caption)
@@ -251,6 +266,14 @@ struct CharacteristicsTab: View {
             if let imperium = imperiumCharacter {
                 AddSpecializationSheet(character: imperium, store: store)
             }
+        }
+        .alert("Delete Specialization", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                deleteSpecialization(specializationToDelete)
+            }
+        } message: {
+            Text("Are you sure you want to delete the specialization '\(specializationToDelete)'? This action cannot be undone.")
         }
     }
     
@@ -403,7 +426,8 @@ struct CharacteristicsTab: View {
             }
             
             for (specializationName, advances) in specializationAdvances {
-                if advances > 0 || isEditMode {
+                // Only show specializations with advances > 0, or in edit mode exclude "Any (" entries with 0 advances
+                if advances > 0 || (isEditMode && !(specializationName.hasPrefix("Any (") && advances == 0)) {
                     // Find skill name by lookup in specializations map
                     let skillName = specializationToSkillMap[specializationName] ?? "Unknown"
                     
@@ -465,6 +489,15 @@ struct CharacteristicsTab: View {
         case "Fel": return characteristics[CharacteristicNames.fellowship]?.derivedValue ?? 20
         default: return 20
         }
+    }
+    
+    private func deleteSpecialization(_ specializationName: String) {
+        guard let imperium = imperiumCharacter else { return }
+        var specializations = imperium.specializationAdvances
+        specializations.removeValue(forKey: specializationName)
+        imperium.specializationAdvances = specializations
+        imperium.lastModified = Date()
+        store.saveChanges()
     }
 }
 
