@@ -1185,13 +1185,21 @@ struct RoleStage: View {
                             ], spacing: 8) {
                                 ForEach(role.talentChoices, id: \.self) { talent in
                                     let isOwnedFromFactionOrAutoGranted = allFactionTalents.contains(talent) || autoGrantedRoleTalents.contains(talent)
+                                    let isCurrentlySelected = selectedTalents.contains(talent)
+                                    
+                                    if talent == "Psyker" {
+                                        print("DEBUG UI: Psyker - isOwnedFromFactionOrAutoGranted=\(isOwnedFromFactionOrAutoGranted), isSelected=\(isCurrentlySelected)")
+                                        print("DEBUG UI: allFactionTalents.contains(Psyker)=\(allFactionTalents.contains(talent))")
+                                        print("DEBUG UI: autoGrantedRoleTalents.contains(Psyker)=\(autoGrantedRoleTalents.contains(talent))")
+                                    }
                                     
                                     TalentSelectionField(
                                         talentName: talent,
-                                        isSelected: selectedTalents.contains(talent),
+                                        isSelected: isCurrentlySelected,
                                         maxReached: selectedTalents.count >= role.talentCount,
                                         alreadyOwned: isOwnedFromFactionOrAutoGranted,
                                         onSelectionChanged: { isSelected in
+                                            print("DEBUG: onSelectionChanged called for \(talent) with isSelected=\(isSelected)")
                                             if isSelected {
                                                 selectedTalents.insert(talent)
                                             } else {
@@ -1444,10 +1452,23 @@ struct RoleStage: View {
         }
         autoGrantedRoleTalents = Set(autoGrantedRoleTalentsList)
         
+        // Debug logging
+        print("DEBUG: autoGrantedRoleTalentsList = \(autoGrantedRoleTalentsList)")
+        print("DEBUG: character.talentNames = \(character.talentNames)")
+        print("DEBUG: role.talentChoices = \(role.talentChoices)")
+        
         // Initialize selected talents from character, excluding faction-granted AND auto-granted role talents
-        selectedTalents = Set(character.talentNames.filter { 
-            role.talentChoices.contains($0) && !allFactionTalents.contains($0) && !autoGrantedRoleTalentsList.contains($0)
-        })
+        let filteredTalents = character.talentNames.filter { talent in
+            let inRoleChoices = role.talentChoices.contains(talent)
+            let inFactionTalents = allFactionTalents.contains(talent)
+            let inAutoGranted = autoGrantedRoleTalentsList.contains(talent)
+            
+            print("DEBUG: talent \(talent): inRoleChoices=\(inRoleChoices), inFactionTalents=\(inFactionTalents), inAutoGranted=\(inAutoGranted)")
+            
+            return inRoleChoices && !inFactionTalents && !inAutoGranted
+        }
+        selectedTalents = Set(filteredTalents)
+        print("DEBUG: selectedTalents = \(selectedTalents)")
         
         // Initialize equipment selections from character data
         let existingWeapons = character.weaponNames
@@ -1530,24 +1551,39 @@ struct RoleStage: View {
         
         // Save selected talents (replace to avoid duplication)
         var allTalents = character.talentNames
+        print("DEBUG SAVE: Initial character.talentNames = \(allTalents)")
+        print("DEBUG SAVE: selectedTalents = \(selectedTalents)")
+        print("DEBUG SAVE: autoGrantedRoleTalents = \(autoGrantedRoleTalents)")
         
         // Get faction-granted talents to preserve them
         let factionGrantedTalents = Set(allFactionTalents)
         
         // Remove any previously selected role talents to avoid duplication, but preserve auto-granted role talents and faction-granted talents
+        let talentsToRemove = allTalents.filter { talent in
+            role.talentChoices.contains(talent) && 
+            !autoGrantedRoleTalents.contains(talent) && 
+            !factionGrantedTalents.contains(talent)
+        }
+        print("DEBUG SAVE: talentsToRemove = \(talentsToRemove)")
+        
         allTalents.removeAll { talent in
             role.talentChoices.contains(talent) && 
             !autoGrantedRoleTalents.contains(talent) && 
             !factionGrantedTalents.contains(talent)
         }
+        print("DEBUG SAVE: After removal, allTalents = \(allTalents)")
         
         // Add currently selected talents
         for talent in selectedTalents {
             if !allTalents.contains(talent) {
+                print("DEBUG SAVE: Adding selected talent \(talent)")
                 allTalents.append(talent)
+            } else {
+                print("DEBUG SAVE: Talent \(talent) already in allTalents, not adding")
             }
         }
         character.talentNames = allTalents
+        print("DEBUG SAVE: Final character.talentNames = \(character.talentNames)")
         
         // Save weapon selections
         var allWeapons = character.weaponNames
