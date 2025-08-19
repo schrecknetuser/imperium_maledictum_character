@@ -424,6 +424,7 @@ struct AddIndividualReputationSheet: View {
                                     .background(Color(.systemGray5))
                                     .cornerRadius(6)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(reputationValue <= -100)
                             
                             
@@ -443,6 +444,7 @@ struct AddIndividualReputationSheet: View {
                                     .background(Color(.systemGray5))
                                     .cornerRadius(6)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(reputationValue >= 100)
                             
                         }
@@ -538,6 +540,7 @@ struct EditIndividualReputationSheet: View {
                                     .background(Color(.systemGray5))
                                     .cornerRadius(6)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(reputationValue <= -100)
                             
                             
@@ -557,6 +560,7 @@ struct EditIndividualReputationSheet: View {
                                     .background(Color(.systemGray5))
                                     .cornerRadius(6)
                             }
+                            .buttonStyle(PlainButtonStyle())
                             .disabled(reputationValue >= 100)
                             
                         }

@@ -500,6 +500,30 @@ struct CharacteristicsTab: View {
         return result
     }
     
+    private func findSkillForSpecialization(_ specializationName: String) -> String {
+        // First try direct lookup
+        for (skillName, specializations) in SkillSpecializations.specializations {
+            if specializations.contains(specializationName) {
+                return skillName
+            }
+        }
+        
+        // If not found, try parsing if it has the format "Name (Skill)"
+        if let parenRange = specializationName.range(of: " ("),
+           specializationName.hasSuffix(")") {
+            let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
+            let skillEnd = specializationName.index(before: specializationName.endIndex)
+            let skillName = String(specializationName[skillStart..<skillEnd])
+            
+            // Validate that this is a real skill
+            if SkillSpecializations.specializations[skillName] != nil {
+                return skillName
+            }
+        }
+        
+        return "Unknown"
+    }
+
     private func getSpecializationsList() -> [SpecializationRowData] {
         var result: [SpecializationRowData] = []
         
@@ -515,10 +539,9 @@ struct CharacteristicsTab: View {
             }
             
             for (specializationName, advances) in specializationAdvances {
-                // Only show specializations with advances > 0, or in edit mode exclude "Any (" entries with 0 advances
-                if advances > 0 || (isEditMode && !(specializationName.hasPrefix("Any (") && advances == 0)) {
-                    // Find skill name by lookup in specializations map
-                    let skillName = specializationToSkillMap[specializationName] ?? "Unknown"
+                // Show all specializations that exist in the character's data
+                // Find skill name using improved lookup
+                let skillName = findSkillForSpecialization(specializationName)
                     
                     // Calculate total value (skill characteristic + specialization advances * 5)
                     let skillCharacteristicMap = [
@@ -557,7 +580,6 @@ struct CharacteristicsTab: View {
                         advances: advances,
                         totalValue: specializationTotalValue
                     ))
-                }
             }
         }
         
@@ -599,6 +621,7 @@ struct AddSpecializationSheet: View {
     
     @State private var selectedSkill = ""
     @State private var selectedSpecialization = ""
+    @State private var initialAdvances = 1
     
     var availableSkills: [String] {
         SkillSpecializations.specializations.keys.sorted()
@@ -610,10 +633,10 @@ struct AddSpecializationSheet: View {
             return []
         }
         
-        // Filter out specializations that already have advances > 0
+        // Filter out specializations that already exist
         let currentSpecializations = character.specializationAdvances
         return skillSpecializations.filter { specialization in
-            (currentSpecializations[specialization] ?? 0) == 0
+            currentSpecializations[specialization] == nil
         }
     }
     
@@ -636,7 +659,7 @@ struct AddSpecializationSheet: View {
                 if !selectedSkill.isEmpty {
                     Section("Select Specialization") {
                         Picker("Specialization", selection: $selectedSpecialization) {
-                            Text("Choose a specialization...").tag("")
+                            Text("Choose...").tag("")
                             ForEach(availableSpecializations, id: \.self) { specialization in
                                 Text(specialization).tag(specialization)
                             }
@@ -645,7 +668,49 @@ struct AddSpecializationSheet: View {
                     }
                 }
                 
-                if !availableSpecializations.isEmpty && availableSpecializations.count == 0 {
+                if !selectedSpecialization.isEmpty {
+                    Section("Initial Advances") {
+                        HStack {
+                            Text("Advances:")
+                            Spacer()
+                            
+                            Button(action: {
+                                initialAdvances = max(0, initialAdvances - 1)
+                            }) {
+                                Image(systemName: "minus")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                    .frame(width: 30, height: 30)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(6)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .disabled(initialAdvances <= 0)
+                            
+                            Text("\(initialAdvances)")
+                                .font(.body)
+                                .fontWeight(.medium)
+                                .frame(minWidth: 30)
+                            
+                            Button(action: {
+                                initialAdvances = min(4, initialAdvances + 1)
+                            }) {
+                                Image(systemName: "plus")
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.primary)
+                                    .frame(width: 30, height: 30)
+                                    .background(Color(.systemGray5))
+                                    .cornerRadius(6)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .disabled(initialAdvances >= 4)
+                        }
+                    }
+                }
+                
+                if !selectedSkill.isEmpty && availableSpecializations.isEmpty {
                     Section {
                         Text("All specializations for \(selectedSkill) are already added.")
                             .foregroundColor(.secondary)
@@ -655,9 +720,19 @@ struct AddSpecializationSheet: View {
             }
             .navigationTitle("Add Specialization")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                // Reset state when sheet appears to prevent picker validation errors
+                selectedSkill = ""
+                selectedSpecialization = ""
+                initialAdvances = 1
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
+                        // Reset picker state before dismissing to prevent validation errors
+                        selectedSkill = ""
+                        selectedSpecialization = ""
+                        initialAdvances = 1
                         dismiss()
                     }
                 }
@@ -676,10 +751,16 @@ struct AddSpecializationSheet: View {
         guard !selectedSpecialization.isEmpty else { return }
         
         var specializations = character.specializationAdvances
-        specializations[selectedSpecialization] = 0
+        specializations[selectedSpecialization] = initialAdvances
         character.specializationAdvances = specializations
         character.lastModified = Date()
         store.saveChanges()
+        
+        // Reset picker state before dismissing to prevent validation errors
+        selectedSkill = ""
+        selectedSpecialization = ""
+        initialAdvances = 1
+        
         dismiss()
     }
 }
