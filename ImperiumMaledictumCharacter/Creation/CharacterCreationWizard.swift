@@ -1431,14 +1431,7 @@ struct RoleStage: View {
         updateRemainingSpecializationAdvances()
         
         // Get all faction-granted talents (including from talent choices)
-        let faction = FactionDefinitions.getFaction(by: character.faction)
-        var allFactionTalents = faction?.talents ?? []
-        
-        // Add talents from selected faction talent choice
-        if !character.selectedFactionTalentChoice.isEmpty,
-           let selectedChoice = faction?.talentChoices.first(where: { $0.name == character.selectedFactionTalentChoice }) {
-            allFactionTalents.append(contentsOf: selectedChoice.talents)
-        }
+        // Use the computed property to ensure consistency with UI
         
         // Get auto-granted role talents (like Psyker for Mystic)
         var autoGrantedRoleTalentsList: [String] = []
@@ -1456,6 +1449,7 @@ struct RoleStage: View {
         print("DEBUG: autoGrantedRoleTalentsList = \(autoGrantedRoleTalentsList)")
         print("DEBUG: character.talentNames = \(character.talentNames)")
         print("DEBUG: role.talentChoices = \(role.talentChoices)")
+        print("DEBUG: allFactionTalents (computed property) = \(allFactionTalents)")
         
         // Initialize selected talents from character, excluding faction-granted AND auto-granted role talents
         let filteredTalents = character.talentNames.filter { talent in
