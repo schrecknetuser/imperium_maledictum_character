@@ -19,7 +19,7 @@ class Equipment: Codable {
     var traitsData: String // JSON array of EquipmentTrait
     
     // For backward compatibility with Equipment objects that don't have IDs
-    init(from decoder: Decoder) throws {
+    required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         // Try to decode ID, if it doesn't exist, generate a new one

@@ -25,7 +25,7 @@ class Weapon: Codable {
     var flawsData: String // JSON array of strings
     
     // For backward compatibility with Weapon objects that don't have IDs
-    init(from decoder: Decoder) throws {
+    required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         // Try to decode ID, if it doesn't exist, generate a new one
