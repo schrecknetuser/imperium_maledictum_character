@@ -20,8 +20,9 @@ struct CharacteristicsTab: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
                 // Characteristics Table
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Characteristics")
@@ -350,6 +351,8 @@ struct CharacteristicsTab: View {
             }
             .padding()
         }
+        .navigationTitle("Stats")
+        .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showingAddSpecializationSheet) {
             if let imperium = imperiumCharacter {
                 AddSpecializationSheet(character: imperium, store: store)
@@ -362,6 +365,7 @@ struct CharacteristicsTab: View {
             }
         } message: {
             Text("Are you sure you want to delete the specialization '\(specializationToDelete)'? This action cannot be undone.")
+        }
         }
     }
     
