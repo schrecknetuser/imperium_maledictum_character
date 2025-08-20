@@ -495,33 +495,7 @@ struct ComprehensiveEquipmentSheet: View {
     let isEditMode: Bool
     @Environment(\.dismiss) private var dismiss
     
-    // Convenience initializers
-    init(character: ImperiumCharacter, store: CharacterStore, isWeapon: Bool, isEditMode: Bool = false) {
-        self.character = character
-        self.store = store
-        self.isWeapon = isWeapon
-        self.editingEquipment = nil
-        self.editingWeapon = nil
-        self.isEditMode = isEditMode
-    }
-    
-    init(character: ImperiumCharacter, store: CharacterStore, isWeapon: Bool, editingEquipment: Equipment?, isEditMode: Bool = false) {
-        self.character = character
-        self.store = store
-        self.isWeapon = isWeapon
-        self.editingEquipment = editingEquipment
-        self.editingWeapon = nil
-        self.isEditMode = isEditMode
-    }
-    
-    init(character: ImperiumCharacter, store: CharacterStore, isWeapon: Bool, editingWeapon: Weapon?, isEditMode: Bool = false) {
-        self.character = character
-        self.store = store
-        self.isWeapon = isWeapon
-        self.editingEquipment = nil
-        self.editingWeapon = editingWeapon
-        self.isEditMode = isEditMode
-    }
+    // Note: @State variables must be initialized in the main initializer below
     
     // Equipment properties
     @State private var itemName = ""
@@ -546,13 +520,13 @@ struct ComprehensiveEquipmentSheet: View {
     @State private var showingTraitPicker = false
     @State private var showingWeaponTraitPicker = false
     
-    init(character: ImperiumCharacter, store: CharacterStore, isWeapon: Bool, editingEquipment: Equipment? = nil, editingWeapon: Weapon? = nil) {
+    init(character: ImperiumCharacter, store: CharacterStore, isWeapon: Bool, editingEquipment: Equipment? = nil, editingWeapon: Weapon? = nil, isEditMode: Bool = false) {
         self.character = character
         self.store = store
         self.isWeapon = isWeapon
         self.editingEquipment = editingEquipment
         self.editingWeapon = editingWeapon
-        self.isEditMode = false
+        self.isEditMode = isEditMode
         
         // Initialize state variables with proper defensive checks
         if let equipment = editingEquipment, !isWeapon {
