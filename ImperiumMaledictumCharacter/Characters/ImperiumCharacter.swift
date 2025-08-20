@@ -1132,22 +1132,28 @@ class ImperiumCharacter: BaseCharacter {
         let currentReputations = reputations
         let originalReputations = originalCharacter.reputations
         
-        // Create dictionaries for easier comparison
-        let currentDict = Dictionary(uniqueKeysWithValues: currentReputations.map { ($0.faction, $0.value) })
-        let originalDict = Dictionary(uniqueKeysWithValues: originalReputations.map { ($0.faction, $0.value) })
+        // Create dictionaries using composite keys (faction + individual) for easier comparison
+        let currentDict = Dictionary(uniqueKeysWithValues: currentReputations.map { 
+            ("\($0.faction)|\($0.individual)", ($0, $0.value)) 
+        })
+        let originalDict = Dictionary(uniqueKeysWithValues: originalReputations.map { 
+            ("\($0.faction)|\($0.individual)", ($0, $0.value)) 
+        })
         
         // Find added/changed reputations
-        for (faction, currentValue) in currentDict {
-            let originalValue = originalDict[faction] ?? 0
+        for (compositeKey, (reputation, currentValue)) in currentDict {
+            let originalValue = originalDict[compositeKey]?.1 ?? 0
             if currentValue != originalValue {
-                changes.append("reputation \(faction) \(originalValue)→\(currentValue)")
+                let displayName = reputation.individual.isEmpty ? reputation.faction : reputation.individual
+                changes.append("reputation \(displayName) \(originalValue)→\(currentValue)")
             }
         }
         
         // Find removed reputations
-        for (faction, originalValue) in originalDict {
-            if currentDict[faction] == nil {
-                changes.append("reputation \(faction) removed (\(originalValue)→0)")
+        for (compositeKey, (reputation, originalValue)) in originalDict {
+            if currentDict[compositeKey] == nil {
+                let displayName = reputation.individual.isEmpty ? reputation.faction : reputation.individual
+                changes.append("reputation \(displayName) removed (\(originalValue)→0)")
             }
         }
         
