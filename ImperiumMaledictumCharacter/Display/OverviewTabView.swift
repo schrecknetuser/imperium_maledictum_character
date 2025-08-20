@@ -11,9 +11,7 @@ struct OverviewTab: View {
     @Binding var character: any BaseCharacter
     @ObservedObject var store: CharacterStore
     @Binding var isEditMode: Bool
-    @State private var showingStatusPopup = false
-    @State private var showingInjuriesPopup = false
-    @State private var showingConditionsPopup = false
+    @State private var showingUnifiedStatusPopup = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -300,62 +298,24 @@ struct OverviewTab: View {
             .padding()
         }
         .overlay(alignment: .bottomTrailing) {
-            VStack(spacing: 12) {
-                // Conditions Button
-                Button {
-                    showingConditionsPopup = true
-                } label: {
-                    Image(systemName: "exclamationmark.triangle")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(Color.orange)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
-                }
-                
-                // Injuries Button
-                Button {
-                    showingInjuriesPopup = true
-                } label: {
-                    Image(systemName: "bandage")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(Color.red)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
-                }
-                
-                // Status Button
-                Button {
-                    showingStatusPopup = true
-                } label: {
-                    Image(systemName: "heart.text.square")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(Color.blue)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
-                }
+            // Single Status Button
+            Button {
+                showingUnifiedStatusPopup = true
+            } label: {
+                Image(systemName: "heart.text.square")
+                    .font(.title2)
+                    .foregroundColor(.white)
+                    .frame(width: 56, height: 56)
+                    .background(Color.blue)
+                    .clipShape(Circle())
+                    .shadow(radius: 4)
             }
             .padding(.trailing, 20)
             .padding(.bottom, 20)
         }
-        .sheet(isPresented: $showingStatusPopup) {
+        .sheet(isPresented: $showingUnifiedStatusPopup) {
             if let binding = imperiumCharacterBinding {
-                StatusPopupView(character: binding, store: store)
-            }
-        }
-        .sheet(isPresented: $showingInjuriesPopup) {
-            if let binding = imperiumCharacterBinding {
-                InjuriesPopupView(character: binding, store: store)
-            }
-        }
-        .sheet(isPresented: $showingConditionsPopup) {
-            if let binding = imperiumCharacterBinding {
-                ConditionsPopupView(character: binding, store: store)
+                UnifiedStatusPopupView(character: binding, store: store)
             }
         }
     }

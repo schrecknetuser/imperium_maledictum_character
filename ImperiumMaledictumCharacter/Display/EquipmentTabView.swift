@@ -21,9 +21,20 @@ struct EquipmentTab: View {
     @State private var showingWeaponDeleteConfirmation = false
     @State private var equipmentToDelete: Equipment?
     @State private var weaponToDelete: Weapon?
+    @State private var showingUnifiedStatusPopup = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
+    }
+    
+    var imperiumCharacterBinding: Binding<ImperiumCharacter>? {
+        guard character is ImperiumCharacter else { return nil }
+        return Binding(
+            get: { character as! ImperiumCharacter },
+            set: { newValue in
+                // This won't modify the original character since it's let, but needed for binding
+            }
+        )
     }
     
     // Computed properties for sheet presentation
@@ -276,6 +287,22 @@ struct EquipmentTab: View {
                 imperiumCharacter?.migrateEquipmentAndWeapons()
             }
         }
+        .overlay(alignment: .bottomTrailing) {
+            // Floating Status Button
+            Button {
+                showingUnifiedStatusPopup = true
+            } label: {
+                Image(systemName: "heart.text.square")
+                    .font(.title2)
+                    .foregroundColor(.white)
+                    .frame(width: 56, height: 56)
+                    .background(Color.blue)
+                    .clipShape(Circle())
+                    .shadow(radius: 4)
+            }
+            .padding(.trailing, 20)
+            .padding(.bottom, 20)
+        }
         .sheet(isPresented: $showingAddEquipmentSheet) {
             if let imperium = imperiumCharacter {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false)
@@ -304,6 +331,11 @@ struct EquipmentTab: View {
         .sheet(isPresented: showingEditWeaponSheet) {
             if let imperium = imperiumCharacter, case .editing(let weapon) = editingWeaponState {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon)
+            }
+        }
+        .sheet(isPresented: $showingUnifiedStatusPopup) {
+            if let binding = imperiumCharacterBinding {
+                UnifiedStatusPopupView(character: binding, store: store)
             }
         }
         .alert("Delete Equipment", isPresented: $showingEquipmentDeleteConfirmation) {
