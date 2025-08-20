@@ -293,7 +293,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 characteristicsData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -844,7 +844,11 @@ class ImperiumCharacter: BaseCharacter {
             changes.append("character description updated")
         }
         
-        // Check characteristics changes
+        // Check characteristics changes (new system)
+        let characteristicsChanges = getDetailedCharacteristicsChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: characteristicsChanges)
+        
+        // Check legacy characteristics for backward compatibility
         if weaponSkill != originalCharacter.weaponSkill {
             changes.append("weapon skill \(originalCharacter.weaponSkill)→\(weaponSkill)")
         }
@@ -945,6 +949,40 @@ class ImperiumCharacter: BaseCharacter {
     }
     
     // MARK: - Detailed Change Tracking Helpers
+    
+    private func getDetailedCharacteristicsChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard characteristicsData != originalCharacter.characteristicsData else { return [] }
+        
+        var changes: [String] = []
+        let currentCharacteristics = characteristics
+        let originalCharacteristics = originalCharacter.characteristics
+        
+        // Check for changes in characteristics
+        for (name, currentChar) in currentCharacteristics {
+            if let originalChar = originalCharacteristics[name] {
+                // Check initial value changes
+                if currentChar.initialValue != originalChar.initialValue {
+                    changes.append("\(name.lowercased()) base \(originalChar.initialValue)→\(currentChar.initialValue)")
+                }
+                // Check advances changes
+                if currentChar.advances != originalChar.advances {
+                    changes.append("\(name.lowercased()) advances \(originalChar.advances)→\(currentChar.advances)")
+                }
+            } else {
+                // New characteristic added
+                changes.append("\(name.lowercased()) added: base \(currentChar.initialValue), advances \(currentChar.advances)")
+            }
+        }
+        
+        // Check for removed characteristics
+        for (name, originalChar) in originalCharacteristics {
+            if currentCharacteristics[name] == nil {
+                changes.append("\(name.lowercased()) removed (base \(originalChar.initialValue), advances \(originalChar.advances))")
+            }
+        }
+        
+        return changes
+    }
     
     private func getDetailedSkillAdvancesChanges(originalCharacter: ImperiumCharacter) -> [String] {
         guard skillsAdvancesData != originalCharacter.skillsAdvancesData else { return [] }

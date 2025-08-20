@@ -431,12 +431,14 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
+                let originalSnapshot = store.createSnapshot(of: imperium)
+                
                 var characteristics = imperium.characteristics
                 if var characteristic = characteristics[characteristicName] {
                     characteristic.initialValue = max(1, newValue) // Minimum value of 1
                     characteristics[characteristicName] = characteristic
                     imperium.characteristics = characteristics
-                    store.saveChanges()
+                    store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
                 }
             }
         )
@@ -450,12 +452,14 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
+                let originalSnapshot = store.createSnapshot(of: imperium)
+                
                 var characteristics = imperium.characteristics
                 if var characteristic = characteristics[characteristicName] {
                     characteristic.advances = newValue
                     characteristics[characteristicName] = characteristic
                     imperium.characteristics = characteristics
-                    store.saveChanges()
+                    store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
                 }
             }
         )

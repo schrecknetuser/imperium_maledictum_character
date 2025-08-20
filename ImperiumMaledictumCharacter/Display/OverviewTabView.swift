@@ -13,6 +13,8 @@ struct OverviewTab: View {
     @Binding var isEditMode: Bool
     @State private var showingUnifiedStatusPopup = false
     @State private var showingChangeHistoryPopup = false
+    @State private var tempSolars: Int = 0
+    @State private var originalSolars: Int = 0
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -185,23 +187,27 @@ struct OverviewTab: View {
                         }
                         
                         if isEditMode {
-                            let solarsBinding = Binding<Int>(
-                                get: { imperium.solars },
-                                set: { newValue in
-                                    let originalSnapshot = store.createSnapshot(of: imperium)
-                                    imperium.solars = newValue
-                                    store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
-                                }
-                            )
                             HStack {
                                 Text("Wealth (Solars)")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                TextField("Solars", value: solarsBinding, format: .number)
+                                TextField("Solars", value: $tempSolars, format: .number)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .frame(width: 80)
                                     .keyboardType(.numberPad)
+                                    .onAppear {
+                                        tempSolars = imperium.solars
+                                        originalSolars = imperium.solars
+                                    }
+                                    .onChange(of: isEditMode) { _ in
+                                        if !isEditMode && tempSolars != originalSolars {
+                                            // Save changes only when exiting edit mode
+                                            let originalSnapshot = store.createSnapshot(of: imperium)
+                                            imperium.solars = tempSolars
+                                            store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                                        }
+                                    }
                             }
                         } else if imperium.solars > 0 {
                             DetailRow(title: "Wealth", value: "\(imperium.solars) Solars")
