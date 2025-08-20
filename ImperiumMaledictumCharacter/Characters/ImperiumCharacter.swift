@@ -1163,28 +1163,76 @@ class ImperiumCharacter: BaseCharacter {
     private func getDetailedInjuryChanges(originalCharacter: ImperiumCharacter) -> [String] {
         var changes: [String] = []
         
+        // Head injuries
         if headInjuries != originalCharacter.headInjuries {
-            let currentCount = headInjuriesList.count
-            let originalCount = originalCharacter.headInjuriesList.count
-            changes.append("head injuries count \(originalCount)→\(currentCount)")
+            let currentInjuries = Set(headInjuriesList.map { $0.name })
+            let originalInjuries = Set(originalCharacter.headInjuriesList.map { $0.name })
+            
+            // Find added head injuries
+            let addedInjuries = currentInjuries.subtracting(originalInjuries)
+            for injury in addedInjuries.sorted() {
+                changes.append("head injury added: \(injury)")
+            }
+            
+            // Find removed head injuries
+            let removedInjuries = originalInjuries.subtracting(currentInjuries)
+            for injury in removedInjuries.sorted() {
+                changes.append("head injury removed: \(injury)")
+            }
         }
         
+        // Arm injuries
         if armInjuries != originalCharacter.armInjuries {
-            let currentCount = armInjuriesList.count
-            let originalCount = originalCharacter.armInjuriesList.count
-            changes.append("arm injuries count \(originalCount)→\(currentCount)")
+            let currentInjuries = Set(armInjuriesList.map { $0.name })
+            let originalInjuries = Set(originalCharacter.armInjuriesList.map { $0.name })
+            
+            // Find added arm injuries
+            let addedInjuries = currentInjuries.subtracting(originalInjuries)
+            for injury in addedInjuries.sorted() {
+                changes.append("arm injury added: \(injury)")
+            }
+            
+            // Find removed arm injuries
+            let removedInjuries = originalInjuries.subtracting(currentInjuries)
+            for injury in removedInjuries.sorted() {
+                changes.append("arm injury removed: \(injury)")
+            }
         }
         
+        // Body injuries
         if bodyInjuries != originalCharacter.bodyInjuries {
-            let currentCount = bodyInjuriesList.count
-            let originalCount = originalCharacter.bodyInjuriesList.count
-            changes.append("body injuries count \(originalCount)→\(currentCount)")
+            let currentInjuries = Set(bodyInjuriesList.map { $0.name })
+            let originalInjuries = Set(originalCharacter.bodyInjuriesList.map { $0.name })
+            
+            // Find added body injuries
+            let addedInjuries = currentInjuries.subtracting(originalInjuries)
+            for injury in addedInjuries.sorted() {
+                changes.append("body injury added: \(injury)")
+            }
+            
+            // Find removed body injuries
+            let removedInjuries = originalInjuries.subtracting(currentInjuries)
+            for injury in removedInjuries.sorted() {
+                changes.append("body injury removed: \(injury)")
+            }
         }
         
+        // Leg injuries
         if legInjuries != originalCharacter.legInjuries {
-            let currentCount = legInjuriesList.count
-            let originalCount = originalCharacter.legInjuriesList.count
-            changes.append("leg injuries count \(originalCount)→\(currentCount)")
+            let currentInjuries = Set(legInjuriesList.map { $0.name })
+            let originalInjuries = Set(originalCharacter.legInjuriesList.map { $0.name })
+            
+            // Find added leg injuries
+            let addedInjuries = currentInjuries.subtracting(originalInjuries)
+            for injury in addedInjuries.sorted() {
+                changes.append("leg injury added: \(injury)")
+            }
+            
+            // Find removed leg injuries
+            let removedInjuries = originalInjuries.subtracting(currentInjuries)
+            for injury in removedInjuries.sorted() {
+                changes.append("leg injury removed: \(injury)")
+            }
         }
         
         return changes
