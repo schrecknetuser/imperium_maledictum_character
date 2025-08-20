@@ -373,7 +373,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 equipmentNamesData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -389,7 +389,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 weaponNamesData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -453,7 +453,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 appliedOriginBonuses = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -469,7 +469,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 appliedFactionBonuses = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     

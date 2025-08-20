@@ -473,10 +473,11 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
+                let originalSnapshot = store.createSnapshot(of: imperium)
                 var skillAdvances = imperium.skillAdvances
                 skillAdvances[skillName] = newValue
                 imperium.skillAdvances = skillAdvances
-                store.saveChanges()
+                store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
             }
         )
     }
@@ -489,10 +490,11 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
+                let originalSnapshot = store.createSnapshot(of: imperium)
                 var specializationAdvances = imperium.specializationAdvances
                 specializationAdvances[specializationName] = newValue
                 imperium.specializationAdvances = specializationAdvances
-                store.saveChanges()
+                store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
             }
         )
     }
@@ -684,11 +686,11 @@ struct CharacteristicsTab: View {
     
     private func deleteSpecialization(_ specializationName: String) {
         guard let imperium = imperiumCharacter else { return }
+        let originalSnapshot = store.createSnapshot(of: imperium)
         var specializations = imperium.specializationAdvances
         specializations.removeValue(forKey: specializationName)
         imperium.specializationAdvances = specializations
-        imperium.lastModified = Date()
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
     }
 }
 
@@ -830,11 +832,11 @@ struct AddSpecializationSheet: View {
     private func addSpecialization() {
         guard !selectedSpecialization.isEmpty else { return }
         
+        let originalSnapshot = store.createSnapshot(of: character)
         var specializations = character.specializationAdvances
         specializations[selectedSpecialization] = initialAdvances
         character.specializationAdvances = specializations
-        character.lastModified = Date()
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         
         // Reset picker state before dismissing to prevent validation errors
         selectedSkill = ""

@@ -200,12 +200,22 @@ struct OverviewTab: View {
                                         tempSolars = imperium.solars
                                         originalSolars = imperium.solars
                                     }
-                                    .onChange(of: isEditMode) { _ in
-                                        if !isEditMode && tempSolars != originalSolars {
-                                            // Save changes only when exiting edit mode
+                                    .onSubmit {
+                                        // Save when user presses return/done
+                                        if tempSolars != originalSolars {
                                             let originalSnapshot = store.createSnapshot(of: imperium)
                                             imperium.solars = tempSolars
                                             store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                                            originalSolars = tempSolars
+                                        }
+                                    }
+                                    .onChange(of: isEditMode) { newValue in
+                                        // Save changes when exiting edit mode
+                                        if !newValue && tempSolars != originalSolars {
+                                            let originalSnapshot = store.createSnapshot(of: imperium)
+                                            imperium.solars = tempSolars
+                                            store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                                            originalSolars = tempSolars
                                         }
                                     }
                             }
