@@ -159,7 +159,6 @@ struct TalentsTab: View {
         var talents = imperium.talentNames
         talents.removeAll { $0 == talent }
         imperium.talentNames = talents
-        imperium.lastModified = Date()
         
         store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
     }
@@ -216,7 +215,6 @@ struct AddTalentSheet: View {
         var talents = character.talentNames
         talents.append(talent)
         character.talentNames = talents
-        character.lastModified = Date()
         
         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         dismiss()

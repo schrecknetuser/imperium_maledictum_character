@@ -455,7 +455,6 @@ struct EquipmentTab: View {
             equipmentList.remove(at: index)
         }
         imperium.equipmentList = equipmentList
-        imperium.lastModified = Date()
         store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
     }
     
@@ -469,7 +468,6 @@ struct EquipmentTab: View {
             weaponList.remove(at: index)
         }
         imperium.weaponList = weaponList
-        imperium.lastModified = Date()
         store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
     }
 }
@@ -808,7 +806,6 @@ struct ComprehensiveEquipmentSheet: View {
             character.equipmentList = equipmentList
         }
         
-        character.lastModified = Date()
         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         dismiss()
     }
@@ -976,7 +973,6 @@ struct WeaponSelectionPopupView: View {
         var weaponList = character.weaponList
         weaponList.append(weapon)
         character.weaponList = weaponList
-        character.lastModified = Date()
         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         
         dismiss()
@@ -1141,7 +1137,6 @@ struct EquipmentSelectionPopupView: View {
         var equipmentList = character.equipmentList
         equipmentList.append(equipment)
         character.equipmentList = equipmentList
-        character.lastModified = Date()
         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         
         dismiss()

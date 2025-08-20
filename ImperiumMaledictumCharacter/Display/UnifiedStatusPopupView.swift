@@ -322,7 +322,6 @@ struct InjuriesContentView: View {
                     var current = character.headInjuriesList
                     current.append(wound)
                     character.headInjuriesList = current
-                    character.lastModified = Date()
                     
                     store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
@@ -335,7 +334,6 @@ struct InjuriesContentView: View {
                             current.remove(at: index)
                         }
                         character.headInjuriesList = current
-                        character.lastModified = Date()
                         
                         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
@@ -358,7 +356,6 @@ struct InjuriesContentView: View {
                     var current = character.armInjuriesList
                     current.append(wound)
                     character.armInjuriesList = current
-                    character.lastModified = Date()
                     
                     store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
@@ -371,7 +368,6 @@ struct InjuriesContentView: View {
                             current.remove(at: index)
                         }
                         character.armInjuriesList = current
-                        character.lastModified = Date()
                         
                         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
@@ -394,7 +390,6 @@ struct InjuriesContentView: View {
                     var current = character.bodyInjuriesList
                     current.append(wound)
                     character.bodyInjuriesList = current
-                    character.lastModified = Date()
                     
                     store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
@@ -407,7 +402,6 @@ struct InjuriesContentView: View {
                             current.remove(at: index)
                         }
                         character.bodyInjuriesList = current
-                        character.lastModified = Date()
                         
                         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
@@ -430,7 +424,6 @@ struct InjuriesContentView: View {
                     var current = character.legInjuriesList
                     current.append(wound)
                     character.legInjuriesList = current
-                    character.lastModified = Date()
                     
                     store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
@@ -443,7 +436,6 @@ struct InjuriesContentView: View {
                             current.remove(at: index)
                         }
                         character.legInjuriesList = current
-                        character.lastModified = Date()
                         
                         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
@@ -547,7 +539,6 @@ struct ConditionsContentView: View {
         var conditions = character.conditionsList
         conditions.remove(atOffsets: offsets)
         character.conditionsList = conditions
-        character.lastModified = Date()
         
         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
     }
@@ -587,7 +578,6 @@ struct AddConditionSheet: View {
                     var conditions = character.conditionsList
                     conditions.append(condition)
                     character.conditionsList = conditions
-                    character.lastModified = Date()
                     
                     store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     dismiss()
