@@ -45,7 +45,6 @@ struct UnifiedStatusPopupView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        character.lastModified = Date()
                         dismiss()
                     }
                 }
@@ -290,7 +289,6 @@ struct StatusContentView: View {
         character.corruption = corruption
         character.fate = fate
         character.spentFate = spentFate
-        character.lastModified = Date()
         
         // Save with change tracking if we have the original snapshot
         if let snapshot = originalSnapshot {

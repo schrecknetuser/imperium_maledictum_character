@@ -74,8 +74,6 @@ struct CharacterDetailView: View {
                     Button("Done") {
                         // Save all changes with change tracking
                         if let imperium = character as? ImperiumCharacter {
-                            imperium.lastModified = Date()
-                            
                             if let snapshot = editModeSnapshot {
                                 store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: snapshot)
                             } else {

@@ -228,7 +228,6 @@ struct StatusPopupView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        character.lastModified = Date()
                         dismiss()
                     }
                 }
@@ -248,7 +247,6 @@ struct StatusPopupView: View {
         character.corruption = corruption
         character.fate = fate
         character.spentFate = spentFate
-        character.lastModified = Date()
         store.saveChanges()
     }
 }
