@@ -192,7 +192,7 @@ struct CharacteristicsTab: View {
                             Text("Total")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 50, alignment: .center)
+                                .frame(width: 45, alignment: .center)
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 8)
@@ -226,7 +226,7 @@ struct CharacteristicsTab: View {
                                     Text("\(skill.totalValue)")
                                         .font(.caption)
                                         .fontWeight(.medium)
-                                        .frame(width: 50, alignment: .center)
+                                        .frame(width: 45, alignment: .center)
                                 }
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
@@ -258,7 +258,7 @@ struct CharacteristicsTab: View {
                             Text("Skill")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 60, alignment: .center)
+                                .frame(width: 50, alignment: .center)
                             Text("Adv.")
                                 .font(.caption)
                                 .fontWeight(.medium)
@@ -266,7 +266,7 @@ struct CharacteristicsTab: View {
                             Text("Total")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 50, alignment: .center)
+                                .frame(width: 45, alignment: .center)
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 8)
@@ -280,7 +280,7 @@ struct CharacteristicsTab: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     Text(specialization.skillName)
                                         .font(.caption)
-                                        .frame(width: 60, alignment: .center)
+                                        .frame(width: 50, alignment: .center)
                                     
                                     if isEditMode {
                                         // Editable dropdown for advances
@@ -313,7 +313,7 @@ struct CharacteristicsTab: View {
                                     Text("\(specialization.totalValue)")
                                         .font(.caption)
                                         .fontWeight(.medium)
-                                        .frame(width: 50, alignment: .center)
+                                        .frame(width: 45, alignment: .center)
                                 }
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
