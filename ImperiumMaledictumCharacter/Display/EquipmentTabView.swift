@@ -22,6 +22,7 @@ struct EquipmentTab: View {
     @State private var equipmentToDelete: Equipment?
     @State private var weaponToDelete: Weapon?
     @State private var showingUnifiedStatusPopup = false
+    @State private var showingChangeHistoryPopup = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -288,54 +289,75 @@ struct EquipmentTab: View {
             }
         }
         .overlay(alignment: .bottomTrailing) {
-            // Floating Status Button
-            Button {
-                showingUnifiedStatusPopup = true
-            } label: {
-                Image(systemName: "heart.text.square")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .frame(width: 56, height: 56)
-                    .background(Color.blue)
-                    .clipShape(Circle())
-                    .shadow(radius: 4)
+            // Floating Action Buttons
+            HStack(spacing: 16) {
+                // Change History Button
+                Button {
+                    showingChangeHistoryPopup = true
+                } label: {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Color.orange)
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
+                
+                // Status Button
+                Button {
+                    showingUnifiedStatusPopup = true
+                } label: {
+                    Image(systemName: "heart.text.square")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Color.blue)
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
             }
             .padding(.trailing, 20)
             .padding(.bottom, 20)
         }
         .sheet(isPresented: $showingAddEquipmentSheet) {
             if let imperium = imperiumCharacter {
-                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false)
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, isEditMode: isEditMode)
             }
         }
         .sheet(isPresented: $showingAddWeaponSheet) {
             if let imperium = imperiumCharacter {
-                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true)
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, isEditMode: isEditMode)
             }
         }
         .sheet(isPresented: $showingWeaponSelectionPopup) {
             if let imperium = imperiumCharacter {
-                WeaponSelectionPopupView(character: imperium, store: store, showingCustomWeaponSheet: $showingAddWeaponSheet)
+                WeaponSelectionPopupView(character: imperium, store: store, showingCustomWeaponSheet: $showingAddWeaponSheet, isEditMode: isEditMode)
             }
         }
         .sheet(isPresented: $showingEquipmentSelectionPopup) {
             if let imperium = imperiumCharacter {
-                EquipmentSelectionPopupView(character: imperium, store: store, showingCustomEquipmentSheet: $showingAddEquipmentSheet)
+                EquipmentSelectionPopupView(character: imperium, store: store, showingCustomEquipmentSheet: $showingAddEquipmentSheet, isEditMode: isEditMode)
             }
         }
         .sheet(isPresented: showingEditEquipmentSheet) {
             if let imperium = imperiumCharacter, case .editing(let equipment) = editingEquipmentState {
-                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, editingEquipment: equipment)
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, editingEquipment: equipment, isEditMode: isEditMode)
             }
         }
         .sheet(isPresented: showingEditWeaponSheet) {
             if let imperium = imperiumCharacter, case .editing(let weapon) = editingWeaponState {
-                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon)
+                ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon, isEditMode: isEditMode)
             }
         }
         .sheet(isPresented: $showingUnifiedStatusPopup) {
             if let binding = imperiumCharacterBinding {
                 UnifiedStatusPopupView(character: binding, store: store)
+            }
+        }
+        .sheet(isPresented: $showingChangeHistoryPopup) {
+            if let binding = imperiumCharacterBinding {
+                ChangeHistoryPopupView(character: binding, store: store)
             }
         }
         .alert("Delete Equipment", isPresented: $showingEquipmentDeleteConfirmation) {
@@ -425,26 +447,42 @@ struct EquipmentTab: View {
     
     private func removeEquipment(_ equipment: Equipment) {
         guard let imperium = imperiumCharacter else { return }
+        
         var equipmentList = imperium.equipmentList
         // Remove the specific equipment instance using ID
         if let index = equipmentList.firstIndex(where: { $0.id == equipment.id }) {
             equipmentList.remove(at: index)
         }
         imperium.equipmentList = equipmentList
-        imperium.lastModified = Date()
-        store.saveChanges()
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: imperium)
+            store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
     }
     
     private func removeWeapon(_ weapon: Weapon) {
         guard let imperium = imperiumCharacter else { return }
+        
         var weaponList = imperium.weaponList
         // Remove the specific weapon instance using ID
         if let index = weaponList.firstIndex(where: { $0.id == weapon.id }) {
             weaponList.remove(at: index)
         }
         imperium.weaponList = weaponList
-        imperium.lastModified = Date()
-        store.saveChanges()
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: imperium)
+            store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
     }
 }
 
@@ -454,7 +492,36 @@ struct ComprehensiveEquipmentSheet: View {
     let isWeapon: Bool
     let editingEquipment: Equipment?
     let editingWeapon: Weapon?
+    let isEditMode: Bool
     @Environment(\.dismiss) private var dismiss
+    
+    // Convenience initializers
+    init(character: ImperiumCharacter, store: CharacterStore, isWeapon: Bool, isEditMode: Bool = false) {
+        self.character = character
+        self.store = store
+        self.isWeapon = isWeapon
+        self.editingEquipment = nil
+        self.editingWeapon = nil
+        self.isEditMode = isEditMode
+    }
+    
+    init(character: ImperiumCharacter, store: CharacterStore, isWeapon: Bool, editingEquipment: Equipment?, isEditMode: Bool = false) {
+        self.character = character
+        self.store = store
+        self.isWeapon = isWeapon
+        self.editingEquipment = editingEquipment
+        self.editingWeapon = nil
+        self.isEditMode = isEditMode
+    }
+    
+    init(character: ImperiumCharacter, store: CharacterStore, isWeapon: Bool, editingWeapon: Weapon?, isEditMode: Bool = false) {
+        self.character = character
+        self.store = store
+        self.isWeapon = isWeapon
+        self.editingEquipment = nil
+        self.editingWeapon = editingWeapon
+        self.isEditMode = isEditMode
+    }
     
     // Equipment properties
     @State private var itemName = ""
@@ -485,6 +552,7 @@ struct ComprehensiveEquipmentSheet: View {
         self.isWeapon = isWeapon
         self.editingEquipment = editingEquipment
         self.editingWeapon = editingWeapon
+        self.isEditMode = false
         
         // Initialize state variables with proper defensive checks
         if let equipment = editingEquipment, !isWeapon {
@@ -541,6 +609,10 @@ struct ComprehensiveEquipmentSheet: View {
             _selectedWeaponTraits = State(initialValue: [])
             _selectedModifications = State(initialValue: [])
         }
+        
+        // Initialize UI state
+        _showingTraitPicker = State(initialValue: false)
+        _showingWeaponTraitPicker = State(initialValue: false)
     }
     
     var body: some View {
@@ -780,8 +852,14 @@ struct ComprehensiveEquipmentSheet: View {
             character.equipmentList = equipmentList
         }
         
-        character.lastModified = Date()
-        store.saveChanges()
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: character)
+            store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
         dismiss()
     }
 }
@@ -791,6 +869,7 @@ struct WeaponSelectionPopupView: View {
     let character: ImperiumCharacter
     @ObservedObject var store: CharacterStore
     @Binding var showingCustomWeaponSheet: Bool
+    let isEditMode: Bool
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedCategory: String = WeaponCategories.ranged
@@ -947,8 +1026,15 @@ struct WeaponSelectionPopupView: View {
         var weaponList = character.weaponList
         weaponList.append(weapon)
         character.weaponList = weaponList
-        character.lastModified = Date()
-        store.saveChanges()
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: character)
+            store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
         
         dismiss()
     }
@@ -959,6 +1045,7 @@ struct EquipmentSelectionPopupView: View {
     let character: ImperiumCharacter
     @ObservedObject var store: CharacterStore
     @Binding var showingCustomEquipmentSheet: Bool
+    let isEditMode: Bool
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedCategory: String = EquipmentCategories.clothingPersonalGear
@@ -1111,8 +1198,15 @@ struct EquipmentSelectionPopupView: View {
         var equipmentList = character.equipmentList
         equipmentList.append(equipment)
         character.equipmentList = equipmentList
-        character.lastModified = Date()
-        store.saveChanges()
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: character)
+            store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
         
         dismiss()
     }

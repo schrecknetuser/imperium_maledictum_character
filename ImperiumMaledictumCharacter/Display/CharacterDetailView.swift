@@ -14,6 +14,7 @@ struct CharacterDetailView: View {
     
     @State private var selectedTab: Int = 0
     @State private var isEditMode = false
+    @State private var editModeSnapshot: CharacterSnapshot?
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -71,15 +72,25 @@ struct CharacterDetailView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if isEditMode {
                     Button("Done") {
-                        // Save all changes
+                        // Save all changes with change tracking
                         if let imperium = character as? ImperiumCharacter {
-                            imperium.lastModified = Date()
+                            if let snapshot = editModeSnapshot {
+                                store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: snapshot)
+                            } else {
+                                store.saveChanges()
+                            }
+                        } else {
+                            store.saveChanges()
                         }
-                        store.saveChanges()
                         isEditMode = false
+                        editModeSnapshot = nil
                     }
                 } else {
                     Button("Edit") {
+                        // Capture snapshot when entering edit mode
+                        if let imperium = character as? ImperiumCharacter {
+                            editModeSnapshot = store.createSnapshot(of: imperium)
+                        }
                         isEditMode = true
                     }
                 }

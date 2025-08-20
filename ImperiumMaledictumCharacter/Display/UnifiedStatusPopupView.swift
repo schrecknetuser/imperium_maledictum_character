@@ -45,7 +45,6 @@ struct UnifiedStatusPopupView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        character.lastModified = Date()
                         dismiss()
                     }
                 }
@@ -65,6 +64,9 @@ struct StatusContentView: View {
     @State private var corruption: Int = 0
     @State private var fate: Int = 0
     @State private var spentFate: Int = 0
+    
+    // Store original snapshot for change tracking
+    @State private var originalSnapshot: CharacterSnapshot?
     
     var body: some View {
         Form {
@@ -276,6 +278,9 @@ struct StatusContentView: View {
             corruption = character.corruption
             fate = character.fate
             spentFate = character.spentFate
+            
+            // Create original snapshot for change tracking
+            originalSnapshot = store.createSnapshot(of: character)
         }
     }
     
@@ -284,8 +289,13 @@ struct StatusContentView: View {
         character.corruption = corruption
         character.fate = fate
         character.spentFate = spentFate
-        character.lastModified = Date()
-        store.saveChanges()
+        
+        // Save with change tracking if we have the original snapshot
+        if let snapshot = originalSnapshot {
+            store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: snapshot)
+        } else {
+            store.saveChanges()
+        }
     }
 }
 
@@ -295,6 +305,8 @@ struct InjuriesContentView: View {
     @Binding var character: ImperiumCharacter
     var store: CharacterStore
     @State private var selectedTab = 0
+    @State private var showingRemoveConfirmation = false
+    @State private var pendingRemoval: (() -> Void)?
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -303,20 +315,27 @@ struct InjuriesContentView: View {
                 injuries: character.headInjuriesList,
                 availableWounds: CriticalWoundDefinitions.headWounds,
                 onAdd: { wound in
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
                     var current = character.headInjuriesList
                     current.append(wound)
                     character.headInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
                 onRemove: { indices in
-                    var current = character.headInjuriesList
-                    for index in indices.sorted(by: >) {
-                        current.remove(at: index)
+                    pendingRemoval = {
+                        let originalSnapshot = store.createSnapshot(of: character)
+                        
+                        var current = character.headInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.headInjuriesList = current
+                        
+                        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
-                    character.headInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    showingRemoveConfirmation = true
                 }
             )
             .tabItem {
@@ -330,20 +349,27 @@ struct InjuriesContentView: View {
                 injuries: character.armInjuriesList,
                 availableWounds: CriticalWoundDefinitions.armWounds,
                 onAdd: { wound in
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
                     var current = character.armInjuriesList
                     current.append(wound)
                     character.armInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
                 onRemove: { indices in
-                    var current = character.armInjuriesList
-                    for index in indices.sorted(by: >) {
-                        current.remove(at: index)
+                    pendingRemoval = {
+                        let originalSnapshot = store.createSnapshot(of: character)
+                        
+                        var current = character.armInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.armInjuriesList = current
+                        
+                        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
-                    character.armInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    showingRemoveConfirmation = true
                 }
             )
             .tabItem {
@@ -357,20 +383,27 @@ struct InjuriesContentView: View {
                 injuries: character.bodyInjuriesList,
                 availableWounds: CriticalWoundDefinitions.bodyWounds,
                 onAdd: { wound in
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
                     var current = character.bodyInjuriesList
                     current.append(wound)
                     character.bodyInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
                 onRemove: { indices in
-                    var current = character.bodyInjuriesList
-                    for index in indices.sorted(by: >) {
-                        current.remove(at: index)
+                    pendingRemoval = {
+                        let originalSnapshot = store.createSnapshot(of: character)
+                        
+                        var current = character.bodyInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.bodyInjuriesList = current
+                        
+                        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
-                    character.bodyInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    showingRemoveConfirmation = true
                 }
             )
             .tabItem {
@@ -384,20 +417,27 @@ struct InjuriesContentView: View {
                 injuries: character.legInjuriesList,
                 availableWounds: CriticalWoundDefinitions.legWounds,
                 onAdd: { wound in
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
                     var current = character.legInjuriesList
                     current.append(wound)
                     character.legInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
                 onRemove: { indices in
-                    var current = character.legInjuriesList
-                    for index in indices.sorted(by: >) {
-                        current.remove(at: index)
+                    pendingRemoval = {
+                        let originalSnapshot = store.createSnapshot(of: character)
+                        
+                        var current = character.legInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.legInjuriesList = current
+                        
+                        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
-                    character.legInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    showingRemoveConfirmation = true
                 }
             )
             .tabItem {
@@ -405,6 +445,14 @@ struct InjuriesContentView: View {
                 Text("Leg")
             }
             .tag(3)
+        }
+        .alert("Remove Injury", isPresented: $showingRemoveConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Remove", role: .destructive) {
+                pendingRemoval?()
+            }
+        } message: {
+            Text("Are you sure you want to remove this injury? This action cannot be undone.")
         }
     }
 }
@@ -415,6 +463,8 @@ struct ConditionsContentView: View {
     @Binding var character: ImperiumCharacter
     var store: CharacterStore
     @State private var showingAddConditionSheet = false
+    @State private var showingRemoveConfirmation = false
+    @State private var conditionToRemove: IndexSet?
     
     var body: some View {
         VStack(spacing: 20) {
@@ -464,13 +514,189 @@ struct ConditionsContentView: View {
         .sheet(isPresented: $showingAddConditionSheet) {
             AddConditionSheet(character: $character, store: store)
         }
+        .alert("Remove Condition", isPresented: $showingRemoveConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Remove", role: .destructive) {
+                if let indicesToRemove = conditionToRemove {
+                    confirmRemoveConditions(at: indicesToRemove)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to remove this condition? This action cannot be undone.")
+        }
     }
     
     private func removeConditions(at offsets: IndexSet) {
+        conditionToRemove = offsets
+        showingRemoveConfirmation = true
+    }
+    
+    private func confirmRemoveConditions(at offsets: IndexSet) {
+        let originalSnapshot = store.createSnapshot(of: character)
+        
         var conditions = character.conditionsList
         conditions.remove(atOffsets: offsets)
         character.conditionsList = conditions
-        character.lastModified = Date()
-        store.saveChanges()
+        
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+    }
+}
+
+// MARK: - Supporting Views
+
+struct ConditionRowView: View {
+    let condition: Condition
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(condition.name)
+                .font(.headline)
+                .foregroundColor(.primary)
+            
+            Text(condition.description)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.leading)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct AddConditionSheet: View {
+    @Binding var character: ImperiumCharacter
+    var store: CharacterStore
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            List(ConditionDefinitions.allConditions) { condition in
+                Button(action: {
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
+                    var conditions = character.conditionsList
+                    conditions.append(condition)
+                    character.conditionsList = conditions
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+                    dismiss()
+                }) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(condition.name)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text(condition.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.plain)
+            }
+            .navigationTitle("Add Condition")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct InjuryListView: View {
+    let title: String
+    let injuries: [CriticalWound]
+    let availableWounds: [CriticalWound]
+    let onAdd: (CriticalWound) -> Void
+    let onRemove: (IndexSet) -> Void
+    
+    @State private var showingAddSheet = false
+    
+    var body: some View {
+        List {
+            Section {
+                ForEach(injuries) { injury in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(injury.name)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text(injury.description)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Treatment:")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                            Text(injury.treatment)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .onDelete(perform: onRemove)
+            } header: {
+                HStack {
+                    Text(title)
+                    Spacer()
+                    Button("Add Injury") {
+                        showingAddSheet = true
+                    }
+                    .font(.caption)
+                }
+            }
+            
+            if injuries.isEmpty {
+                Text("No \(title.lowercased()) recorded")
+                    .foregroundColor(.secondary)
+                    .italic()
+            }
+        }
+        .sheet(isPresented: $showingAddSheet) {
+            NavigationStack {
+                List(availableWounds) { wound in
+                    Button(action: {
+                        onAdd(wound)
+                        showingAddSheet = false
+                    }) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(wound.name)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            Text(wound.description)
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Treatment:")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                Text(wound.treatment)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .navigationTitle("Add \(title)")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Cancel") {
+                            showingAddSheet = false
+                        }
+                    }
+                }
+            }
+        }
     }
 }

@@ -13,6 +13,9 @@ struct TalentsTab: View {
     @Binding var isEditMode: Bool
     @State private var showingAddTalentSheet = false
     @State private var showingUnifiedStatusPopup = false
+    @State private var showingChangeHistoryPopup = false
+    @State private var showingRemoveConfirmation = false
+    @State private var talentToRemove: String?
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -50,7 +53,8 @@ struct TalentsTab: View {
                             
                             if isEditMode {
                                 Button(action: {
-                                    removeTalent(talent)
+                                    talentToRemove = talent
+                                    showingRemoveConfirmation = true
                                 }) {
                                     Image(systemName: "minus.circle.fill")
                                         .foregroundColor(.red)
@@ -90,24 +94,40 @@ struct TalentsTab: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .overlay(alignment: .bottomTrailing) {
-            // Floating Status Button
-            Button {
-                showingUnifiedStatusPopup = true
-            } label: {
-                Image(systemName: "heart.text.square")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .frame(width: 56, height: 56)
-                    .background(Color.blue)
-                    .clipShape(Circle())
-                    .shadow(radius: 4)
+            // Floating Action Buttons
+            HStack(spacing: 16) {
+                // Change History Button
+                Button {
+                    showingChangeHistoryPopup = true
+                } label: {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Color.orange)
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
+                
+                // Status Button
+                Button {
+                    showingUnifiedStatusPopup = true
+                } label: {
+                    Image(systemName: "heart.text.square")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Color.blue)
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
             }
             .padding(.trailing, 20)
             .padding(.bottom, 20)
         }
         .sheet(isPresented: $showingAddTalentSheet) {
             if let imperium = imperiumCharacter {
-                AddTalentSheet(character: imperium, store: store)
+                AddTalentSheet(character: imperium, store: store, isEditMode: isEditMode)
             }
         }
         .sheet(isPresented: $showingUnifiedStatusPopup) {
@@ -115,21 +135,45 @@ struct TalentsTab: View {
                 UnifiedStatusPopupView(character: binding, store: store)
             }
         }
+        .sheet(isPresented: $showingChangeHistoryPopup) {
+            if let binding = imperiumCharacterBinding {
+                ChangeHistoryPopupView(character: binding, store: store)
+            }
+        }
+        .alert("Remove Talent", isPresented: $showingRemoveConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Remove", role: .destructive) {
+                if let talent = talentToRemove {
+                    removeTalent(talent)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to remove this talent? This action cannot be undone.")
+        }
     }
     
     private func removeTalent(_ talent: String) {
         guard let imperium = imperiumCharacter else { return }
+        
         var talents = imperium.talentNames
         talents.removeAll { $0 == talent }
         imperium.talentNames = talents
-        imperium.lastModified = Date()
-        store.saveChanges()
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: imperium)
+            store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
     }
 }
 
 struct AddTalentSheet: View {
     let character: ImperiumCharacter
     @ObservedObject var store: CharacterStore
+    let isEditMode: Bool
     @Environment(\.dismiss) private var dismiss
     
     var availableTalents: [String] {
@@ -176,8 +220,15 @@ struct AddTalentSheet: View {
         var talents = character.talentNames
         talents.append(talent)
         character.talentNames = talents
-        character.lastModified = Date()
-        store.saveChanges()
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: character)
+            store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
         dismiss()
     }
 }

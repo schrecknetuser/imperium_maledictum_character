@@ -15,6 +15,7 @@ struct CharacteristicsTab: View {
     @State private var showingDeleteConfirmation = false
     @State private var specializationToDelete: String = ""
     @State private var showingUnifiedStatusPopup = false
+    @State private var showingChangeHistoryPopup = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -365,17 +366,33 @@ struct CharacteristicsTab: View {
         .navigationTitle("Stats")
         .navigationBarTitleDisplayMode(.large)
         .overlay(alignment: .bottomTrailing) {
-            // Floating Status Button
-            Button {
-                showingUnifiedStatusPopup = true
-            } label: {
-                Image(systemName: "heart.text.square")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .frame(width: 56, height: 56)
-                    .background(Color.blue)
-                    .clipShape(Circle())
-                    .shadow(radius: 4)
+            // Floating Action Buttons
+            HStack(spacing: 16) {
+                // Change History Button
+                Button {
+                    showingChangeHistoryPopup = true
+                } label: {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Color.orange)
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
+                
+                // Status Button
+                Button {
+                    showingUnifiedStatusPopup = true
+                } label: {
+                    Image(systemName: "heart.text.square")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(Color.blue)
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
             }
             .padding(.trailing, 20)
             .padding(.bottom, 20)
@@ -388,6 +405,11 @@ struct CharacteristicsTab: View {
         .sheet(isPresented: $showingUnifiedStatusPopup) {
             if let binding = imperiumCharacterBinding {
                 UnifiedStatusPopupView(character: binding, store: store)
+            }
+        }
+        .sheet(isPresented: $showingChangeHistoryPopup) {
+            if let binding = imperiumCharacterBinding {
+                ChangeHistoryPopupView(character: binding, store: store)
             }
         }
         .alert("Delete Specialization", isPresented: $showingDeleteConfirmation) {
@@ -409,12 +431,14 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
+                let originalSnapshot = store.createSnapshot(of: imperium)
+                
                 var characteristics = imperium.characteristics
                 if var characteristic = characteristics[characteristicName] {
                     characteristic.initialValue = max(1, newValue) // Minimum value of 1
                     characteristics[characteristicName] = characteristic
                     imperium.characteristics = characteristics
-                    store.saveChanges()
+                    store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
                 }
             }
         )
@@ -428,12 +452,14 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
+                let originalSnapshot = store.createSnapshot(of: imperium)
+                
                 var characteristics = imperium.characteristics
                 if var characteristic = characteristics[characteristicName] {
                     characteristic.advances = newValue
                     characteristics[characteristicName] = characteristic
                     imperium.characteristics = characteristics
-                    store.saveChanges()
+                    store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
                 }
             }
         )
@@ -447,10 +473,11 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
+                let originalSnapshot = store.createSnapshot(of: imperium)
                 var skillAdvances = imperium.skillAdvances
                 skillAdvances[skillName] = newValue
                 imperium.skillAdvances = skillAdvances
-                store.saveChanges()
+                store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
             }
         )
     }
@@ -463,10 +490,11 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
+                let originalSnapshot = store.createSnapshot(of: imperium)
                 var specializationAdvances = imperium.specializationAdvances
                 specializationAdvances[specializationName] = newValue
                 imperium.specializationAdvances = specializationAdvances
-                store.saveChanges()
+                store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
             }
         )
     }
@@ -658,11 +686,11 @@ struct CharacteristicsTab: View {
     
     private func deleteSpecialization(_ specializationName: String) {
         guard let imperium = imperiumCharacter else { return }
+        let originalSnapshot = store.createSnapshot(of: imperium)
         var specializations = imperium.specializationAdvances
         specializations.removeValue(forKey: specializationName)
         imperium.specializationAdvances = specializations
-        imperium.lastModified = Date()
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
     }
 }
 
@@ -804,11 +832,11 @@ struct AddSpecializationSheet: View {
     private func addSpecialization() {
         guard !selectedSpecialization.isEmpty else { return }
         
+        let originalSnapshot = store.createSnapshot(of: character)
         var specializations = character.specializationAdvances
         specializations[selectedSpecialization] = initialAdvances
         character.specializationAdvances = specializations
-        character.lastModified = Date()
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         
         // Reset picker state before dismissing to prevent validation errors
         selectedSkill = ""

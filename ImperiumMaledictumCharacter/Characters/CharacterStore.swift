@@ -122,6 +122,30 @@ class CharacterStore: ObservableObject {
         }
     }
     
+    func saveCharacterWithChangeTracking(_ character: ImperiumCharacter, originalCharacter: ImperiumCharacter) {
+        // Log changes if any exist
+        character.logChanges(originalCharacter: originalCharacter)
+        
+        // Save to SwiftData
+        saveChanges()
+    }
+    
+    func saveCharacterWithAutoChangeTracking(_ character: ImperiumCharacter, originalSnapshot: CharacterSnapshot) {
+        // Create a temporary character with the snapshot data for change comparison
+        let originalCharacter = ImperiumCharacter()
+        originalSnapshot.applyTo(originalCharacter)
+        
+        // Log changes if any exist
+        character.logChanges(originalCharacter: originalCharacter)
+        
+        // Save to SwiftData
+        saveChanges()
+    }
+    
+    func createSnapshot(of character: ImperiumCharacter) -> CharacterSnapshot {
+        return CharacterSnapshot(from: character)
+    }
+    
     // MARK: - Character Management
     
     func createNewCharacter() -> ImperiumCharacter {
