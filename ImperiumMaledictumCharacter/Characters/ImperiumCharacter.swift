@@ -309,7 +309,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 skillsAdvancesData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -325,7 +325,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 factionSkillAdvancesData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -341,7 +341,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 specializationAdvancesData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -357,7 +357,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 talentNamesData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -405,7 +405,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 equipmentListData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -421,7 +421,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 weaponListData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -437,7 +437,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 reputationData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -526,7 +526,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 headInjuries = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -542,7 +542,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 armInjuries = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -558,7 +558,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 bodyInjuries = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -574,7 +574,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 legInjuries = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -592,7 +592,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 conditionsData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     

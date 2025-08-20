@@ -184,7 +184,26 @@ struct OverviewTab: View {
                             DetailRow(title: "Background", value: imperium.background)
                         }
                         
-                        if imperium.solars > 0 {
+                        if isEditMode {
+                            let solarsBinding = Binding<Int>(
+                                get: { imperium.solars },
+                                set: { newValue in
+                                    let originalSnapshot = store.createSnapshot(of: imperium)
+                                    imperium.solars = newValue
+                                    store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                                }
+                            )
+                            HStack {
+                                Text("Wealth (Solars)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                TextField("Solars", value: solarsBinding, format: .number)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 80)
+                                    .keyboardType(.numberPad)
+                            }
+                        } else if imperium.solars > 0 {
                             DetailRow(title: "Wealth", value: "\(imperium.solars) Solars")
                         }
                         
