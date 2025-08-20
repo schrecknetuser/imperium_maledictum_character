@@ -157,8 +157,6 @@ struct CharacteristicsTab: View {
                             .background(Color(.systemGray6).opacity(0.5))
                         }
                     }
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
                 }
                 .padding()
                 .background(Color(.systemGray6))
@@ -227,8 +225,6 @@ struct CharacteristicsTab: View {
                             .background(Color(.systemGray6).opacity(0.5))
                         }
                     }
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
                 }
                 .padding()
                 .background(Color(.systemGray6))
@@ -329,8 +325,6 @@ struct CharacteristicsTab: View {
                             }
                         }
                     }
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
                 }
                 .padding()
                 .background(Color(.systemGray6))
