@@ -15,6 +15,7 @@ struct OverviewTab: View {
     @State private var showingChangeHistoryPopup = false
     @State private var tempSolars: Int = 0
     @State private var originalSolars: Int = 0
+    @State private var originalSnapshot: CharacterSnapshot? = nil
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -197,26 +198,27 @@ struct OverviewTab: View {
                                     .frame(width: 80)
                                     .keyboardType(.numberPad)
                                     .onAppear {
-                                        tempSolars = imperium.solars
-                                        originalSolars = imperium.solars
+                                        if let imperium = imperiumCharacter {
+                                            tempSolars = imperium.solars
+                                            originalSolars = imperium.solars
+                                            originalSnapshot = store.createSnapshot(of: imperium)
+                                        }
                                     }
                                     .onSubmit {
-                                        // Save when user presses return/done
-                                        if tempSolars != originalSolars {
-                                            let originalSnapshot = store.createSnapshot(of: imperium)
-                                            imperium.solars = tempSolars
-                                            store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
-                                            originalSolars = tempSolars
-                                        }
+                                        saveSolarsChanges()
                                     }
                                     .onChange(of: isEditMode) { newValue in
-                                        // Save changes when exiting edit mode
-                                        if !newValue && tempSolars != originalSolars {
-                                            let originalSnapshot = store.createSnapshot(of: imperium)
-                                            imperium.solars = tempSolars
-                                            store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
-                                            originalSolars = tempSolars
+                                        if !newValue {
+                                            saveSolarsChanges()
+                                        } else if let imperium = imperiumCharacter {
+                                            // Entering edit mode - capture snapshot
+                                            tempSolars = imperium.solars
+                                            originalSolars = imperium.solars
+                                            originalSnapshot = store.createSnapshot(of: imperium)
                                         }
+                                    }
+                                    .onDisappear {
+                                        saveSolarsChanges()
                                     }
                             }
                         } else if imperium.solars > 0 {
@@ -367,5 +369,16 @@ struct OverviewTab: View {
                 ChangeHistoryPopupView(character: binding, store: store)
             }
         }
+    }
+    
+    private func saveSolarsChanges() {
+        guard let imperium = imperiumCharacter,
+              let snapshot = originalSnapshot,
+              tempSolars != originalSolars else { return }
+        
+        imperium.solars = tempSolars
+        store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: snapshot)
+        originalSolars = tempSolars
+        originalSnapshot = store.createSnapshot(of: imperium) // Update snapshot for potential future changes
     }
 }

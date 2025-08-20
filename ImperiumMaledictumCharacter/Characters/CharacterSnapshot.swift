@@ -42,6 +42,7 @@ class CharacterSnapshot {
     let criticalWounds: Int
     
     // Data strings for complex objects
+    let characteristicsData: String
     let skillsAdvancesData: String
     let factionSkillAdvancesData: String
     let specializationAdvancesData: String
@@ -90,6 +91,7 @@ class CharacterSnapshot {
         self.criticalWounds = character.criticalWounds
         
         // Complex data
+        self.characteristicsData = character.characteristicsData
         self.skillsAdvancesData = character.skillsAdvancesData
         self.factionSkillAdvancesData = character.factionSkillAdvancesData
         self.specializationAdvancesData = character.specializationAdvancesData
@@ -139,6 +141,7 @@ class CharacterSnapshot {
         character.criticalWounds = self.criticalWounds
         
         // Complex data
+        character.characteristicsData = self.characteristicsData
         character.skillsAdvancesData = self.skillsAdvancesData
         character.factionSkillAdvancesData = self.factionSkillAdvancesData
         character.specializationAdvancesData = self.specializationAdvancesData
