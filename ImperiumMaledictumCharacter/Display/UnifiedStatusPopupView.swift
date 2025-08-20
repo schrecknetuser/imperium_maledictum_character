@@ -307,6 +307,8 @@ struct InjuriesContentView: View {
     @Binding var character: ImperiumCharacter
     var store: CharacterStore
     @State private var selectedTab = 0
+    @State private var showingRemoveConfirmation = false
+    @State private var pendingRemoval: (() -> Void)?
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -315,20 +317,29 @@ struct InjuriesContentView: View {
                 injuries: character.headInjuriesList,
                 availableWounds: CriticalWoundDefinitions.headWounds,
                 onAdd: { wound in
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
                     var current = character.headInjuriesList
                     current.append(wound)
                     character.headInjuriesList = current
                     character.lastModified = Date()
-                    store.saveChanges()
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
                 onRemove: { indices in
-                    var current = character.headInjuriesList
-                    for index in indices.sorted(by: >) {
-                        current.remove(at: index)
+                    pendingRemoval = {
+                        let originalSnapshot = store.createSnapshot(of: character)
+                        
+                        var current = character.headInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.headInjuriesList = current
+                        character.lastModified = Date()
+                        
+                        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
-                    character.headInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    showingRemoveConfirmation = true
                 }
             )
             .tabItem {
@@ -342,20 +353,29 @@ struct InjuriesContentView: View {
                 injuries: character.armInjuriesList,
                 availableWounds: CriticalWoundDefinitions.armWounds,
                 onAdd: { wound in
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
                     var current = character.armInjuriesList
                     current.append(wound)
                     character.armInjuriesList = current
                     character.lastModified = Date()
-                    store.saveChanges()
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
                 onRemove: { indices in
-                    var current = character.armInjuriesList
-                    for index in indices.sorted(by: >) {
-                        current.remove(at: index)
+                    pendingRemoval = {
+                        let originalSnapshot = store.createSnapshot(of: character)
+                        
+                        var current = character.armInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.armInjuriesList = current
+                        character.lastModified = Date()
+                        
+                        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
-                    character.armInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    showingRemoveConfirmation = true
                 }
             )
             .tabItem {
@@ -369,20 +389,29 @@ struct InjuriesContentView: View {
                 injuries: character.bodyInjuriesList,
                 availableWounds: CriticalWoundDefinitions.bodyWounds,
                 onAdd: { wound in
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
                     var current = character.bodyInjuriesList
                     current.append(wound)
                     character.bodyInjuriesList = current
                     character.lastModified = Date()
-                    store.saveChanges()
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
                 onRemove: { indices in
-                    var current = character.bodyInjuriesList
-                    for index in indices.sorted(by: >) {
-                        current.remove(at: index)
+                    pendingRemoval = {
+                        let originalSnapshot = store.createSnapshot(of: character)
+                        
+                        var current = character.bodyInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.bodyInjuriesList = current
+                        character.lastModified = Date()
+                        
+                        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
-                    character.bodyInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    showingRemoveConfirmation = true
                 }
             )
             .tabItem {
@@ -396,20 +425,29 @@ struct InjuriesContentView: View {
                 injuries: character.legInjuriesList,
                 availableWounds: CriticalWoundDefinitions.legWounds,
                 onAdd: { wound in
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
                     var current = character.legInjuriesList
                     current.append(wound)
                     character.legInjuriesList = current
                     character.lastModified = Date()
-                    store.saveChanges()
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                 },
                 onRemove: { indices in
-                    var current = character.legInjuriesList
-                    for index in indices.sorted(by: >) {
-                        current.remove(at: index)
+                    pendingRemoval = {
+                        let originalSnapshot = store.createSnapshot(of: character)
+                        
+                        var current = character.legInjuriesList
+                        for index in indices.sorted(by: >) {
+                            current.remove(at: index)
+                        }
+                        character.legInjuriesList = current
+                        character.lastModified = Date()
+                        
+                        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     }
-                    character.legInjuriesList = current
-                    character.lastModified = Date()
-                    store.saveChanges()
+                    showingRemoveConfirmation = true
                 }
             )
             .tabItem {
@@ -417,6 +455,14 @@ struct InjuriesContentView: View {
                 Text("Leg")
             }
             .tag(3)
+        }
+        .alert("Remove Injury", isPresented: $showingRemoveConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Remove", role: .destructive) {
+                pendingRemoval?()
+            }
+        } message: {
+            Text("Are you sure you want to remove this injury? This action cannot be undone.")
         }
     }
 }
@@ -427,6 +473,8 @@ struct ConditionsContentView: View {
     @Binding var character: ImperiumCharacter
     var store: CharacterStore
     @State private var showingAddConditionSheet = false
+    @State private var showingRemoveConfirmation = false
+    @State private var conditionToRemove: IndexSet?
     
     var body: some View {
         VStack(spacing: 20) {
@@ -476,13 +524,31 @@ struct ConditionsContentView: View {
         .sheet(isPresented: $showingAddConditionSheet) {
             AddConditionSheet(character: $character, store: store)
         }
+        .alert("Remove Condition", isPresented: $showingRemoveConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Remove", role: .destructive) {
+                if let indicesToRemove = conditionToRemove {
+                    confirmRemoveConditions(at: indicesToRemove)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to remove this condition? This action cannot be undone.")
+        }
     }
     
     private func removeConditions(at offsets: IndexSet) {
+        conditionToRemove = offsets
+        showingRemoveConfirmation = true
+    }
+    
+    private func confirmRemoveConditions(at offsets: IndexSet) {
+        let originalSnapshot = store.createSnapshot(of: character)
+        
         var conditions = character.conditionsList
         conditions.remove(atOffsets: offsets)
         character.conditionsList = conditions
         character.lastModified = Date()
-        store.saveChanges()
+        
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
     }
 }
