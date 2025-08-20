@@ -552,6 +552,7 @@ struct ComprehensiveEquipmentSheet: View {
         self.isWeapon = isWeapon
         self.editingEquipment = editingEquipment
         self.editingWeapon = editingWeapon
+        self.isEditMode = false
         
         // Initialize state variables with proper defensive checks
         if let equipment = editingEquipment, !isWeapon {
@@ -608,6 +609,10 @@ struct ComprehensiveEquipmentSheet: View {
             _selectedWeaponTraits = State(initialValue: [])
             _selectedModifications = State(initialValue: [])
         }
+        
+        // Initialize UI state
+        _showingTraitPicker = State(initialValue: false)
+        _showingWeaponTraitPicker = State(initialValue: false)
     }
     
     var body: some View {
