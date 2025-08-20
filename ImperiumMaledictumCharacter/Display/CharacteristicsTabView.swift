@@ -184,7 +184,7 @@ struct CharacteristicsTab: View {
                             Text("Char.")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 40, alignment: .center)
+                                .frame(width: 30, alignment: .center)
                             Text("Adv.")
                                 .font(.caption)
                                 .fontWeight(.medium)
@@ -192,7 +192,7 @@ struct CharacteristicsTab: View {
                             Text("Total")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 50, alignment: .center)
+                                .frame(width: 35, alignment: .center)
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 8)
@@ -206,7 +206,7 @@ struct CharacteristicsTab: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     Text(skill.characteristicAbbreviation)
                                         .font(.caption)
-                                        .frame(width: 40, alignment: .center)
+                                        .frame(width: 30, alignment: .center)
                                     
                                     if isEditMode {
                                         // Editable dropdown for advances
@@ -216,7 +216,7 @@ struct CharacteristicsTab: View {
                                             }
                                         }
                                         .pickerStyle(MenuPickerStyle())
-                                        .frame(width: 40)
+                                        .frame(width: 55)
                                     } else {
                                         Text("\(skill.advances)")
                                             .font(.caption)
@@ -226,7 +226,7 @@ struct CharacteristicsTab: View {
                                     Text("\(skill.totalValue)")
                                         .font(.caption)
                                         .fontWeight(.medium)
-                                        .frame(width: 50, alignment: .center)
+                                        .frame(width: 35, alignment: .center)
                                 }
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
@@ -258,7 +258,7 @@ struct CharacteristicsTab: View {
                             Text("Skill")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 60, alignment: .center)
+                                .frame(width: 40, alignment: .center)
                             Text("Adv.")
                                 .font(.caption)
                                 .fontWeight(.medium)
@@ -266,7 +266,7 @@ struct CharacteristicsTab: View {
                             Text("Total")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 50, alignment: .center)
+                                .frame(width: 35, alignment: .center)
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 8)
@@ -280,7 +280,7 @@ struct CharacteristicsTab: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     Text(specialization.skillName)
                                         .font(.caption)
-                                        .frame(width: 60, alignment: .center)
+                                        .frame(width: 40, alignment: .center)
                                     
                                     if isEditMode {
                                         // Editable dropdown for advances
@@ -290,7 +290,7 @@ struct CharacteristicsTab: View {
                                             }
                                         }
                                         .pickerStyle(MenuPickerStyle())
-                                        .frame(width: 40)
+                                        .frame(width: 60)
                                         
                                         // Delete button
                                         Button(action: {
@@ -301,7 +301,7 @@ struct CharacteristicsTab: View {
                                                 .font(.caption)
                                                 .foregroundColor(.red)
                                         }
-                                        .frame(width: 30, height: 30)
+                                        .frame(width: 20, height: 25)
                                         .background(Color(.systemGray5))
                                         .cornerRadius(6)
                                     } else {
@@ -313,7 +313,7 @@ struct CharacteristicsTab: View {
                                     Text("\(specialization.totalValue)")
                                         .font(.caption)
                                         .fontWeight(.medium)
-                                        .frame(width: 50, alignment: .center)
+                                        .frame(width: 35, alignment: .center)
                                 }
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
