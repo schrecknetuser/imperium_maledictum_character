@@ -1184,13 +1184,11 @@ struct RoleStage: View {
                                 GridItem(.flexible())
                             ], spacing: 8) {
                                 ForEach(role.talentChoices, id: \.self) { talent in
-                                    let isOwnedFromFactionOrAutoGranted = allFactionTalents.contains(talent) || autoGrantedRoleTalents.contains(talent)
-                                    
                                     TalentSelectionField(
                                         talentName: talent,
                                         isSelected: selectedTalents.contains(talent),
                                         maxReached: selectedTalents.count >= role.talentCount,
-                                        alreadyOwned: isOwnedFromFactionOrAutoGranted,
+                                        alreadyOwned: allFactionTalents.contains(talent) || isAutoGrantedByRole(talent, role: role),
                                         onSelectionChanged: { isSelected in
                                             if isSelected {
                                                 selectedTalents.insert(talent)
@@ -1398,6 +1396,11 @@ struct RoleStage: View {
         customSpecializations[anySpecialization] = newName
     }
     
+    // Helper function to determine if a talent is auto-granted by a role
+    private func isAutoGrantedByRole(_ talent: String, role: Role) -> Bool {
+        return role.name == "Mystic" && talent == "Psyker"
+    }
+    
     private func initializeRoleSelections() {
         guard let role = selectedRole else { return }
         
@@ -1423,29 +1426,29 @@ struct RoleStage: View {
         updateRemainingSpecializationAdvances()
         
         // Get all faction-granted talents (including from talent choices)
-        let faction = FactionDefinitions.getFaction(by: character.faction)
-        var allFactionTalents = faction?.talents ?? []
-        
-        // Add talents from selected faction talent choice
-        if !character.selectedFactionTalentChoice.isEmpty,
-           let selectedChoice = faction?.talentChoices.first(where: { $0.name == character.selectedFactionTalentChoice }) {
-            allFactionTalents.append(contentsOf: selectedChoice.talents)
-        }
+        // Use the computed property to ensure consistency with UI
         
         // Get auto-granted role talents (like Psyker for Mystic)
         var autoGrantedRoleTalentsList: [String] = []
-        if role.name == "Mystic" && !character.talentNames.contains("Psyker") {
+        if role.name == "Mystic" {
             autoGrantedRoleTalentsList.append("Psyker")
-            var updatedTalents = character.talentNames
-            updatedTalents.append("Psyker")
-            character.talentNames = updatedTalents
+            if !character.talentNames.contains("Psyker") {
+                var updatedTalents = character.talentNames
+                updatedTalents.append("Psyker")
+                character.talentNames = updatedTalents
+            }
         }
         autoGrantedRoleTalents = Set(autoGrantedRoleTalentsList)
         
         // Initialize selected talents from character, excluding faction-granted AND auto-granted role talents
-        selectedTalents = Set(character.talentNames.filter { 
-            role.talentChoices.contains($0) && !allFactionTalents.contains($0) && !autoGrantedRoleTalentsList.contains($0)
-        })
+        let filteredTalents = character.talentNames.filter { talent in
+            let inRoleChoices = role.talentChoices.contains(talent)
+            let inFactionTalents = allFactionTalents.contains(talent)
+            let inAutoGranted = isAutoGrantedByRole(talent, role: role)
+            
+            return inRoleChoices && !inFactionTalents && !inAutoGranted
+        }
+        selectedTalents = Set(filteredTalents)
         
         // Initialize equipment selections from character data
         let existingWeapons = character.weaponNames
@@ -1533,10 +1536,18 @@ struct RoleStage: View {
         let factionGrantedTalents = Set(allFactionTalents)
         
         // Remove any previously selected role talents to avoid duplication, but preserve auto-granted role talents and faction-granted talents
+        let talentsToRemove = allTalents.filter { talent in
+            let isAutoGranted = isAutoGrantedByRole(talent, role: role)
+            return role.talentChoices.contains(talent) && 
+                   !isAutoGranted && 
+                   !factionGrantedTalents.contains(talent)
+        }
+        
         allTalents.removeAll { talent in
-            role.talentChoices.contains(talent) && 
-            !autoGrantedRoleTalents.contains(talent) && 
-            !factionGrantedTalents.contains(talent)
+            let isAutoGranted = isAutoGrantedByRole(talent, role: role)
+            return role.talentChoices.contains(talent) && 
+                   !isAutoGranted && 
+                   !factionGrantedTalents.contains(talent)
         }
         
         // Add currently selected talents
