@@ -14,6 +14,8 @@ struct TalentsTab: View {
     @State private var showingAddTalentSheet = false
     @State private var showingUnifiedStatusPopup = false
     @State private var showingChangeHistoryPopup = false
+    @State private var showingRemoveConfirmation = false
+    @State private var talentToRemove: String?
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -51,7 +53,8 @@ struct TalentsTab: View {
                             
                             if isEditMode {
                                 Button(action: {
-                                    removeTalent(talent)
+                                    talentToRemove = talent
+                                    showingRemoveConfirmation = true
                                 }) {
                                     Image(systemName: "minus.circle.fill")
                                         .foregroundColor(.red)
@@ -136,6 +139,16 @@ struct TalentsTab: View {
             if let binding = imperiumCharacterBinding {
                 ChangeHistoryPopupView(character: binding, store: store)
             }
+        }
+        .alert("Remove Talent", isPresented: $showingRemoveConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Remove", role: .destructive) {
+                if let talent = talentToRemove {
+                    removeTalent(talent)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to remove this talent? This action cannot be undone.")
         }
     }
     

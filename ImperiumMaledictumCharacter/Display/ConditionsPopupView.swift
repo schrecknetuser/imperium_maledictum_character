@@ -12,6 +12,8 @@ struct ConditionsPopupView: View {
     var store: CharacterStore
     @Environment(\.dismiss) private var dismiss
     @State private var showingAddConditionSheet = false
+    @State private var showingRemoveConfirmation = false
+    @State private var conditionToRemove: IndexSet?
     
     var body: some View {
         NavigationStack {
@@ -72,14 +74,32 @@ struct ConditionsPopupView: View {
         .sheet(isPresented: $showingAddConditionSheet) {
             AddConditionSheet(character: $character, store: store)
         }
+        .alert("Remove Condition", isPresented: $showingRemoveConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Remove", role: .destructive) {
+                if let indicesToRemove = conditionToRemove {
+                    confirmRemoveConditions(at: indicesToRemove)
+                }
+            }
+        } message: {
+            Text("Are you sure you want to remove this condition? This action cannot be undone.")
+        }
     }
     
     private func removeConditions(at offsets: IndexSet) {
+        conditionToRemove = offsets
+        showingRemoveConfirmation = true
+    }
+    
+    private func confirmRemoveConditions(at offsets: IndexSet) {
+        let originalSnapshot = store.createSnapshot(of: character)
+        
         var conditions = character.conditionsList
         conditions.remove(atOffsets: offsets)
         character.conditionsList = conditions
         character.lastModified = Date()
-        store.saveChanges()
+        
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
     }
 }
 
@@ -110,11 +130,14 @@ struct AddConditionSheet: View {
         NavigationStack {
             List(ConditionDefinitions.allConditions) { condition in
                 Button(action: {
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
                     var conditions = character.conditionsList
                     conditions.append(condition)
                     character.conditionsList = conditions
                     character.lastModified = Date()
-                    store.saveChanges()
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
                     dismiss()
                 }) {
                     VStack(alignment: .leading, spacing: 8) {
