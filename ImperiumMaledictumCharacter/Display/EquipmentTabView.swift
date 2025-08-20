@@ -447,6 +447,8 @@ struct EquipmentTab: View {
     
     private func removeEquipment(_ equipment: Equipment) {
         guard let imperium = imperiumCharacter else { return }
+        let originalSnapshot = store.createSnapshot(of: imperium)
+        
         var equipmentList = imperium.equipmentList
         // Remove the specific equipment instance using ID
         if let index = equipmentList.firstIndex(where: { $0.id == equipment.id }) {
@@ -454,11 +456,13 @@ struct EquipmentTab: View {
         }
         imperium.equipmentList = equipmentList
         imperium.lastModified = Date()
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
     }
     
     private func removeWeapon(_ weapon: Weapon) {
         guard let imperium = imperiumCharacter else { return }
+        let originalSnapshot = store.createSnapshot(of: imperium)
+        
         var weaponList = imperium.weaponList
         // Remove the specific weapon instance using ID
         if let index = weaponList.firstIndex(where: { $0.id == weapon.id }) {
@@ -466,7 +470,7 @@ struct EquipmentTab: View {
         }
         imperium.weaponList = weaponList
         imperium.lastModified = Date()
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
     }
 }
 
@@ -744,6 +748,8 @@ struct ComprehensiveEquipmentSheet: View {
         let trimmedName = itemName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return }
         
+        let originalSnapshot = store.createSnapshot(of: character)
+        
         if isWeapon {
             let weapon = Weapon(
                 name: trimmedName,
@@ -803,7 +809,7 @@ struct ComprehensiveEquipmentSheet: View {
         }
         
         character.lastModified = Date()
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         dismiss()
     }
 }
@@ -964,13 +970,14 @@ struct WeaponSelectionPopupView: View {
     }
     
     private func addWeaponFromTemplate(_ template: WeaponTemplate) {
+        let originalSnapshot = store.createSnapshot(of: character)
         let weapon = template.createWeapon()
         
         var weaponList = character.weaponList
         weaponList.append(weapon)
         character.weaponList = weaponList
         character.lastModified = Date()
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         
         dismiss()
     }
@@ -1128,13 +1135,14 @@ struct EquipmentSelectionPopupView: View {
     }
     
     private func addEquipmentFromTemplate(_ template: EquipmentTemplate) {
+        let originalSnapshot = store.createSnapshot(of: character)
         let equipment = template.createEquipment()
         
         var equipmentList = character.equipmentList
         equipmentList.append(equipment)
         character.equipmentList = equipmentList
         character.lastModified = Date()
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         
         dismiss()
     }

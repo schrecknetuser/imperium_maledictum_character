@@ -141,11 +141,14 @@ struct TalentsTab: View {
     
     private func removeTalent(_ talent: String) {
         guard let imperium = imperiumCharacter else { return }
+        let originalSnapshot = store.createSnapshot(of: imperium)
+        
         var talents = imperium.talentNames
         talents.removeAll { $0 == talent }
         imperium.talentNames = talents
         imperium.lastModified = Date()
-        store.saveChanges()
+        
+        store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
     }
 }
 
@@ -195,11 +198,14 @@ struct AddTalentSheet: View {
     }
     
     private func addTalent(_ talent: String) {
+        let originalSnapshot = store.createSnapshot(of: character)
+        
         var talents = character.talentNames
         talents.append(talent)
         character.talentNames = talents
         character.lastModified = Date()
-        store.saveChanges()
+        
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         dismiss()
     }
 }
