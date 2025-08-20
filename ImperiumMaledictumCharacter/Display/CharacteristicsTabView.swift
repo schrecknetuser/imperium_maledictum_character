@@ -26,7 +26,6 @@ struct CharacteristicsTab: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Characteristics")
                         .font(.headline)
-                        .padding(.horizontal)
                     
                     VStack(spacing: 0) {
                         // Header row
@@ -161,12 +160,14 @@ struct CharacteristicsTab: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(8)
                 }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
                 
                 // Skills Table
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Skills")
                         .font(.headline)
-                        .padding(.horizontal)
                     
                     VStack(spacing: 0) {
                         // Header row
@@ -229,12 +230,14 @@ struct CharacteristicsTab: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(8)
                 }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
                 
                 // Specializations Table
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Specializations")
                         .font(.headline)
-                        .padding(.horizontal)
                     
                     VStack(spacing: 0) {
                         // Header row
@@ -329,6 +332,9 @@ struct CharacteristicsTab: View {
                     .background(Color(.systemGray6))
                     .cornerRadius(8)
                 }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
             }
             .padding()
         }
