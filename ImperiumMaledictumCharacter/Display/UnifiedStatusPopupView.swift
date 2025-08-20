@@ -552,3 +552,163 @@ struct ConditionsContentView: View {
         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
     }
 }
+
+// MARK: - Supporting Views
+
+struct ConditionRowView: View {
+    let condition: Condition
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(condition.name)
+                .font(.headline)
+                .foregroundColor(.primary)
+            
+            Text(condition.description)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.leading)
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+struct AddConditionSheet: View {
+    @Binding var character: ImperiumCharacter
+    var store: CharacterStore
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            List(ConditionDefinitions.allConditions) { condition in
+                Button(action: {
+                    let originalSnapshot = store.createSnapshot(of: character)
+                    
+                    var conditions = character.conditionsList
+                    conditions.append(condition)
+                    character.conditionsList = conditions
+                    character.lastModified = Date()
+                    
+                    store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+                    dismiss()
+                }) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(condition.name)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text(condition.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(.plain)
+            }
+            .navigationTitle("Add Condition")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct InjuryListView: View {
+    let title: String
+    let injuries: [CriticalWound]
+    let availableWounds: [CriticalWound]
+    let onAdd: (CriticalWound) -> Void
+    let onRemove: (IndexSet) -> Void
+    
+    @State private var showingAddSheet = false
+    
+    var body: some View {
+        List {
+            Section {
+                ForEach(injuries) { injury in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(injury.name)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text(injury.description)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Treatment:")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                            Text(injury.treatment)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .onDelete(perform: onRemove)
+            } header: {
+                HStack {
+                    Text(title)
+                    Spacer()
+                    Button("Add Injury") {
+                        showingAddSheet = true
+                    }
+                    .font(.caption)
+                }
+            }
+            
+            if injuries.isEmpty {
+                Text("No \(title.lowercased()) recorded")
+                    .foregroundColor(.secondary)
+                    .italic()
+            }
+        }
+        .sheet(isPresented: $showingAddSheet) {
+            NavigationStack {
+                List(availableWounds) { wound in
+                    Button(action: {
+                        onAdd(wound)
+                        showingAddSheet = false
+                    }) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(wound.name)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            Text(wound.description)
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Treatment:")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                Text(wound.treatment)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .navigationTitle("Add \(title)")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Cancel") {
+                            showingAddSheet = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
