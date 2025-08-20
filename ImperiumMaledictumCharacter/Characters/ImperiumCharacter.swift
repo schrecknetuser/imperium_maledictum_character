@@ -22,8 +22,6 @@ class ImperiumCharacter: BaseCharacter {
     var role: String = ""
     var homeworld: String = ""
     var background: String = ""
-    var goal: String = ""
-    var nemesis: String = ""
     var selectedFactionTalentChoice: String = "" // Index or name of selected faction talent choice
     
     // Additional character description fields
@@ -73,7 +71,6 @@ class ImperiumCharacter: BaseCharacter {
     var wounds: Int = 0
     var maxWounds: Int = 0
     var corruption: Int = 0
-    var stress: Int = 0
     var fate: Int = 3
     var spentFate: Int = 0
     var solars: Int = 0
@@ -116,8 +113,6 @@ class ImperiumCharacter: BaseCharacter {
         role = ""
         homeworld = ""
         background = ""
-        goal = ""
-        nemesis = ""
         shortTermGoal = ""
         longTermGoal = ""
         characterDescription = ""
@@ -144,7 +139,6 @@ class ImperiumCharacter: BaseCharacter {
         wounds = 0
         maxWounds = calculateMaxWounds()
         corruption = 0
-        stress = 0
         fate = 3
         spentFate = 0
         solars = 0
@@ -840,12 +834,6 @@ class ImperiumCharacter: BaseCharacter {
         if background != originalCharacter.background {
             changes.append("background \(originalCharacter.background)→\(background)")
         }
-        if goal != originalCharacter.goal {
-            changes.append("goal \(originalCharacter.goal)→\(goal)")
-        }
-        if nemesis != originalCharacter.nemesis {
-            changes.append("nemesis \(originalCharacter.nemesis)→\(nemesis)")
-        }
         if shortTermGoal != originalCharacter.shortTermGoal {
             changes.append("short term goal updated")
         }
@@ -888,13 +876,7 @@ class ImperiumCharacter: BaseCharacter {
             changes.append("perception \(originalCharacter.perception)→\(perception)")
         }
         
-        // Check other stats (excluding corruption - as specified in requirements)
-        if wounds != originalCharacter.wounds {
-            changes.append("wounds \(originalCharacter.wounds)→\(wounds)")
-        }
-        if stress != originalCharacter.stress {
-            changes.append("stress \(originalCharacter.stress)→\(stress)")
-        }
+        // Check other stats (excluding corruption and wounds - as specified in requirements)
         if fate != originalCharacter.fate {
             changes.append("fate \(originalCharacter.fate)→\(fate)")
         }
@@ -919,49 +901,37 @@ class ImperiumCharacter: BaseCharacter {
         }
         
         // Check injuries lists changes  
-        if headInjuries != originalCharacter.headInjuries {
-            changes.append("head injuries changed")
-        }
-        if armInjuries != originalCharacter.armInjuries {
-            changes.append("arm injuries changed")
-        }
-        if bodyInjuries != originalCharacter.bodyInjuries {
-            changes.append("body injuries changed")
-        }
-        if legInjuries != originalCharacter.legInjuries {
-            changes.append("leg injuries changed")
-        }
+        let injuryChanges = getDetailedInjuryChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: injuryChanges)
         
         // Check conditions
-        if conditionsData != originalCharacter.conditionsData {
-            changes.append("conditions changed")
-        }
+        let conditionChanges = getDetailedConditionChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: conditionChanges)
         
-        // Check skills, talents, equipment changes
-        if skillsAdvancesData != originalCharacter.skillsAdvancesData {
-            changes.append("skill advances changed")
-        }
-        if factionSkillAdvancesData != originalCharacter.factionSkillAdvancesData {
-            changes.append("faction skill advances changed")
-        }
-        if specializationAdvancesData != originalCharacter.specializationAdvancesData {
-            changes.append("specialization advances changed")
-        }
-        if talentNamesData != originalCharacter.talentNamesData {
-            changes.append("talents changed")
-        }
-        if equipmentListData != originalCharacter.equipmentListData {
-            changes.append("equipment changed")
-        }
-        if weaponListData != originalCharacter.weaponListData {
-            changes.append("weapons changed")
-        }
-        if psychicPowersData != originalCharacter.psychicPowersData {
-            changes.append("psychic powers changed")
-        }
-        if reputationData != originalCharacter.reputationData {
-            changes.append("reputation changed")
-        }
+        // Check skills, talents, equipment changes with specific details
+        let skillAdvancesChanges = getDetailedSkillAdvancesChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: skillAdvancesChanges)
+        
+        let factionSkillAdvancesChanges = getDetailedFactionSkillAdvancesChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: factionSkillAdvancesChanges)
+        
+        let specializationAdvancesChanges = getDetailedSpecializationAdvancesChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: specializationAdvancesChanges)
+        
+        let talentChanges = getDetailedTalentChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: talentChanges)
+        
+        let equipmentChanges = getDetailedEquipmentChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: equipmentChanges)
+        
+        let weaponChanges = getDetailedWeaponChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: weaponChanges)
+        
+        let psychicPowerChanges = getDetailedPsychicPowerChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: psychicPowerChanges)
+        
+        let reputationChanges = getDetailedReputationChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: reputationChanges)
         
         return changes
     }
@@ -972,5 +942,267 @@ class ImperiumCharacter: BaseCharacter {
             let summary = changes.joined(separator: ", ")
             addChangeLogEntry(summary)
         }
+    }
+    
+    // MARK: - Detailed Change Tracking Helpers
+    
+    private func getDetailedSkillAdvancesChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard skillsAdvancesData != originalCharacter.skillsAdvancesData else { return [] }
+        
+        var changes: [String] = []
+        let currentAdvances = skillAdvances
+        let originalAdvances = originalCharacter.skillAdvances
+        
+        // Find added/changed skills
+        for (skill, currentValue) in currentAdvances {
+            let originalValue = originalAdvances[skill] ?? 0
+            if currentValue != originalValue {
+                changes.append("skill \(skill) \(originalValue)→\(currentValue)")
+            }
+        }
+        
+        // Find removed skills
+        for (skill, originalValue) in originalAdvances {
+            if currentAdvances[skill] == nil {
+                changes.append("skill \(skill) removed (\(originalValue)→0)")
+            }
+        }
+        
+        return changes
+    }
+    
+    private func getDetailedFactionSkillAdvancesChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard factionSkillAdvancesData != originalCharacter.factionSkillAdvancesData else { return [] }
+        
+        var changes: [String] = []
+        let currentAdvances = factionSkillAdvances
+        let originalAdvances = originalCharacter.factionSkillAdvances
+        
+        // Find added/changed faction skills
+        for (skill, currentValue) in currentAdvances {
+            let originalValue = originalAdvances[skill] ?? 0
+            if currentValue != originalValue {
+                changes.append("faction skill \(skill) \(originalValue)→\(currentValue)")
+            }
+        }
+        
+        // Find removed faction skills
+        for (skill, originalValue) in originalAdvances {
+            if currentAdvances[skill] == nil {
+                changes.append("faction skill \(skill) removed (\(originalValue)→0)")
+            }
+        }
+        
+        return changes
+    }
+    
+    private func getDetailedSpecializationAdvancesChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard specializationAdvancesData != originalCharacter.specializationAdvancesData else { return [] }
+        
+        var changes: [String] = []
+        let currentAdvances = specializationAdvances
+        let originalAdvances = originalCharacter.specializationAdvances
+        
+        // Find added/changed specialization advances
+        for (specialization, currentValue) in currentAdvances {
+            let originalValue = originalAdvances[specialization] ?? 0
+            if currentValue != originalValue {
+                changes.append("specialization \(specialization) \(originalValue)→\(currentValue)")
+            }
+        }
+        
+        // Find removed specialization advances
+        for (specialization, originalValue) in originalAdvances {
+            if currentAdvances[specialization] == nil {
+                changes.append("specialization \(specialization) removed (\(originalValue)→0)")
+            }
+        }
+        
+        return changes
+    }
+    
+    private func getDetailedTalentChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard talentNamesData != originalCharacter.talentNamesData else { return [] }
+        
+        var changes: [String] = []
+        let currentTalents = Set(talentNames)
+        let originalTalents = Set(originalCharacter.talentNames)
+        
+        // Find added talents
+        let addedTalents = currentTalents.subtracting(originalTalents)
+        for talent in addedTalents.sorted() {
+            changes.append("talent added: \(talent)")
+        }
+        
+        // Find removed talents
+        let removedTalents = originalTalents.subtracting(currentTalents)
+        for talent in removedTalents.sorted() {
+            changes.append("talent removed: \(talent)")
+        }
+        
+        return changes
+    }
+    
+    private func getDetailedEquipmentChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard equipmentListData != originalCharacter.equipmentListData else { return [] }
+        
+        var changes: [String] = []
+        let currentEquipment = equipmentList
+        let originalEquipment = originalCharacter.equipmentList
+        
+        // Create sets of equipment IDs for comparison
+        let currentIds = Set(currentEquipment.map { $0.id })
+        let originalIds = Set(originalEquipment.map { $0.id })
+        
+        // Find added equipment
+        let addedIds = currentIds.subtracting(originalIds)
+        for addedId in addedIds {
+            if let equipment = currentEquipment.first(where: { $0.id == addedId }) {
+                changes.append("equipment added: \(equipment.name)")
+            }
+        }
+        
+        // Find removed equipment
+        let removedIds = originalIds.subtracting(currentIds)
+        for removedId in removedIds {
+            if let equipment = originalEquipment.first(where: { $0.id == removedId }) {
+                changes.append("equipment removed: \(equipment.name)")
+            }
+        }
+        
+        return changes
+    }
+    
+    private func getDetailedWeaponChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard weaponListData != originalCharacter.weaponListData else { return [] }
+        
+        var changes: [String] = []
+        let currentWeapons = weaponList
+        let originalWeapons = originalCharacter.weaponList
+        
+        // Create sets of weapon IDs for comparison
+        let currentIds = Set(currentWeapons.map { $0.id })
+        let originalIds = Set(originalWeapons.map { $0.id })
+        
+        // Find added weapons
+        let addedIds = currentIds.subtracting(originalIds)
+        for addedId in addedIds {
+            if let weapon = currentWeapons.first(where: { $0.id == addedId }) {
+                changes.append("weapon added: \(weapon.name)")
+            }
+        }
+        
+        // Find removed weapons
+        let removedIds = originalIds.subtracting(currentIds)
+        for removedId in removedIds {
+            if let weapon = originalWeapons.first(where: { $0.id == removedId }) {
+                changes.append("weapon removed: \(weapon.name)")
+            }
+        }
+        
+        return changes
+    }
+    
+    private func getDetailedPsychicPowerChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard psychicPowersData != originalCharacter.psychicPowersData else { return [] }
+        
+        var changes: [String] = []
+        let currentPowers = Set(psychicPowers)
+        let originalPowers = Set(originalCharacter.psychicPowers)
+        
+        // Find added psychic powers
+        let addedPowers = currentPowers.subtracting(originalPowers)
+        for power in addedPowers.sorted() {
+            changes.append("psychic power added: \(power)")
+        }
+        
+        // Find removed psychic powers
+        let removedPowers = originalPowers.subtracting(currentPowers)
+        for power in removedPowers.sorted() {
+            changes.append("psychic power removed: \(power)")
+        }
+        
+        return changes
+    }
+    
+    private func getDetailedReputationChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard reputationData != originalCharacter.reputationData else { return [] }
+        
+        var changes: [String] = []
+        let currentReputations = reputations
+        let originalReputations = originalCharacter.reputations
+        
+        // Create dictionaries for easier comparison
+        let currentDict = Dictionary(uniqueKeysWithValues: currentReputations.map { ($0.faction, $0.value) })
+        let originalDict = Dictionary(uniqueKeysWithValues: originalReputations.map { ($0.faction, $0.value) })
+        
+        // Find added/changed reputations
+        for (faction, currentValue) in currentDict {
+            let originalValue = originalDict[faction] ?? 0
+            if currentValue != originalValue {
+                changes.append("reputation \(faction) \(originalValue)→\(currentValue)")
+            }
+        }
+        
+        // Find removed reputations
+        for (faction, originalValue) in originalDict {
+            if currentDict[faction] == nil {
+                changes.append("reputation \(faction) removed (\(originalValue)→0)")
+            }
+        }
+        
+        return changes
+    }
+    
+    private func getDetailedInjuryChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        var changes: [String] = []
+        
+        if headInjuries != originalCharacter.headInjuries {
+            let currentCount = headInjuriesList.count
+            let originalCount = originalCharacter.headInjuriesList.count
+            changes.append("head injuries count \(originalCount)→\(currentCount)")
+        }
+        
+        if armInjuries != originalCharacter.armInjuries {
+            let currentCount = armInjuriesList.count
+            let originalCount = originalCharacter.armInjuriesList.count
+            changes.append("arm injuries count \(originalCount)→\(currentCount)")
+        }
+        
+        if bodyInjuries != originalCharacter.bodyInjuries {
+            let currentCount = bodyInjuriesList.count
+            let originalCount = originalCharacter.bodyInjuriesList.count
+            changes.append("body injuries count \(originalCount)→\(currentCount)")
+        }
+        
+        if legInjuries != originalCharacter.legInjuries {
+            let currentCount = legInjuriesList.count
+            let originalCount = originalCharacter.legInjuriesList.count
+            changes.append("leg injuries count \(originalCount)→\(currentCount)")
+        }
+        
+        return changes
+    }
+    
+    private func getDetailedConditionChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard conditionsData != originalCharacter.conditionsData else { return [] }
+        
+        var changes: [String] = []
+        let currentConditions = Set(conditionsList.map { $0.name })
+        let originalConditions = Set(originalCharacter.conditionsList.map { $0.name })
+        
+        // Find added conditions
+        let addedConditions = currentConditions.subtracting(originalConditions)
+        for condition in addedConditions.sorted() {
+            changes.append("condition added: \(condition)")
+        }
+        
+        // Find removed conditions
+        let removedConditions = originalConditions.subtracting(currentConditions)
+        for condition in removedConditions.sorted() {
+            changes.append("condition removed: \(condition)")
+        }
+        
+        return changes
     }
 }

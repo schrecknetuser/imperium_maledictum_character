@@ -184,19 +184,11 @@ struct OverviewTab: View {
                             DetailRow(title: "Background", value: imperium.background)
                         }
                         
-                        if !imperium.goal.isEmpty {
-                            DetailRow(title: "Goal", value: imperium.goal)
-                        }
-                        
-                        if !imperium.nemesis.isEmpty {
-                            DetailRow(title: "Nemesis", value: imperium.nemesis)
-                        }
-                        
                         if imperium.solars > 0 {
                             DetailRow(title: "Wealth", value: "\(imperium.solars) Solars")
                         }
                         
-                        if imperium.background.isEmpty && imperium.goal.isEmpty && imperium.nemesis.isEmpty && imperium.solars == 0 {
+                        if imperium.background.isEmpty && imperium.solars == 0 {
                             Text("No background details provided")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
