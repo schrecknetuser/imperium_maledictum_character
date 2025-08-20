@@ -92,6 +92,10 @@ class ImperiumCharacter: BaseCharacter {
     var dateCreated: Date = Date()
     var lastModified: Date = Date()
     
+    // Change history tracking
+    var currentSession: Int = 1
+    var changeLog: [ChangeLogEntry] = []
+    
     var characterType: CharacterType {
         return .acolyte // Default, could be determined by role
     }
@@ -166,6 +170,10 @@ class ImperiumCharacter: BaseCharacter {
         reputationData = ""
         appliedOriginBonuses = ""
         appliedFactionBonuses = ""
+        
+        // Initialize change history
+        currentSession = 1
+        changeLog = [ChangeLogEntry(summary: "Character created", session: 1)]
         
         creationProgress = 0
         isArchived = false
@@ -785,5 +793,184 @@ class ImperiumCharacter: BaseCharacter {
         }
         
         return weapon
+    }
+    
+    // MARK: - Change History Management
+    
+    func addChangeLogEntry(_ summary: String) {
+        let entry = ChangeLogEntry(summary: summary, session: currentSession)
+        changeLog.append(entry)
+        lastModified = Date()
+    }
+    
+    func incrementSession() {
+        currentSession += 1
+        addChangeLogEntry("Session incremented to \(currentSession)")
+    }
+    
+    func decrementSession() {
+        if currentSession > 1 {
+            currentSession -= 1
+            addChangeLogEntry("Session decremented to \(currentSession)")
+        }
+    }
+    
+    func generateChangeSummary(originalCharacter: ImperiumCharacter) -> [String] {
+        var changes: [String] = []
+        
+        // Check basic information changes (excluding corruption and non-critical wounds)
+        if name != originalCharacter.name {
+            changes.append("name \(originalCharacter.name)→\(name)")
+        }
+        if player != originalCharacter.player {
+            changes.append("player \(originalCharacter.player)→\(player)")
+        }
+        if campaign != originalCharacter.campaign {
+            changes.append("campaign \(originalCharacter.campaign)→\(campaign)")
+        }
+        if faction != originalCharacter.faction {
+            changes.append("faction \(originalCharacter.faction)→\(faction)")
+        }
+        if role != originalCharacter.role {
+            changes.append("role \(originalCharacter.role)→\(role)")
+        }
+        if homeworld != originalCharacter.homeworld {
+            changes.append("homeworld \(originalCharacter.homeworld)→\(homeworld)")
+        }
+        if background != originalCharacter.background {
+            changes.append("background \(originalCharacter.background)→\(background)")
+        }
+        if goal != originalCharacter.goal {
+            changes.append("goal \(originalCharacter.goal)→\(goal)")
+        }
+        if nemesis != originalCharacter.nemesis {
+            changes.append("nemesis \(originalCharacter.nemesis)→\(nemesis)")
+        }
+        if shortTermGoal != originalCharacter.shortTermGoal {
+            changes.append("short term goal updated")
+        }
+        if longTermGoal != originalCharacter.longTermGoal {
+            changes.append("long term goal updated")
+        }
+        if characterDescription != originalCharacter.characterDescription {
+            changes.append("character description updated")
+        }
+        
+        // Check characteristics changes
+        if weaponSkill != originalCharacter.weaponSkill {
+            changes.append("weapon skill \(originalCharacter.weaponSkill)→\(weaponSkill)")
+        }
+        if ballisticSkill != originalCharacter.ballisticSkill {
+            changes.append("ballistic skill \(originalCharacter.ballisticSkill)→\(ballisticSkill)")
+        }
+        if strength != originalCharacter.strength {
+            changes.append("strength \(originalCharacter.strength)→\(strength)")
+        }
+        if toughness != originalCharacter.toughness {
+            changes.append("toughness \(originalCharacter.toughness)→\(toughness)")
+        }
+        if agility != originalCharacter.agility {
+            changes.append("agility \(originalCharacter.agility)→\(agility)")
+        }
+        if intelligence != originalCharacter.intelligence {
+            changes.append("intelligence \(originalCharacter.intelligence)→\(intelligence)")
+        }
+        if willpower != originalCharacter.willpower {
+            changes.append("willpower \(originalCharacter.willpower)→\(willpower)")
+        }
+        if fellowship != originalCharacter.fellowship {
+            changes.append("fellowship \(originalCharacter.fellowship)→\(fellowship)")
+        }
+        if influence != originalCharacter.influence {
+            changes.append("influence \(originalCharacter.influence)→\(influence)")
+        }
+        if perception != originalCharacter.perception {
+            changes.append("perception \(originalCharacter.perception)→\(perception)")
+        }
+        
+        // Check other stats (excluding corruption - as specified in requirements)
+        if wounds != originalCharacter.wounds {
+            changes.append("wounds \(originalCharacter.wounds)→\(wounds)")
+        }
+        if stress != originalCharacter.stress {
+            changes.append("stress \(originalCharacter.stress)→\(stress)")
+        }
+        if fate != originalCharacter.fate {
+            changes.append("fate \(originalCharacter.fate)→\(fate)")
+        }
+        if spentFate != originalCharacter.spentFate {
+            changes.append("spent fate \(originalCharacter.spentFate)→\(spentFate)")
+        }
+        if solars != originalCharacter.solars {
+            changes.append("solars \(originalCharacter.solars)→\(solars)")
+        }
+        
+        // Check experience changes
+        if totalExperience != originalCharacter.totalExperience {
+            changes.append("total experience \(originalCharacter.totalExperience)→\(totalExperience)")
+        }
+        if spentExperience != originalCharacter.spentExperience {
+            changes.append("spent experience \(originalCharacter.spentExperience)→\(spentExperience)")
+        }
+        
+        // Check critical wounds (as this is different from non-critical wounds)
+        if criticalWounds != originalCharacter.criticalWounds {
+            changes.append("critical wounds \(originalCharacter.criticalWounds)→\(criticalWounds)")
+        }
+        
+        // Check injuries lists changes  
+        if headInjuries != originalCharacter.headInjuries {
+            changes.append("head injuries changed")
+        }
+        if armInjuries != originalCharacter.armInjuries {
+            changes.append("arm injuries changed")
+        }
+        if bodyInjuries != originalCharacter.bodyInjuries {
+            changes.append("body injuries changed")
+        }
+        if legInjuries != originalCharacter.legInjuries {
+            changes.append("leg injuries changed")
+        }
+        
+        // Check conditions
+        if conditionsData != originalCharacter.conditionsData {
+            changes.append("conditions changed")
+        }
+        
+        // Check skills, talents, equipment changes
+        if skillsAdvancesData != originalCharacter.skillsAdvancesData {
+            changes.append("skill advances changed")
+        }
+        if factionSkillAdvancesData != originalCharacter.factionSkillAdvancesData {
+            changes.append("faction skill advances changed")
+        }
+        if specializationAdvancesData != originalCharacter.specializationAdvancesData {
+            changes.append("specialization advances changed")
+        }
+        if talentNamesData != originalCharacter.talentNamesData {
+            changes.append("talents changed")
+        }
+        if equipmentListData != originalCharacter.equipmentListData {
+            changes.append("equipment changed")
+        }
+        if weaponListData != originalCharacter.weaponListData {
+            changes.append("weapons changed")
+        }
+        if psychicPowersData != originalCharacter.psychicPowersData {
+            changes.append("psychic powers changed")
+        }
+        if reputationData != originalCharacter.reputationData {
+            changes.append("reputation changed")
+        }
+        
+        return changes
+    }
+    
+    func logChanges(originalCharacter: ImperiumCharacter) {
+        let changes = generateChangeSummary(originalCharacter: originalCharacter)
+        if !changes.isEmpty {
+            let summary = changes.joined(separator: ", ")
+            addChangeLogEntry(summary)
+        }
     }
 }
