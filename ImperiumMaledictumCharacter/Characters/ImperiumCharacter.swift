@@ -226,7 +226,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 skillsData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -242,7 +242,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 talentsData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -258,7 +258,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 equipmentData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
@@ -274,7 +274,7 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 psychicPowersData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            lastModified = Date()
+            // Note: lastModified is handled by the change tracking system
         }
     }
     
