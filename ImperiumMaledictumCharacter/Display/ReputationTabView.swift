@@ -193,6 +193,7 @@ struct ReputationTab: View {
     }
     
     private func updateFactionReputation(faction: String, value: Int, character: ImperiumCharacter) {
+        let originalSnapshot = store.createSnapshot(of: character)
         var reputations = character.reputations
         
         if let index = reputations.firstIndex(where: { $0.faction == faction && $0.individual.isEmpty }) {
@@ -202,10 +203,11 @@ struct ReputationTab: View {
         }
         
         character.reputations = reputations
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
     }
     
     private func updateIndividualReputation(individual: Reputation, value: Int, character: ImperiumCharacter) {
+        let originalSnapshot = store.createSnapshot(of: character)
         var reputations = character.reputations
         
         if let index = reputations.firstIndex(where: { $0.faction == individual.faction && $0.individual == individual.individual }) {
@@ -213,14 +215,15 @@ struct ReputationTab: View {
         }
         
         character.reputations = reputations
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
     }
     
     private func deleteIndividualReputation(individual: Reputation, character: ImperiumCharacter) {
+        let originalSnapshot = store.createSnapshot(of: character)
         var reputations = character.reputations
         reputations.removeAll { $0.faction == individual.faction && $0.individual == individual.individual }
         character.reputations = reputations
-        store.saveChanges()
+        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
     }
 }
 
