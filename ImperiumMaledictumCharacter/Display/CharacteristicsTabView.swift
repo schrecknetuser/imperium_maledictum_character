@@ -154,7 +154,6 @@ struct CharacteristicsTab: View {
                             }
                             .padding(.horizontal)
                             .padding(.vertical, 6)
-                            .background(Color(.systemGray6).opacity(0.5))
                         }
                     }
                 }
@@ -222,7 +221,6 @@ struct CharacteristicsTab: View {
                             }
                             .padding(.horizontal)
                             .padding(.vertical, 6)
-                            .background(Color(.systemGray6).opacity(0.5))
                         }
                     }
                 }
@@ -303,7 +301,6 @@ struct CharacteristicsTab: View {
                             }
                             .padding(.horizontal)
                             .padding(.vertical, 6)
-                            .background(Color(.systemGray6).opacity(0.5))
                         }
                         
                         // Add new specialization button in edit mode
