@@ -67,7 +67,7 @@ struct ChangeHistoryPopupView: View {
                         
                         Text("Changes to your character will appear here")
                             .font(.body)
-                            .foregroundColor(.tertiary)
+                            .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
