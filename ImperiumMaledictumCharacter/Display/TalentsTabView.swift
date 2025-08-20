@@ -127,7 +127,7 @@ struct TalentsTab: View {
         }
         .sheet(isPresented: $showingAddTalentSheet) {
             if let imperium = imperiumCharacter {
-                AddTalentSheet(character: imperium, store: store)
+                AddTalentSheet(character: imperium, store: store, isEditMode: isEditMode)
             }
         }
         .sheet(isPresented: $showingUnifiedStatusPopup) {
@@ -154,19 +154,26 @@ struct TalentsTab: View {
     
     private func removeTalent(_ talent: String) {
         guard let imperium = imperiumCharacter else { return }
-        let originalSnapshot = store.createSnapshot(of: imperium)
         
         var talents = imperium.talentNames
         talents.removeAll { $0 == talent }
         imperium.talentNames = talents
         
-        store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: imperium)
+            store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
     }
 }
 
 struct AddTalentSheet: View {
     let character: ImperiumCharacter
     @ObservedObject var store: CharacterStore
+    let isEditMode: Bool
     @Environment(\.dismiss) private var dismiss
     
     var availableTalents: [String] {
@@ -210,13 +217,18 @@ struct AddTalentSheet: View {
     }
     
     private func addTalent(_ talent: String) {
-        let originalSnapshot = store.createSnapshot(of: character)
-        
         var talents = character.talentNames
         talents.append(talent)
         character.talentNames = talents
         
-        store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: character)
+            store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
         dismiss()
     }
 }
