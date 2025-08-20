@@ -66,6 +66,9 @@ struct StatusContentView: View {
     @State private var fate: Int = 0
     @State private var spentFate: Int = 0
     
+    // Store original snapshot for change tracking
+    @State private var originalSnapshot: CharacterSnapshot?
+    
     var body: some View {
         Form {
             Section("Character Status") {
@@ -276,6 +279,9 @@ struct StatusContentView: View {
             corruption = character.corruption
             fate = character.fate
             spentFate = character.spentFate
+            
+            // Create original snapshot for change tracking
+            originalSnapshot = store.createSnapshot(of: character)
         }
     }
     
@@ -285,7 +291,13 @@ struct StatusContentView: View {
         character.fate = fate
         character.spentFate = spentFate
         character.lastModified = Date()
-        store.saveChanges()
+        
+        // Save with change tracking if we have the original snapshot
+        if let snapshot = originalSnapshot {
+            store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: snapshot)
+        } else {
+            store.saveChanges()
+        }
     }
 }
 
