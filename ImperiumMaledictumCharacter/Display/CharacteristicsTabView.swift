@@ -52,108 +52,115 @@ struct CharacteristicsTab: View {
                         .padding(.vertical, 8)
                         .background(Color(.systemGray5))
                         
-                        ForEach(getCharacteristicsList(), id: \.abbreviation) { characteristic in
-                            HStack {
-                                Text(characteristic.abbreviation)
-                                    .font(.caption)
-                                    .frame(width: 40, alignment: .leading)
-                                
-                                // Base Value Section
-                                if isEditMode {
-                                    HStack(spacing: 2) {
-                                        Button(action: {
-                                            let current = imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20
-                                            let binding = getCharacteristicBaseValueBinding(for: characteristic.name)
-                                            binding.wrappedValue = max(1, current - 1)
-                                        }) {
-                                            Image(systemName: "minus")
-                                                .font(.caption2)
-                                                .fontWeight(.bold)
-                                                .foregroundColor(.primary)
-                                                .frame(width: 20, height: 20)
-                                                .background(Color(.systemGray5))
-                                                .cornerRadius(3)
+                        ForEach(Array(getCharacteristicsList().enumerated()), id: \.element.abbreviation) { index, characteristic in
+                            VStack(spacing: 0) {
+                                HStack {
+                                    Text(characteristic.abbreviation)
+                                        .font(.caption)
+                                        .frame(width: 40, alignment: .leading)
+                                    
+                                    // Base Value Section
+                                    if isEditMode {
+                                        HStack(spacing: 2) {
+                                            Button(action: {
+                                                let current = imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20
+                                                let binding = getCharacteristicBaseValueBinding(for: characteristic.name)
+                                                binding.wrappedValue = max(1, current - 1)
+                                            }) {
+                                                Image(systemName: "minus")
+                                                    .font(.caption2)
+                                                    .fontWeight(.bold)
+                                                    .foregroundColor(.primary)
+                                                    .frame(width: 20, height: 20)
+                                                    .background(Color(.systemGray5))
+                                                    .cornerRadius(3)
+                                            }
+                                            .disabled((imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20) <= 1)
+                                            
+                                            Text("\(characteristic.baseValue)")
+                                                .font(.caption)
+                                                .frame(minWidth: 25)
+                                            
+                                            Button(action: {
+                                                let current = imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20
+                                                let binding = getCharacteristicBaseValueBinding(for: characteristic.name)
+                                                binding.wrappedValue = min(100, current + 1)
+                                            }) {
+                                                Image(systemName: "plus")
+                                                    .font(.caption2)
+                                                    .fontWeight(.bold)
+                                                    .foregroundColor(.primary)
+                                                    .frame(width: 20, height: 20)
+                                                    .background(Color(.systemGray5))
+                                                    .cornerRadius(3)
+                                            }
+                                            .disabled((imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20) >= 100)
                                         }
-                                        .disabled((imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20) <= 1)
-                                        
+                                        .frame(width: 80, alignment: .center)
+                                    } else {
                                         Text("\(characteristic.baseValue)")
                                             .font(.caption)
-                                            .frame(minWidth: 25)
-                                        
-                                        Button(action: {
-                                            let current = imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20
-                                            let binding = getCharacteristicBaseValueBinding(for: characteristic.name)
-                                            binding.wrappedValue = min(100, current + 1)
-                                        }) {
-                                            Image(systemName: "plus")
-                                                .font(.caption2)
-                                                .fontWeight(.bold)
-                                                .foregroundColor(.primary)
-                                                .frame(width: 20, height: 20)
-                                                .background(Color(.systemGray5))
-                                                .cornerRadius(3)
-                                        }
-                                        .disabled((imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20) >= 100)
+                                            .frame(width: 40, alignment: .center)
                                     }
-                                    .frame(width: 80, alignment: .center)
-                                } else {
-                                    Text("\(characteristic.baseValue)")
-                                        .font(.caption)
-                                        .frame(width: 40, alignment: .center)
-                                }
-                                
-                                // Advances Section
-                                if isEditMode {
-                                    HStack(spacing: 2) {
-                                        Button(action: {
-                                            let current = imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0
-                                            let binding = getCharacteristicAdvanceBinding(for: characteristic.name)
-                                            binding.wrappedValue = max(0, current - 1)
-                                        }) {
-                                            Image(systemName: "minus")
-                                                .font(.caption2)
-                                                .fontWeight(.bold)
-                                                .foregroundColor(.primary)
-                                                .frame(width: 20, height: 20)
-                                                .background(Color(.systemGray5))
-                                                .cornerRadius(3)
+                                    
+                                    // Advances Section
+                                    if isEditMode {
+                                        HStack(spacing: 2) {
+                                            Button(action: {
+                                                let current = imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0
+                                                let binding = getCharacteristicAdvanceBinding(for: characteristic.name)
+                                                binding.wrappedValue = max(0, current - 1)
+                                            }) {
+                                                Image(systemName: "minus")
+                                                    .font(.caption2)
+                                                    .fontWeight(.bold)
+                                                    .foregroundColor(.primary)
+                                                    .frame(width: 20, height: 20)
+                                                    .background(Color(.systemGray5))
+                                                    .cornerRadius(3)
+                                            }
+                                            .disabled((imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0) <= 0)
+                                            
+                                            Text("\(characteristic.advances)")
+                                                .font(.caption)
+                                                .frame(minWidth: 25)
+                                            
+                                            Button(action: {
+                                                let current = imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0
+                                                let binding = getCharacteristicAdvanceBinding(for: characteristic.name)
+                                                binding.wrappedValue = min(20, current + 1)
+                                            }) {
+                                                Image(systemName: "plus")
+                                                    .font(.caption2)
+                                                    .fontWeight(.bold)
+                                                    .foregroundColor(.primary)
+                                                    .frame(width: 20, height: 20)
+                                                    .background(Color(.systemGray5))
+                                                    .cornerRadius(3)
+                                            }
+                                            .disabled((imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0) >= 20)
                                         }
-                                        .disabled((imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0) <= 0)
-                                        
+                                        .frame(width: 80, alignment: .center)
+                                    } else {
                                         Text("\(characteristic.advances)")
                                             .font(.caption)
-                                            .frame(minWidth: 25)
-                                        
-                                        Button(action: {
-                                            let current = imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0
-                                            let binding = getCharacteristicAdvanceBinding(for: characteristic.name)
-                                            binding.wrappedValue = min(20, current + 1)
-                                        }) {
-                                            Image(systemName: "plus")
-                                                .font(.caption2)
-                                                .fontWeight(.bold)
-                                                .foregroundColor(.primary)
-                                                .frame(width: 20, height: 20)
-                                                .background(Color(.systemGray5))
-                                                .cornerRadius(3)
-                                        }
-                                        .disabled((imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0) >= 20)
+                                            .frame(width: 40, alignment: .center)
                                     }
-                                    .frame(width: 80, alignment: .center)
-                                } else {
-                                    Text("\(characteristic.advances)")
+                                    
+                                    Text("\(characteristic.totalValue)")
                                         .font(.caption)
-                                        .frame(width: 40, alignment: .center)
+                                        .fontWeight(.medium)
+                                        .frame(width: 50, alignment: .center)
+                                    Spacer()
                                 }
+                                .padding(.horizontal)
+                                .padding(.vertical, 6)
                                 
-                                Text("\(characteristic.totalValue)")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .frame(width: 50, alignment: .center)
-                                Spacer()
+                                if index < getCharacteristicsList().count - 1 {
+                                    Divider()
+                                        .padding(.horizontal)
+                                }
                             }
-                            .padding(.horizontal)
-                            .padding(.vertical, 6)
                         }
                     }
                 }
@@ -190,37 +197,44 @@ struct CharacteristicsTab: View {
                         .padding(.vertical, 8)
                         .background(Color(.systemGray5))
                         
-                        ForEach(getSkillsList(), id: \.name) { skill in
-                            HStack {
-                                Text(skill.name)
-                                    .font(.caption)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Text(skill.characteristicAbbreviation)
-                                    .font(.caption)
-                                    .frame(width: 40, alignment: .center)
-                                
-                                if isEditMode {
-                                    // Editable dropdown for advances
-                                    Picker("Advances", selection: getSkillAdvanceBinding(for: skill.name)) {
-                                        ForEach(0...4, id: \.self) { value in
-                                            Text("\(value)").tag(value)
-                                        }
-                                    }
-                                    .pickerStyle(MenuPickerStyle())
-                                    .frame(width: 40)
-                                } else {
-                                    Text("\(skill.advances)")
+                        ForEach(Array(getSkillsList().enumerated()), id: \.element.name) { index, skill in
+                            VStack(spacing: 0) {
+                                HStack {
+                                    Text(skill.name)
+                                        .font(.caption)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text(skill.characteristicAbbreviation)
                                         .font(.caption)
                                         .frame(width: 40, alignment: .center)
+                                    
+                                    if isEditMode {
+                                        // Editable dropdown for advances
+                                        Picker("Advances", selection: getSkillAdvanceBinding(for: skill.name)) {
+                                            ForEach(0...4, id: \.self) { value in
+                                                Text("\(value)").tag(value)
+                                            }
+                                        }
+                                        .pickerStyle(MenuPickerStyle())
+                                        .frame(width: 40)
+                                    } else {
+                                        Text("\(skill.advances)")
+                                            .font(.caption)
+                                            .frame(width: 40, alignment: .center)
+                                    }
+                                    
+                                    Text("\(skill.totalValue)")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .frame(width: 50, alignment: .center)
                                 }
+                                .padding(.horizontal)
+                                .padding(.vertical, 6)
                                 
-                                Text("\(skill.totalValue)")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .frame(width: 50, alignment: .center)
+                                if index < getSkillsList().count - 1 {
+                                    Divider()
+                                        .padding(.horizontal)
+                                }
                             }
-                            .padding(.horizontal)
-                            .padding(.vertical, 6)
                         }
                     }
                 }
@@ -257,50 +271,57 @@ struct CharacteristicsTab: View {
                         .padding(.vertical, 8)
                         .background(Color(.systemGray5))
                         
-                        ForEach(getSpecializationsList(), id: \.name) { specialization in
-                            HStack {
-                                Text(specialization.name)
-                                    .font(.caption)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Text(specialization.skillName)
-                                    .font(.caption)
-                                    .frame(width: 60, alignment: .center)
-                                
-                                if isEditMode {
-                                    // Editable dropdown for advances
-                                    Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name)) {
-                                        ForEach(0...4, id: \.self) { value in
-                                            Text("\(value)").tag(value)
-                                        }
-                                    }
-                                    .pickerStyle(MenuPickerStyle())
-                                    .frame(width: 40)
-                                    
-                                    // Delete button
-                                    Button(action: {
-                                        specializationToDelete = specialization.name
-                                        showingDeleteConfirmation = true
-                                    }) {
-                                        Image(systemName: "trash")
-                                            .font(.caption)
-                                            .foregroundColor(.red)
-                                    }
-                                    .frame(width: 30, height: 30)
-                                    .background(Color(.systemGray5))
-                                    .cornerRadius(6)
-                                } else {
-                                    Text("\(specialization.advances)")
+                        ForEach(Array(getSpecializationsList().enumerated()), id: \.element.name) { index, specialization in
+                            VStack(spacing: 0) {
+                                HStack {
+                                    Text(specialization.name)
                                         .font(.caption)
-                                        .frame(width: 40, alignment: .center)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text(specialization.skillName)
+                                        .font(.caption)
+                                        .frame(width: 60, alignment: .center)
+                                    
+                                    if isEditMode {
+                                        // Editable dropdown for advances
+                                        Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name)) {
+                                            ForEach(0...4, id: \.self) { value in
+                                                Text("\(value)").tag(value)
+                                            }
+                                        }
+                                        .pickerStyle(MenuPickerStyle())
+                                        .frame(width: 40)
+                                        
+                                        // Delete button
+                                        Button(action: {
+                                            specializationToDelete = specialization.name
+                                            showingDeleteConfirmation = true
+                                        }) {
+                                            Image(systemName: "trash")
+                                                .font(.caption)
+                                                .foregroundColor(.red)
+                                        }
+                                        .frame(width: 30, height: 30)
+                                        .background(Color(.systemGray5))
+                                        .cornerRadius(6)
+                                    } else {
+                                        Text("\(specialization.advances)")
+                                            .font(.caption)
+                                            .frame(width: 40, alignment: .center)
+                                    }
+                                    
+                                    Text("\(specialization.totalValue)")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .frame(width: 50, alignment: .center)
                                 }
+                                .padding(.horizontal)
+                                .padding(.vertical, 6)
                                 
-                                Text("\(specialization.totalValue)")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                                    .frame(width: 50, alignment: .center)
+                                if index < getSpecializationsList().count - 1 {
+                                    Divider()
+                                        .padding(.horizontal)
+                                }
                             }
-                            .padding(.horizontal)
-                            .padding(.vertical, 6)
                         }
                         
                         // Add new specialization button in edit mode
