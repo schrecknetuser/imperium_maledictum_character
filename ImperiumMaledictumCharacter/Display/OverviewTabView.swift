@@ -11,8 +11,6 @@ struct OverviewTab: View {
     @Binding var character: any BaseCharacter
     @ObservedObject var store: CharacterStore
     @Binding var isEditMode: Bool
-    @State private var showingUnifiedStatusPopup = false
-    @State private var showingChangeHistoryPopup = false
     @State private var tempSolars: Int = 0
     @State private var originalSolars: Int = 0
     @State private var originalSnapshot: CharacterSnapshot? = nil
@@ -327,38 +325,6 @@ struct OverviewTab: View {
             }
             .padding()
             .padding(.bottom, 76) // Reserve space for floating buttons
-        }
-        .overlay(alignment: .bottomTrailing) {
-            // Floating Action Buttons
-            HStack(spacing: 16) {
-                // Change History Button
-                Button {
-                    showingChangeHistoryPopup = true
-                } label: {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(Color.orange)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
-                }
-                
-                // Status Button
-                Button {
-                    showingUnifiedStatusPopup = true
-                } label: {
-                    Image(systemName: "heart.text.square")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(Color.blue)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
-                }
-            }
-            .padding(.trailing, 20)
-            .padding(.bottom, 20)
         }
         .sheet(isPresented: $showingUnifiedStatusPopup) {
             if let binding = imperiumCharacterBinding {
