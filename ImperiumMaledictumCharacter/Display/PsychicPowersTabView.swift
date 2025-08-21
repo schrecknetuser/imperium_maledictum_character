@@ -42,6 +42,10 @@ struct PsychicPowersTab: View {
             }
             .navigationTitle("Psychic Powers")
             .navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .bottom) {
+                // Reserve space for floating buttons
+                Color.clear.frame(height: 76)
+            }
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons

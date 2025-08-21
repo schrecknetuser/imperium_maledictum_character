@@ -283,6 +283,10 @@ struct EquipmentTab: View {
             }
             .navigationTitle("Equipment")
             .navigationBarTitleDisplayMode(.inline)
+            .safeAreaInset(edge: .bottom) {
+                // Reserve space for floating buttons
+                Color.clear.frame(height: 76)
+            }
             .onAppear {
                 // Migrate old string-based data to new object-based system
                 imperiumCharacter?.migrateEquipmentAndWeapons()

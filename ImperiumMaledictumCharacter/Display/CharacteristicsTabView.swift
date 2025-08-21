@@ -362,6 +362,7 @@ struct CharacteristicsTab: View {
                 .cornerRadius(12)
             }
             .padding()
+            .padding(.bottom, 76) // Add bottom padding to prevent overlap with floating buttons
         }
         .navigationTitle("Stats")
         .navigationBarTitleDisplayMode(.large)

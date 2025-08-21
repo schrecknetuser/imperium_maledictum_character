@@ -326,6 +326,7 @@ struct OverviewTab: View {
                 }
             }
             .padding()
+            .padding(.bottom, 76) // Add bottom padding to prevent overlap with floating buttons
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons

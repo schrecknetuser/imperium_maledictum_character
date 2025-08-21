@@ -121,6 +121,7 @@ struct ReputationTab: View {
                 }
                 .padding(.vertical)
             }
+            .padding(.bottom, 76) // Add bottom padding to prevent overlap with floating buttons
             .navigationTitle("Reputation")
             .navigationBarTitleDisplayMode(.large)
         }
