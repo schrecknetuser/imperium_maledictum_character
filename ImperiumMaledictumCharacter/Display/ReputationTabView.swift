@@ -120,10 +120,13 @@ struct ReputationTab: View {
                     }
                 }
                 .padding(.vertical)
-                .padding(.bottom, 76) // Reserve space for floating buttons
             }
             .navigationTitle("Reputation")
             .navigationBarTitleDisplayMode(.large)
+        }
+        .safeAreaInset(edge: .bottom) {
+            // Reserve space for floating buttons
+            Spacer().frame(height: 76)
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons

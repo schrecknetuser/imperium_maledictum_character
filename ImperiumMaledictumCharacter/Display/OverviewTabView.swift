@@ -326,7 +326,10 @@ struct OverviewTab: View {
                 }
             }
             .padding()
-            .padding(.bottom, 76) // Reserve space for floating buttons
+        }
+        .safeAreaInset(edge: .bottom) {
+            // Reserve space for floating buttons
+            Spacer().frame(height: 76)
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
