@@ -16,6 +16,11 @@
 		1A000014 /* CharacterStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000013 /* CharacterStore.swift */; };
 		1A000016 /* CharacterCreationWizard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000015 /* CharacterCreationWizard.swift */; };
 		1A000018 /* CharacterDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A000017 /* CharacterDetailView.swift */; };
+		CE0525832E5785E2009641C6 /* UnifiedStatusPopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0525822E5785E2009641C6 /* UnifiedStatusPopupView.swift */; };
+		CE0525852E5785EB009641C6 /* ChangeHistoryPopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0525842E5785EB009641C6 /* ChangeHistoryPopupView.swift */; };
+		CE0525892E57860D009641C6 /* PsychicPowerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0525882E57860D009641C6 /* PsychicPowerModel.swift */; };
+		CE05258A2E57860D009641C6 /* ChangeLogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0525862E57860D009641C6 /* ChangeLogEntry.swift */; };
+		CE05258B2E57860D009641C6 /* CharacterSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0525872E57860D009641C6 /* CharacterSnapshot.swift */; };
 		CE94F7502E4FE646008F9F08 /* CharacteristicModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7482E4FE646008F9F08 /* CharacteristicModel.swift */; };
 		CE94F7512E4FE646008F9F08 /* ReputationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74C2E4FE646008F9F08 /* ReputationModel.swift */; };
 		CE94F7522E4FE646008F9F08 /* FactionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74A2E4FE646008F9F08 /* FactionModel.swift */; };
@@ -29,12 +34,10 @@
 		CE94F7652E52B197008F9F08 /* PsychicPowersTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7622E52B197008F9F08 /* PsychicPowersTabView.swift */; };
 		CE94F7662E52B197008F9F08 /* StatusPopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7632E52B197008F9F08 /* StatusPopupView.swift */; };
 		CE94F7672E52B197008F9F08 /* EquipmentTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F75F2E52B197008F9F08 /* EquipmentTabView.swift */; };
-		CE94F7682E52B197008F9F08 /* ConditionsPopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F75E2E52B197008F9F08 /* ConditionsPopupView.swift */; };
 		CE94F7692E52B197008F9F08 /* TalentsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7642E52B197008F9F08 /* TalentsTabView.swift */; };
 		CE94F76A2E52B197008F9F08 /* CharacterDetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F75C2E52B197008F9F08 /* CharacterDetailComponents.swift */; };
 		CE94F76B2E52B197008F9F08 /* OverviewTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7612E52B197008F9F08 /* OverviewTabView.swift */; };
 		CE94F76C2E52B197008F9F08 /* CharacteristicsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F75D2E52B197008F9F08 /* CharacteristicsTabView.swift */; };
-		CE94F76D2E52B197008F9F08 /* InjuriesPopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7602E52B197008F9F08 /* InjuriesPopupView.swift */; };
 		CE94F76F2E52B86C008F9F08 /* ReputationTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F76E2E52B86C008F9F08 /* ReputationTabView.swift */; };
 /* End PBXBuildFile section */
 
@@ -49,6 +52,11 @@
 		1A000015 /* CharacterCreationWizard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterCreationWizard.swift; sourceTree = "<group>"; };
 		1A000017 /* CharacterDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterDetailView.swift; sourceTree = "<group>"; };
 		1AFFFFFF /* ImperiumMaledictumCharacter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ImperiumMaledictumCharacter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE0525822E5785E2009641C6 /* UnifiedStatusPopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnifiedStatusPopupView.swift; sourceTree = "<group>"; };
+		CE0525842E5785EB009641C6 /* ChangeHistoryPopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeHistoryPopupView.swift; sourceTree = "<group>"; };
+		CE0525862E57860D009641C6 /* ChangeLogEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeLogEntry.swift; sourceTree = "<group>"; };
+		CE0525872E57860D009641C6 /* CharacterSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterSnapshot.swift; sourceTree = "<group>"; };
+		CE0525882E57860D009641C6 /* PsychicPowerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PsychicPowerModel.swift; sourceTree = "<group>"; };
 		CE94F7482E4FE646008F9F08 /* CharacteristicModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacteristicModel.swift; sourceTree = "<group>"; };
 		CE94F7492E4FE646008F9F08 /* EquipmentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentModel.swift; sourceTree = "<group>"; };
 		CE94F74A2E4FE646008F9F08 /* FactionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactionModel.swift; sourceTree = "<group>"; };
@@ -61,9 +69,7 @@
 		CE94F75A2E526378008F9F08 /* ConditionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionModel.swift; sourceTree = "<group>"; };
 		CE94F75C2E52B197008F9F08 /* CharacterDetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterDetailComponents.swift; sourceTree = "<group>"; };
 		CE94F75D2E52B197008F9F08 /* CharacteristicsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacteristicsTabView.swift; sourceTree = "<group>"; };
-		CE94F75E2E52B197008F9F08 /* ConditionsPopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConditionsPopupView.swift; sourceTree = "<group>"; };
 		CE94F75F2E52B197008F9F08 /* EquipmentTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentTabView.swift; sourceTree = "<group>"; };
-		CE94F7602E52B197008F9F08 /* InjuriesPopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InjuriesPopupView.swift; sourceTree = "<group>"; };
 		CE94F7612E52B197008F9F08 /* OverviewTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewTabView.swift; sourceTree = "<group>"; };
 		CE94F7622E52B197008F9F08 /* PsychicPowersTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PsychicPowersTabView.swift; sourceTree = "<group>"; };
 		CE94F7632E52B197008F9F08 /* StatusPopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusPopupView.swift; sourceTree = "<group>"; };
@@ -93,6 +99,9 @@
 		1A00000E /* Characters */ = {
 			isa = PBXGroup;
 			children = (
+				CE0525862E57860D009641C6 /* ChangeLogEntry.swift */,
+				CE0525872E57860D009641C6 /* CharacterSnapshot.swift */,
+				CE0525882E57860D009641C6 /* PsychicPowerModel.swift */,
 				CE94F75A2E526378008F9F08 /* ConditionModel.swift */,
 				CE94F7582E515FB4008F9F08 /* CriticalWoundModel.swift */,
 				CE94F7482E4FE646008F9F08 /* CharacteristicModel.swift */,
@@ -121,12 +130,12 @@
 		1A00001A /* Display */ = {
 			isa = PBXGroup;
 			children = (
+				CE0525842E5785EB009641C6 /* ChangeHistoryPopupView.swift */,
+				CE0525822E5785E2009641C6 /* UnifiedStatusPopupView.swift */,
 				CE94F76E2E52B86C008F9F08 /* ReputationTabView.swift */,
 				CE94F75C2E52B197008F9F08 /* CharacterDetailComponents.swift */,
 				CE94F75D2E52B197008F9F08 /* CharacteristicsTabView.swift */,
-				CE94F75E2E52B197008F9F08 /* ConditionsPopupView.swift */,
 				CE94F75F2E52B197008F9F08 /* EquipmentTabView.swift */,
-				CE94F7602E52B197008F9F08 /* InjuriesPopupView.swift */,
 				CE94F7612E52B197008F9F08 /* OverviewTabView.swift */,
 				CE94F7622E52B197008F9F08 /* PsychicPowersTabView.swift */,
 				CE94F7632E52B197008F9F08 /* StatusPopupView.swift */,
@@ -246,23 +255,26 @@
 				CE94F7562E4FE646008F9F08 /* TalentModel.swift in Sources */,
 				CE94F7572E4FE646008F9F08 /* SkillModel.swift in Sources */,
 				1A000003 /* ContentView.swift in Sources */,
+				CE0525832E5785E2009641C6 /* UnifiedStatusPopupView.swift in Sources */,
 				1A000010 /* CharacterBase.swift in Sources */,
 				1A000012 /* ImperiumCharacter.swift in Sources */,
 				1A000014 /* CharacterStore.swift in Sources */,
 				CE94F7592E515FB4008F9F08 /* CriticalWoundModel.swift in Sources */,
+				CE0525892E57860D009641C6 /* PsychicPowerModel.swift in Sources */,
+				CE05258A2E57860D009641C6 /* ChangeLogEntry.swift in Sources */,
+				CE05258B2E57860D009641C6 /* CharacterSnapshot.swift in Sources */,
 				1A000016 /* CharacterCreationWizard.swift in Sources */,
 				1A000018 /* CharacterDetailView.swift in Sources */,
+				CE0525852E5785EB009641C6 /* ChangeHistoryPopupView.swift in Sources */,
 				1A000001 /* ImperiumMaledictumCharacterApp.swift in Sources */,
 				CE94F7652E52B197008F9F08 /* PsychicPowersTabView.swift in Sources */,
 				CE94F7662E52B197008F9F08 /* StatusPopupView.swift in Sources */,
 				CE94F7672E52B197008F9F08 /* EquipmentTabView.swift in Sources */,
-				CE94F7682E52B197008F9F08 /* ConditionsPopupView.swift in Sources */,
 				CE94F7692E52B197008F9F08 /* TalentsTabView.swift in Sources */,
 				CE94F76A2E52B197008F9F08 /* CharacterDetailComponents.swift in Sources */,
 				CE94F76B2E52B197008F9F08 /* OverviewTabView.swift in Sources */,
 				CE94F76C2E52B197008F9F08 /* CharacteristicsTabView.swift in Sources */,
 				CE94F76F2E52B86C008F9F08 /* ReputationTabView.swift in Sources */,
-				CE94F76D2E52B197008F9F08 /* InjuriesPopupView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
