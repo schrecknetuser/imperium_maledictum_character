@@ -326,16 +326,6 @@ struct OverviewTab: View {
             .padding()
             .padding(.bottom, 76) // Reserve space for floating buttons
         }
-        .sheet(isPresented: $showingUnifiedStatusPopup) {
-            if let binding = imperiumCharacterBinding {
-                UnifiedStatusPopupView(character: binding, store: store)
-            }
-        }
-        .sheet(isPresented: $showingChangeHistoryPopup) {
-            if let binding = imperiumCharacterBinding {
-                ChangeHistoryPopupView(character: binding, store: store)
-            }
-        }
     }
     
     private func saveSolarsChanges() {
