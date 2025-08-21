@@ -326,6 +326,7 @@ struct OverviewTab: View {
                 }
             }
             .padding()
+            .padding(.bottom, 80) // Extra space for floating buttons
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
