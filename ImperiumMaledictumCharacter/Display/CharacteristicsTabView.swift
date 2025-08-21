@@ -362,6 +362,7 @@ struct CharacteristicsTab: View {
                 .cornerRadius(12)
             }
             .padding()
+            .padding(.bottom, 80) // Extra space for floating buttons
         }
         .navigationTitle("Stats")
         .navigationBarTitleDisplayMode(.large)

@@ -120,6 +120,7 @@ struct ReputationTab: View {
                     }
                 }
                 .padding(.vertical)
+                .padding(.bottom, 80) // Extra space for floating buttons
             }
             .navigationTitle("Reputation")
             .navigationBarTitleDisplayMode(.large)
