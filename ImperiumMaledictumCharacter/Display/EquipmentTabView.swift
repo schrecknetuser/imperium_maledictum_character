@@ -68,7 +68,8 @@ struct EquipmentTab: View {
     }
     
     var body: some View {
-        List {
+        NavigationView {
+            List {
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
                         let groupedEquipment = Dictionary(grouping: imperium.equipmentList) { equipment in
@@ -280,13 +281,15 @@ struct EquipmentTab: View {
                         .foregroundColor(.secondary)
                 }
                 
-                // Bottom spacing for floating buttons
+                // Invisible spacer for floating buttons
                 Section {
                     Color.clear.frame(height: 76)
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
                 }
             }
+            .navigationTitle("Equipment")
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 // Migrate old string-based data to new object-based system
                 imperiumCharacter?.migrateEquipmentAndWeapons()

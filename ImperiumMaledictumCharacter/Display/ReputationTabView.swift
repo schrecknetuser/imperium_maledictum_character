@@ -31,8 +31,9 @@ struct ReputationTab: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 16) {
                     if let imperium = imperiumCharacter {
                         // Faction Reputation Block
                         VStack(alignment: .leading, spacing: 12) {
@@ -119,8 +120,10 @@ struct ReputationTab: View {
                     }
                 }
                 .padding(.vertical)
+                .padding(.bottom, 76) // Reserve space for floating buttons
             }
-            .padding(.bottom, 76) // Reserve space for floating buttons
+            .navigationTitle("Reputation")
+            .navigationBarTitleDisplayMode(.large)
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons

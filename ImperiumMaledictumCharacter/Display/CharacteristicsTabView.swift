@@ -32,8 +32,9 @@ struct CharacteristicsTab: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
                 // Characteristics Table
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Characteristics")
@@ -363,6 +364,8 @@ struct CharacteristicsTab: View {
             .padding()
             .padding(.bottom, 76) // Reserve space for floating buttons
         }
+        .navigationTitle("Stats")
+        .navigationBarTitleDisplayMode(.large)
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {
