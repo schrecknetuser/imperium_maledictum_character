@@ -12,10 +12,12 @@ struct TalentsTab: View {
     @ObservedObject var store: CharacterStore
     @Binding var isEditMode: Bool
     @State private var showingAddTalentSheet = false
+    @State private var showingAddPsychicPowerSheet = false
     @State private var showingUnifiedStatusPopup = false
     @State private var showingChangeHistoryPopup = false
     @State private var showingRemoveConfirmation = false
     @State private var talentToRemove: String?
+    @State private var psychicPowerToRemove: String?
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
@@ -35,62 +37,130 @@ struct TalentsTab: View {
         NavigationView {
             List {
                 if let imperium = imperiumCharacter {
-                    ForEach(imperium.talentNames, id: \.self) { talent in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(talent)
-                                    .font(.body)
-                                
-                                if let description = TalentDefinitions.talents[talent] {
-                                    Text(description)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .multilineTextAlignment(.leading)
-                                }
-                            }
-                            
-                            Spacer()
-                            
-                            if isEditMode {
-                                Button(action: {
-                                    talentToRemove = talent
-                                    showingRemoveConfirmation = true
-                                }) {
-                                    Image(systemName: "minus.circle.fill")
-                                        .foregroundColor(.red)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                            }
-                        }
-                        .padding(.vertical, 2)
-                    }
-                    
-                    if isEditMode {
-                        Button(action: {
-                            showingAddTalentSheet = true
-                        }) {
+                    // Talents Section
+                    Section("Talents") {
+                        ForEach(imperium.talentNames, id: \.self) { talent in
                             HStack {
-                                Image(systemName: "plus.circle.fill")
-                                    .foregroundColor(.blue)
-                                Text("Add Talent")
-                                    .foregroundColor(.blue)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(talent)
+                                        .font(.body)
+                                    
+                                    if let description = TalentDefinitions.talents[talent] {
+                                        Text(description)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .multilineTextAlignment(.leading)
+                                    }
+                                }
+                                
                                 Spacer()
+                                
+                                if isEditMode {
+                                    Button(action: {
+                                        talentToRemove = talent
+                                        showingRemoveConfirmation = true
+                                    }) {
+                                        Image(systemName: "minus.circle.fill")
+                                            .foregroundColor(.red)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                }
                             }
+                            .padding(.vertical, 2)
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        
+                        if isEditMode {
+                            Button(action: {
+                                showingAddTalentSheet = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundColor(.blue)
+                                    Text("Add Talent")
+                                        .foregroundColor(.blue)
+                                    Spacer()
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        
+                        if imperium.talentNames.isEmpty && !isEditMode {
+                            Text("No talents selected")
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
                     }
                     
-                    if imperium.talentNames.isEmpty && !isEditMode {
-                        Text("No talents selected")
-                            .foregroundColor(.secondary)
-                            .italic()
+                    // Psychic Powers Section
+                    Section("Psychic Powers") {
+                        // Group psychic powers by category
+                        let groupedPowers = Dictionary(grouping: imperium.psychicPowers) { power in
+                            PsychicPowerDefinitions.getCategoryForPower(power)
+                        }
+                        
+                        ForEach(["Minor Psychic Powers", "Biomancy", "Divination"], id: \.self) { category in
+                            if let powersInCategory = groupedPowers[category], !powersInCategory.isEmpty {
+                                DisclosureGroup(category) {
+                                    ForEach(powersInCategory, id: \.self) { power in
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(power)
+                                                    .font(.body)
+                                                
+                                                if let description = PsychicPowerDefinitions.powers[power] {
+                                                    Text(description)
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
+                                                        .multilineTextAlignment(.leading)
+                                                }
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            if isEditMode {
+                                                Button(action: {
+                                                    psychicPowerToRemove = power
+                                                    showingRemoveConfirmation = true
+                                                }) {
+                                                    Image(systemName: "minus.circle.fill")
+                                                        .foregroundColor(.red)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                            }
+                                        }
+                                        .padding(.vertical, 2)
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if isEditMode {
+                            Button(action: {
+                                showingAddPsychicPowerSheet = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundColor(.purple)
+                                    Text("Add Psychic Power")
+                                        .foregroundColor(.purple)
+                                    Spacer()
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        
+                        if imperium.psychicPowers.isEmpty && !isEditMode {
+                            Text("No psychic powers selected")
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
                     }
                 } else {
-                    Text("Talents not available for this character type")
+                    Text("Talents and psychic powers not available for this character type")
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Talents")
+            .navigationTitle("Talents & Powers")
             .navigationBarTitleDisplayMode(.inline)
         }
         .overlay(alignment: .bottomTrailing) {
@@ -130,6 +200,11 @@ struct TalentsTab: View {
                 AddTalentSheet(character: imperium, store: store, isEditMode: isEditMode)
             }
         }
+        .sheet(isPresented: $showingAddPsychicPowerSheet) {
+            if let imperium = imperiumCharacter {
+                AddPsychicPowerSheet(character: imperium, store: store, isEditMode: isEditMode)
+            }
+        }
         .sheet(isPresented: $showingUnifiedStatusPopup) {
             if let binding = imperiumCharacterBinding {
                 UnifiedStatusPopupView(character: binding, store: store)
@@ -140,15 +215,28 @@ struct TalentsTab: View {
                 ChangeHistoryPopupView(character: binding, store: store)
             }
         }
-        .alert("Remove Talent", isPresented: $showingRemoveConfirmation) {
-            Button("Cancel", role: .cancel) { }
+        .alert("Remove Item", isPresented: $showingRemoveConfirmation) {
+            Button("Cancel", role: .cancel) {
+                talentToRemove = nil
+                psychicPowerToRemove = nil
+            }
             Button("Remove", role: .destructive) {
                 if let talent = talentToRemove {
                     removeTalent(talent)
+                    talentToRemove = nil
+                } else if let power = psychicPowerToRemove {
+                    removePsychicPower(power)
+                    psychicPowerToRemove = nil
                 }
             }
         } message: {
-            Text("Are you sure you want to remove this talent? This action cannot be undone.")
+            if talentToRemove != nil {
+                Text("Are you sure you want to remove this talent? This action cannot be undone.")
+            } else if psychicPowerToRemove != nil {
+                Text("Are you sure you want to remove this psychic power? This action cannot be undone.")
+            } else {
+                Text("Are you sure you want to remove this item? This action cannot be undone.")
+            }
         }
     }
     
@@ -158,6 +246,23 @@ struct TalentsTab: View {
         var talents = imperium.talentNames
         talents.removeAll { $0 == talent }
         imperium.talentNames = talents
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: imperium)
+            store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
+    }
+    
+    private func removePsychicPower(_ power: String) {
+        guard let imperium = imperiumCharacter else { return }
+        
+        var powers = imperium.psychicPowers
+        powers.removeAll { $0 == power }
+        imperium.psychicPowers = powers
         
         // Only use immediate change tracking if not in edit mode
         // When in edit mode, let the main "Done" button handle change tracking
@@ -220,6 +325,88 @@ struct AddTalentSheet: View {
         var talents = character.talentNames
         talents.append(talent)
         character.talentNames = talents
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: character)
+            store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
+        dismiss()
+    }
+}
+
+struct AddPsychicPowerSheet: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    let isEditMode: Bool
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedCategory = "Minor Psychic Powers"
+    
+    var availablePowers: [String] {
+        PsychicPowerDefinitions.allPowers.filter { power in
+            !character.psychicPowers.contains(power)
+        }
+    }
+    
+    var powersInSelectedCategory: [String] {
+        availablePowers.filter { power in
+            PsychicPowerDefinitions.getCategoryForPower(power) == selectedCategory
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            VStack {
+                // Category picker
+                Picker("Category", selection: $selectedCategory) {
+                    ForEach(["Minor Psychic Powers", "Biomancy", "Divination"], id: \.self) { category in
+                        Text(category).tag(category)
+                    }
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
+                
+                List(powersInSelectedCategory, id: \.self) { power in
+                    Button(action: {
+                        addPsychicPower(power)
+                    }) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(power)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                            
+                            if let description = PsychicPowerDefinitions.powers[power] {
+                                Text(description)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.leading)
+                                    .lineLimit(3)
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+            .navigationTitle("Add Psychic Power")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func addPsychicPower(_ power: String) {
+        var powers = character.psychicPowers
+        powers.append(power)
+        character.psychicPowers = powers
         
         // Only use immediate change tracking if not in edit mode
         // When in edit mode, let the main "Done" button handle change tracking
