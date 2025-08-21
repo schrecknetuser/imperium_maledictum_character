@@ -98,7 +98,7 @@ struct TalentsTab: View {
                             PsychicPowerDefinitions.getCategoryForPower(power)
                         }
                         
-                        ForEach(["Minor Psychic Powers", "Biomancy", "Divination"], id: \.self) { category in
+                        ForEach(Array(PsychicPowerDefinitions.powerCategories.keys).sorted(), id: \.self) { category in
                             if let powersInCategory = groupedPowers[category], !powersInCategory.isEmpty {
                                 DisclosureGroup(category) {
                                     ForEach(powersInCategory, id: \.self) { power in
@@ -345,6 +345,10 @@ struct AddPsychicPowerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedCategory = "Minor Psychic Powers"
     
+    var availableCategories: [String] {
+        Array(PsychicPowerDefinitions.powerCategories.keys).sorted()
+    }
+    
     var availablePowers: [String] {
         PsychicPowerDefinitions.allPowers.filter { power in
             !character.psychicPowers.contains(power)
@@ -362,7 +366,7 @@ struct AddPsychicPowerSheet: View {
             VStack {
                 // Category picker
                 Picker("Category", selection: $selectedCategory) {
-                    ForEach(["Minor Psychic Powers", "Biomancy", "Divination"], id: \.self) { category in
+                    ForEach(availableCategories, id: \.self) { category in
                         Text(category).tag(category)
                     }
                 }
