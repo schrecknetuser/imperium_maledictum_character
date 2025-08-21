@@ -38,56 +38,58 @@ struct TalentsTab: View {
             List {
                 if let imperium = imperiumCharacter {
                     // Talents Section
-                    Section("Talents") {
-                        ForEach(imperium.talentNames, id: \.self) { talent in
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(talent)
-                                        .font(.body)
-                                    
-                                    if let description = TalentDefinitions.talents[talent] {
-                                        Text(description)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .multilineTextAlignment(.leading)
-                                    }
-                                }
-                                
-                                Spacer()
-                                
-                                if isEditMode {
-                                    Button(action: {
-                                        talentToRemove = talent
-                                        showingRemoveConfirmation = true
-                                    }) {
-                                        Image(systemName: "minus.circle.fill")
-                                            .foregroundColor(.red)
-                                    }
-                                    .buttonStyle(PlainButtonStyle())
-                                }
-                            }
-                            .padding(.vertical, 2)
-                        }
-                        
-                        if isEditMode {
-                            Button(action: {
-                                showingAddTalentSheet = true
-                            }) {
+                    Section {
+                        DisclosureGroup("Talents") {
+                            ForEach(imperium.talentNames, id: \.self) { talent in
                                 HStack {
-                                    Image(systemName: "plus.circle.fill")
-                                        .foregroundColor(.blue)
-                                    Text("Add Talent")
-                                        .foregroundColor(.blue)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(talent)
+                                            .font(.body)
+                                        
+                                        if let description = TalentDefinitions.talents[talent] {
+                                            Text(description)
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                                .multilineTextAlignment(.leading)
+                                        }
+                                    }
+                                    
                                     Spacer()
+                                    
+                                    if isEditMode {
+                                        Button(action: {
+                                            talentToRemove = talent
+                                            showingRemoveConfirmation = true
+                                        }) {
+                                            Image(systemName: "minus.circle.fill")
+                                                .foregroundColor(.red)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                    }
                                 }
+                                .padding(.vertical, 2)
                             }
-                            .buttonStyle(PlainButtonStyle())
-                        }
-                        
-                        if imperium.talentNames.isEmpty && !isEditMode {
-                            Text("No talents selected")
-                                .foregroundColor(.secondary)
-                                .italic()
+                            
+                            if isEditMode {
+                                Button(action: {
+                                    showingAddTalentSheet = true
+                                }) {
+                                    HStack {
+                                        Image(systemName: "plus.circle.fill")
+                                            .foregroundColor(.blue)
+                                        Text("Add Talent")
+                                            .foregroundColor(.blue)
+                                        Spacer()
+                                    }
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                            
+                            if imperium.talentNames.isEmpty && !isEditMode {
+                                Text("No talents selected")
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                            }
                         }
                     }
                     
