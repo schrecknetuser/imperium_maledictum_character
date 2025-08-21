@@ -34,8 +34,7 @@ struct TalentsTab: View {
     }
     
     var body: some View {
-        NavigationView {
-            List {
+        List {
                 if let imperium = imperiumCharacter {
                     // Talents Section
                     Section {
@@ -169,8 +168,6 @@ struct TalentsTab: View {
                         .listRowSeparator(.hidden)
                 }
             }
-            .navigationTitle("Talents & Powers")
-            .navigationBarTitleDisplayMode(.inline)
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons

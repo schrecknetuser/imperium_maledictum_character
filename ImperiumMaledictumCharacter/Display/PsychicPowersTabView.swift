@@ -29,8 +29,7 @@ struct PsychicPowersTab: View {
     }
     
     var body: some View {
-        NavigationView {
-            List {
+        List {
                 if let imperium = imperiumCharacter {
                     ForEach(imperium.psychicPowers, id: \.self) { power in
                         Text(power)
@@ -47,8 +46,6 @@ struct PsychicPowersTab: View {
                         .listRowSeparator(.hidden)
                 }
             }
-            .navigationTitle("Psychic Powers")
-            .navigationBarTitleDisplayMode(.inline)
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
