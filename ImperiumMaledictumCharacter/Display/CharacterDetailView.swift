@@ -56,15 +56,6 @@ struct CharacterDetailView: View {
                     Text("Equipment")
                 }
                 .tag(4)
-            
-            if imperiumCharacter?.role.lowercased().contains("psyker") == true {
-                PsychicPowersTab(character: character, store: store, isEditMode: $isEditMode)
-                    .tabItem {
-                        Image(systemName: "brain")
-                        Text("Psychic")
-                    }
-                    .tag(5)
-            }
         }
         .navigationTitle(character.name.isEmpty ? "Unnamed Character" : character.name)
         .navigationBarTitleDisplayMode(.large)
