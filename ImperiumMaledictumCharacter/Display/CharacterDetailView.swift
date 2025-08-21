@@ -15,21 +15,9 @@ struct CharacterDetailView: View {
     @State private var selectedTab: Int = 0
     @State private var isEditMode = false
     @State private var editModeSnapshot: CharacterSnapshot?
-    @State private var showingUnifiedStatusPopup = false
-    @State private var showingChangeHistoryPopup = false
     
     var imperiumCharacter: ImperiumCharacter? {
         return character as? ImperiumCharacter
-    }
-    
-    var imperiumCharacterBinding: Binding<ImperiumCharacter>? {
-        guard character is ImperiumCharacter else { return nil }
-        return Binding(
-            get: { character as! ImperiumCharacter },
-            set: { newValue in
-                character = newValue
-            }
-        )
     }
     
     var body: some View {
@@ -68,45 +56,6 @@ struct CharacterDetailView: View {
                     Text("Equipment")
                 }
                 .tag(4)
-            
-            PsychicPowersTab(character: character, store: store, isEditMode: $isEditMode)
-                .tabItem {
-                    Image(systemName: "brain.head.profile")
-                    Text("Psychic Powers")
-                }
-                .tag(5)
-        }
-        .overlay(alignment: .bottomTrailing) {
-            // Floating Action Buttons - positioned at TabView level
-            HStack(spacing: 16) {
-                // Change History Button
-                Button {
-                    showingChangeHistoryPopup = true
-                } label: {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(Color.orange)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
-                }
-                
-                // Status Button
-                Button {
-                    showingUnifiedStatusPopup = true
-                } label: {
-                    Image(systemName: "heart.text.square")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                        .frame(width: 56, height: 56)
-                        .background(Color.blue)
-                        .clipShape(Circle())
-                        .shadow(radius: 4)
-                }
-            }
-            .padding(.trailing, 20)
-            .padding(.bottom, 100) // Increased padding to clear tab bar (49pt) + safe area
         }
         .navigationTitle(character.name.isEmpty ? "Unnamed Character" : character.name)
         .navigationBarTitleDisplayMode(.large)
@@ -136,16 +85,6 @@ struct CharacterDetailView: View {
                         isEditMode = true
                     }
                 }
-            }
-        }
-        .sheet(isPresented: $showingUnifiedStatusPopup) {
-            if let binding = imperiumCharacterBinding {
-                UnifiedStatusPopupView(character: binding, store: store)
-            }
-        }
-        .sheet(isPresented: $showingChangeHistoryPopup) {
-            if let binding = imperiumCharacterBinding {
-                ChangeHistoryPopupView(character: binding, store: store)
             }
         }
     }
