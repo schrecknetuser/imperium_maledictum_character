@@ -362,10 +362,13 @@ struct CharacteristicsTab: View {
                 .cornerRadius(12)
             }
             .padding()
-            .padding(.bottom, 76) // Add bottom padding to prevent overlap with floating buttons
         }
         .navigationTitle("Stats")
         .navigationBarTitleDisplayMode(.large)
+        .safeAreaInset(edge: .bottom) {
+            // Reserve space for floating buttons
+            Color.clear.frame(height: 76)
+        }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {
