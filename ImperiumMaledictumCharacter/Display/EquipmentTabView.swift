@@ -280,6 +280,13 @@ struct EquipmentTab: View {
                     Text("Equipment not available for this character type")
                         .foregroundColor(.secondary)
                 }
+                
+                // Bottom spacing for floating buttons
+                Section {
+                    Color.clear.frame(height: 76)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
             }
             .navigationTitle("Equipment")
             .navigationBarTitleDisplayMode(.inline)
@@ -287,10 +294,6 @@ struct EquipmentTab: View {
                 // Migrate old string-based data to new object-based system
                 imperiumCharacter?.migrateEquipmentAndWeapons()
             }
-        }
-        .safeAreaInset(edge: .bottom) {
-            // Reserve space for floating buttons
-            Color.clear.frame(height: 76)
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons

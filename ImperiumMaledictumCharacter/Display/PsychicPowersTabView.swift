@@ -39,13 +39,16 @@ struct PsychicPowersTab: View {
                     Text("Psychic powers not available for this character type")
                         .foregroundColor(.secondary)
                 }
+                
+                // Bottom spacing for floating buttons
+                Section {
+                    Color.clear.frame(height: 76)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
             }
             .navigationTitle("Psychic Powers")
             .navigationBarTitleDisplayMode(.inline)
-        }
-        .safeAreaInset(edge: .bottom) {
-            // Reserve space for floating buttons
-            Color.clear.frame(height: 76)
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons

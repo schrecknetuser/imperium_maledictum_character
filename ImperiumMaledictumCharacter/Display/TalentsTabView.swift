@@ -161,13 +161,16 @@ struct TalentsTab: View {
                     Text("Talents and psychic powers not available for this character type")
                         .foregroundColor(.secondary)
                 }
+                
+                // Bottom spacing for floating buttons
+                Section {
+                    Color.clear.frame(height: 76)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
             }
             .navigationTitle("Talents & Powers")
             .navigationBarTitleDisplayMode(.inline)
-        }
-        .safeAreaInset(edge: .bottom) {
-            // Reserve space for floating buttons
-            Color.clear.frame(height: 76)
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons

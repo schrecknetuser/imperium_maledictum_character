@@ -362,6 +362,7 @@ struct CharacteristicsTab: View {
                 .cornerRadius(12)
             }
             .padding()
+            .padding(.bottom, 76) // Reserve space for floating buttons
         }
         .navigationTitle("Stats")
         .navigationBarTitleDisplayMode(.large)
@@ -411,10 +412,6 @@ struct CharacteristicsTab: View {
             if let binding = imperiumCharacterBinding {
                 ChangeHistoryPopupView(character: binding, store: store)
             }
-        }
-        .safeAreaInset(edge: .bottom) {
-            // Reserve space for floating buttons
-            Color.clear.frame(height: 76)
         }
         .alert("Delete Specialization", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) { }
