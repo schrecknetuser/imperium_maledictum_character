@@ -68,6 +68,13 @@ struct CharacterDetailView: View {
                     Text("Equipment")
                 }
                 .tag(4)
+            
+            PsychicPowersTab(character: character, store: store, isEditMode: $isEditMode)
+                .tabItem {
+                    Image(systemName: "brain.head.profile")
+                    Text("Psychic Powers")
+                }
+                .tag(5)
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons - positioned at TabView level
@@ -99,7 +106,7 @@ struct CharacterDetailView: View {
                 }
             }
             .padding(.trailing, 20)
-            .padding(.bottom, 20)
+            .padding(.bottom, 100) // Increased padding to clear tab bar (49pt) + safe area
         }
         .navigationTitle(character.name.isEmpty ? "Unnamed Character" : character.name)
         .navigationBarTitleDisplayMode(.large)
