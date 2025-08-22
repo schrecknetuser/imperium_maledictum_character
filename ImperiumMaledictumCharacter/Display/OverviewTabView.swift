@@ -151,6 +151,19 @@ struct OverviewTab: View {
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .lineLimit(3...6)
                             }
+                            
+                            let notesBinding = Binding<String>(
+                                get: { imperium.notes },
+                                set: { imperium.notes = $0 }
+                            )
+                            VStack(alignment: .leading) {
+                                Text("Notes")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                TextField("Notes", text: notesBinding, axis: .vertical)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .lineLimit(3...8)
+                            }
                         } else {
                             if !imperium.shortTermGoal.isEmpty {
                                 DetailRow(title: "Short-term Goal", value: imperium.shortTermGoal)
@@ -164,7 +177,11 @@ struct OverviewTab: View {
                                 DetailRow(title: "Description", value: imperium.characterDescription)
                             }
                             
-                            if imperium.shortTermGoal.isEmpty && imperium.longTermGoal.isEmpty && imperium.characterDescription.isEmpty {
+                            if !imperium.notes.isEmpty {
+                                DetailRow(title: "Notes", value: imperium.notes)
+                            }
+                            
+                            if imperium.shortTermGoal.isEmpty && imperium.longTermGoal.isEmpty && imperium.characterDescription.isEmpty && imperium.notes.isEmpty {
                                 Text("No character information provided")
                                     .font(.caption)
                                     .foregroundColor(.secondary)

@@ -20,6 +20,7 @@ class CharacterSnapshot {
     let shortTermGoal: String
     let longTermGoal: String
     let characterDescription: String
+    let notes: String
     
     // Characteristics
     let weaponSkill: Int
@@ -69,6 +70,7 @@ class CharacterSnapshot {
         self.shortTermGoal = character.shortTermGoal
         self.longTermGoal = character.longTermGoal
         self.characterDescription = character.characterDescription
+        self.notes = character.notes
         
         // Characteristics
         self.weaponSkill = character.weaponSkill
@@ -119,6 +121,7 @@ class CharacterSnapshot {
         character.shortTermGoal = self.shortTermGoal
         character.longTermGoal = self.longTermGoal
         character.characterDescription = self.characterDescription
+        character.notes = self.notes
         
         // Characteristics
         character.weaponSkill = self.weaponSkill

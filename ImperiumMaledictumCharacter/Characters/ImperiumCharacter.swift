@@ -28,6 +28,7 @@ class ImperiumCharacter: BaseCharacter {
     var shortTermGoal: String = ""
     var longTermGoal: String = ""
     var characterDescription: String = ""
+    var notes: String = ""
     
     // Critical wounds and injuries
     var criticalWounds: Int = 0
@@ -116,6 +117,7 @@ class ImperiumCharacter: BaseCharacter {
         shortTermGoal = ""
         longTermGoal = ""
         characterDescription = ""
+        notes = ""
         criticalWounds = 0
         headInjuries = ""
         armInjuries = ""
@@ -842,6 +844,9 @@ class ImperiumCharacter: BaseCharacter {
         }
         if characterDescription != originalCharacter.characterDescription {
             changes.append("character description updated")
+        }
+        if notes != originalCharacter.notes {
+            changes.append("notes updated")
         }
         
         // Check characteristics changes (new system)

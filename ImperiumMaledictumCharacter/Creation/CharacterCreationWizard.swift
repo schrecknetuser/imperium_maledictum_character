@@ -234,6 +234,14 @@ struct BasicInfoStage: View {
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .lineLimit(3...6)
                 }
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Notes")
+                        .font(.headline)
+                    TextField("Additional notes about your character (optional)", text: $character.notes, axis: .vertical)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .lineLimit(3...8)
+                }
             }
         }
     }
