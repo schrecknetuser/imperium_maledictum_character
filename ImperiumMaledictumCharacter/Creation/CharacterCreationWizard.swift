@@ -214,33 +214,97 @@ struct BasicInfoStage: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Short-term Goal")
                         .font(.headline)
-                    TextField("What does your character want to achieve soon? (optional)", text: $character.shortTermGoal, axis: .vertical)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .lineLimit(2, reservesSpace: false)
+                    TextEditor(text: $character.shortTermGoal)
+                        .frame(minHeight: 60)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
+                        .overlay(
+                            Group {
+                                if character.shortTermGoal.isEmpty {
+                                    Text("What does your character want to achieve soon? (optional)")
+                                        .foregroundColor(.secondary)
+                                        .allowsHitTesting(false)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 8)
+                                }
+                            }, alignment: .topLeading
+                        )
                 }
                 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Long-term Goal")
                         .font(.headline)
-                    TextField("What are your character's ultimate aspirations? (optional)", text: $character.longTermGoal, axis: .vertical)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .lineLimit(2, reservesSpace: false)
+                    TextEditor(text: $character.longTermGoal)
+                        .frame(minHeight: 60)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
+                        .overlay(
+                            Group {
+                                if character.longTermGoal.isEmpty {
+                                    Text("What are your character's ultimate aspirations? (optional)")
+                                        .foregroundColor(.secondary)
+                                        .allowsHitTesting(false)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 8)
+                                }
+                            }, alignment: .topLeading
+                        )
                 }
                 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Character Description")
                         .font(.headline)
-                    TextField("Describe your character's appearance, personality, background... (optional)", text: $character.characterDescription, axis: .vertical)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .lineLimit(3, reservesSpace: false)
+                    TextEditor(text: $character.characterDescription)
+                        .frame(minHeight: 80)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
+                        .overlay(
+                            Group {
+                                if character.characterDescription.isEmpty {
+                                    Text("Describe your character's appearance, personality, background... (optional)")
+                                        .foregroundColor(.secondary)
+                                        .allowsHitTesting(false)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 8)
+                                }
+                            }, alignment: .topLeading
+                        )
                 }
                 
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Notes")
                         .font(.headline)
-                    TextField("Additional notes about your character (optional)", text: $character.notes, axis: .vertical)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .lineLimit(3, reservesSpace: false)
+                    TextEditor(text: $character.notes)
+                        .frame(minHeight: 80)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
+                        .overlay(
+                            Group {
+                                if character.notes.isEmpty {
+                                    Text("Additional notes about your character (optional)")
+                                        .foregroundColor(.secondary)
+                                        .allowsHitTesting(false)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 8)
+                                }
+                            }, alignment: .topLeading
+                        )
                 }
             }
         }
