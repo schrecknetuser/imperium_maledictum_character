@@ -240,7 +240,7 @@ struct BasicInfoStage: View {
                         .font(.headline)
                     TextField("Additional notes about your character (optional)", text: $character.notes, axis: .vertical)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .lineLimit(3...8)
+                        .lineLimit(3, reservesSpace: false)
                 }
             }
         }

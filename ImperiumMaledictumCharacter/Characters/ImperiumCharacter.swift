@@ -846,7 +846,7 @@ class ImperiumCharacter: BaseCharacter {
             changes.append("character description updated")
         }
         if notes != originalCharacter.notes {
-            changes.append("notes updated")
+            changes.append("notes: \(notes)")
         }
         
         // Check characteristics changes (new system)

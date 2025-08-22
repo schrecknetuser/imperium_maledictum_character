@@ -151,19 +151,6 @@ struct OverviewTab: View {
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .lineLimit(3...6)
                             }
-                            
-                            let notesBinding = Binding<String>(
-                                get: { imperium.notes },
-                                set: { imperium.notes = $0 }
-                            )
-                            VStack(alignment: .leading) {
-                                Text("Notes")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                TextField("Notes", text: notesBinding, axis: .vertical)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .lineLimit(3...8)
-                            }
                         } else {
                             if !imperium.shortTermGoal.isEmpty {
                                 DetailRow(title: "Short-term Goal", value: imperium.shortTermGoal)
@@ -177,11 +164,7 @@ struct OverviewTab: View {
                                 DetailRow(title: "Description", value: imperium.characterDescription)
                             }
                             
-                            if !imperium.notes.isEmpty {
-                                DetailRow(title: "Notes", value: imperium.notes)
-                            }
-                            
-                            if imperium.shortTermGoal.isEmpty && imperium.longTermGoal.isEmpty && imperium.characterDescription.isEmpty && imperium.notes.isEmpty {
+                            if imperium.shortTermGoal.isEmpty && imperium.longTermGoal.isEmpty && imperium.characterDescription.isEmpty {
                                 Text("No character information provided")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
@@ -334,6 +317,38 @@ struct OverviewTab: View {
                                 }
                                 
                                 Spacer()
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
+                
+                // Notes Section
+                if let imperium = imperiumCharacter {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Notes")
+                            .font(.headline)
+                        
+                        if isEditMode {
+                            let notesBinding = Binding<String>(
+                                get: { imperium.notes },
+                                set: { imperium.notes = $0 }
+                            )
+                            TextField("Additional notes about your character", text: notesBinding, axis: .vertical)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .lineLimit(3, reservesSpace: false)
+                        } else {
+                            if !imperium.notes.isEmpty {
+                                Text(imperium.notes)
+                                    .font(.body)
+                                    .padding(.top, 4)
+                            } else {
+                                Text("No notes provided")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .italic()
                             }
                         }
                     }
