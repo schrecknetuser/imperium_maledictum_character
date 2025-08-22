@@ -123,7 +123,7 @@ struct OverviewTab: View {
                                     .foregroundColor(.secondary)
                                 TextField("Short-term Goal", text: shortTermGoalBinding, axis: .vertical)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .lineLimit(2...4)
+                                    .lineLimit(2, reservesSpace: false)
                             }
                             
                             let longTermGoalBinding = Binding<String>(
@@ -136,7 +136,7 @@ struct OverviewTab: View {
                                     .foregroundColor(.secondary)
                                 TextField("Long-term Goal", text: longTermGoalBinding, axis: .vertical)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .lineLimit(2...4)
+                                    .lineLimit(2, reservesSpace: false)
                             }
                             
                             let descriptionBinding = Binding<String>(
@@ -149,7 +149,7 @@ struct OverviewTab: View {
                                     .foregroundColor(.secondary)
                                 TextField("Character Description", text: descriptionBinding, axis: .vertical)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .lineLimit(3...6)
+                                    .lineLimit(3, reservesSpace: false)
                             }
                         } else {
                             if !imperium.shortTermGoal.isEmpty {

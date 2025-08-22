@@ -216,7 +216,7 @@ struct BasicInfoStage: View {
                         .font(.headline)
                     TextField("What does your character want to achieve soon? (optional)", text: $character.shortTermGoal, axis: .vertical)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .lineLimit(2...4)
+                        .lineLimit(2, reservesSpace: false)
                 }
                 
                 VStack(alignment: .leading, spacing: 12) {
@@ -224,7 +224,7 @@ struct BasicInfoStage: View {
                         .font(.headline)
                     TextField("What are your character's ultimate aspirations? (optional)", text: $character.longTermGoal, axis: .vertical)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .lineLimit(2...4)
+                        .lineLimit(2, reservesSpace: false)
                 }
                 
                 VStack(alignment: .leading, spacing: 12) {
@@ -232,7 +232,7 @@ struct BasicInfoStage: View {
                         .font(.headline)
                     TextField("Describe your character's appearance, personality, background... (optional)", text: $character.characterDescription, axis: .vertical)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .lineLimit(3...6)
+                        .lineLimit(3, reservesSpace: false)
                 }
                 
                 VStack(alignment: .leading, spacing: 12) {
