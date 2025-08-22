@@ -121,9 +121,25 @@ struct OverviewTab: View {
                                 Text("Short-term Goal")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                TextField("Short-term Goal", text: shortTermGoalBinding, axis: .vertical)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .lineLimit(2...4)
+                                TextEditor(text: shortTermGoalBinding)
+                                    .frame(minHeight: 60)
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color(.systemGray4), lineWidth: 1)
+                                    )
+                                    .overlay(
+                                        Group {
+                                            if imperium.shortTermGoal.isEmpty {
+                                                Text("Short-term Goal")
+                                                    .foregroundColor(.secondary)
+                                                    .allowsHitTesting(false)
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 8)
+                                            }
+                                        }, alignment: .topLeading
+                                    )
                             }
                             
                             let longTermGoalBinding = Binding<String>(
@@ -134,9 +150,25 @@ struct OverviewTab: View {
                                 Text("Long-term Goal")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                TextField("Long-term Goal", text: longTermGoalBinding, axis: .vertical)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .lineLimit(2...4)
+                                TextEditor(text: longTermGoalBinding)
+                                    .frame(minHeight: 60)
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color(.systemGray4), lineWidth: 1)
+                                    )
+                                    .overlay(
+                                        Group {
+                                            if imperium.longTermGoal.isEmpty {
+                                                Text("Long-term Goal")
+                                                    .foregroundColor(.secondary)
+                                                    .allowsHitTesting(false)
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 8)
+                                            }
+                                        }, alignment: .topLeading
+                                    )
                             }
                             
                             let descriptionBinding = Binding<String>(
@@ -147,9 +179,25 @@ struct OverviewTab: View {
                                 Text("Description")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                TextField("Character Description", text: descriptionBinding, axis: .vertical)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .lineLimit(3...6)
+                                TextEditor(text: descriptionBinding)
+                                    .frame(minHeight: 80)
+                                    .background(Color(.systemGray6))
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color(.systemGray4), lineWidth: 1)
+                                    )
+                                    .overlay(
+                                        Group {
+                                            if imperium.characterDescription.isEmpty {
+                                                Text("Character Description")
+                                                    .foregroundColor(.secondary)
+                                                    .allowsHitTesting(false)
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 8)
+                                            }
+                                        }, alignment: .topLeading
+                                    )
                             }
                         } else {
                             if !imperium.shortTermGoal.isEmpty {
@@ -317,6 +365,54 @@ struct OverviewTab: View {
                                 }
                                 
                                 Spacer()
+                            }
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
+                
+                // Notes Section
+                if let imperium = imperiumCharacter {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Notes")
+                            .font(.headline)
+                        
+                        if isEditMode {
+                            let notesBinding = Binding<String>(
+                                get: { imperium.notes },
+                                set: { imperium.notes = $0 }
+                            )
+                            TextEditor(text: notesBinding)
+                                .frame(minHeight: 80)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                )
+                                .overlay(
+                                    Group {
+                                        if imperium.notes.isEmpty {
+                                            Text("Additional notes about your character")
+                                                .foregroundColor(.secondary)
+                                                .allowsHitTesting(false)
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 8)
+                                        }
+                                    }, alignment: .topLeading
+                                )
+                        } else {
+                            if !imperium.notes.isEmpty {
+                                Text(imperium.notes)
+                                    .font(.body)
+                                    .padding(.top, 4)
+                            } else {
+                                Text("No notes provided")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .italic()
                             }
                         }
                     }
