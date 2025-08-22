@@ -837,13 +837,13 @@ class ImperiumCharacter: BaseCharacter {
             changes.append("background \(originalCharacter.background)→\(background)")
         }
         if shortTermGoal != originalCharacter.shortTermGoal {
-            changes.append("short term goal updated")
+            changes.append("short-term goals: \(shortTermGoal)")
         }
         if longTermGoal != originalCharacter.longTermGoal {
-            changes.append("long term goal updated")
+            changes.append("long-term goals: \(longTermGoal)")
         }
         if characterDescription != originalCharacter.characterDescription {
-            changes.append("character description updated")
+            changes.append("character description: \(characterDescription)")
         }
         if notes != originalCharacter.notes {
             changes.append("notes: \(notes)")
