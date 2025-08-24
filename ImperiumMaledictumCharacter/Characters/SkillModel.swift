@@ -103,4 +103,28 @@ struct SkillSpecializations {
     static func getSpecializations(for skill: String) -> [String] {
         return specializations[skill] ?? []
     }
+    
+    static func findSkillForSpecialization(_ specializationName: String) -> String {
+        // First try direct lookup
+        for (skillName, specializations) in SkillSpecializations.specializations {
+            if specializations.contains(specializationName) {
+                return skillName
+            }
+        }
+        
+        // If not found, try parsing if it has the format "Name (Skill)"
+        if let parenRange = specializationName.range(of: " ("),
+           specializationName.hasSuffix(")") {
+            let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
+            let skillEnd = specializationName.index(before: specializationName.endIndex)
+            let skillName = String(specializationName[skillStart..<skillEnd])
+            
+            // Validate that this is a real skill
+            if SkillSpecializations.specializations[skillName] != nil {
+                return skillName
+            }
+        }
+        
+        return "Unknown"
+    }
 }

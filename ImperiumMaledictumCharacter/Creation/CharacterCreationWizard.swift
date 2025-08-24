@@ -1595,7 +1595,7 @@ struct RoleStage: View {
                         finalSpecializationAdvances[specialization] = advances
                     } else {
                         // Regular specialization - find its skill and create composite key
-                        let skillName = findSkillForSpecialization(specialization)
+                        let skillName = SkillSpecializations.findSkillForSpecialization(specialization)
                         let compositeKey = ImperiumCharacter.makeSpecializationKey(specialization: specialization, skill: skillName)
                         finalSpecializationAdvances[compositeKey] = advances
                     }
@@ -2080,30 +2080,6 @@ struct CharacterPreviewSheet: View {
         
         return result
     }
-    
-    private func findSkillForSpecialization(_ specializationName: String) -> String {
-        // First try direct lookup
-        for (skillName, specializations) in SkillSpecializations.specializations {
-            if specializations.contains(specializationName) {
-                return skillName
-            }
-        }
-        
-        // If not found, try parsing if it has the format "Name (Skill)"
-        if let parenRange = specializationName.range(of: " ("),
-           specializationName.hasSuffix(")") {
-            let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
-            let skillEnd = specializationName.index(before: specializationName.endIndex)
-            let skillName = String(specializationName[skillStart..<skillEnd])
-            
-            // Validate that this is a real skill
-            if SkillSpecializations.specializations[skillName] != nil {
-                return skillName
-            }
-        }
-        
-        return "Unknown"
-    }
 
     private func getSpecializationsList() -> [SpecializationRowData] {
         var result: [SpecializationRowData] = []
@@ -2114,7 +2090,7 @@ struct CharacterPreviewSheet: View {
             if advances > 0 {
                 // Parse the composite key to get clean specialization name and skill
                 let (cleanSpecializationName, skillName) = ImperiumCharacter.parseSpecializationKey(specializationKey)
-                let finalSkillName = skillName ?? findSkillForSpecialization(cleanSpecializationName)
+                let finalSkillName = skillName ?? SkillSpecializations.findSkillForSpecialization(cleanSpecializationName)
                 
                 // Calculate total value (skill characteristic + specialization advances * 5)
                 let skillCharacteristicMap = [
