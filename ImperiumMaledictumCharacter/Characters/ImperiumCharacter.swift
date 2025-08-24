@@ -347,6 +347,48 @@ class ImperiumCharacter: BaseCharacter {
         }
     }
     
+    // MARK: - Specialization Utility Methods
+    
+    /// Creates a composite key for a specialization that includes the skill name to avoid ambiguity
+    /// For example: "Human (Intuition)" or "Forbidden (Lore)"
+    static func makeSpecializationKey(specialization: String, skill: String) -> String {
+        return "\(specialization) (\(skill))"
+    }
+    
+    /// Parses a composite specialization key to extract the specialization name and skill
+    /// Returns (specializationName, skillName) or (originalKey, nil) if parsing fails
+    static func parseSpecializationKey(_ key: String) -> (specialization: String, skill: String?) {
+        // Check if it has the format "Name (Skill)"
+        if let parenRange = key.range(of: " ("),
+           key.hasSuffix(")") {
+            let specializationName = String(key[..<parenRange.lowerBound])
+            let skillStart = key.index(parenRange.upperBound, offsetBy: 0)
+            let skillEnd = key.index(before: key.endIndex)
+            let skillName = String(key[skillStart..<skillEnd])
+            return (specializationName, skillName)
+        }
+        // Return the original key as specialization name with no skill if parsing fails
+        return (key, nil)
+    }
+    
+    /// Gets the advances for a specific specialization of a specific skill
+    func getSpecializationAdvances(specialization: String, skill: String) -> Int {
+        let key = ImperiumCharacter.makeSpecializationKey(specialization: specialization, skill: skill)
+        return specializationAdvances[key] ?? 0
+    }
+    
+    /// Sets the advances for a specific specialization of a specific skill
+    func setSpecializationAdvances(specialization: String, skill: String, advances: Int) {
+        let key = ImperiumCharacter.makeSpecializationKey(specialization: specialization, skill: skill)
+        var currentAdvances = specializationAdvances
+        if advances <= 0 {
+            currentAdvances.removeValue(forKey: key)
+        } else {
+            currentAdvances[key] = advances
+        }
+        specializationAdvances = currentAdvances
+    }
+    
     var talentNames: [String] {
         get {
             guard let data = talentNamesData.data(using: .utf8),

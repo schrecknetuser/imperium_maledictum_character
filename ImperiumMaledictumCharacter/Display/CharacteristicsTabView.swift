@@ -13,7 +13,7 @@ struct CharacteristicsTab: View {
     @Binding var isEditMode: Bool
     @State private var showingAddSpecializationSheet = false
     @State private var showingDeleteConfirmation = false
-    @State private var specializationToDelete: String = ""
+    @State private var specializationToDelete: (name: String, skill: String) = ("", "")
     @State private var showingUnifiedStatusPopup = false
     @State private var showingChangeHistoryPopup = false
     
@@ -296,7 +296,7 @@ struct CharacteristicsTab: View {
                                     
                                     if isEditMode {
                                         // Editable dropdown for advances
-                                        Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name)) {
+                                        Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name, skill: specialization.skillName)) {
                                             ForEach(0...4, id: \.self) { value in
                                                 Text("\(value)").tag(value)
                                             }
@@ -306,7 +306,7 @@ struct CharacteristicsTab: View {
                                         
                                         // Delete button
                                         Button(action: {
-                                            specializationToDelete = specialization.name
+                                            specializationToDelete = (name: specialization.name, skill: specialization.skillName)
                                             showingDeleteConfirmation = true
                                         }) {
                                             Image(systemName: "trash")
@@ -416,10 +416,10 @@ struct CharacteristicsTab: View {
         .alert("Delete Specialization", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                deleteSpecialization(specializationToDelete)
+                deleteSpecialization(specializationToDelete.name, skill: specializationToDelete.skill)
             }
         } message: {
-            Text("Are you sure you want to delete the specialization '\(specializationToDelete)'? This action cannot be undone.")
+            Text("Are you sure you want to delete the specialization '\(specializationToDelete.name) (\(specializationToDelete.skill))'? This action cannot be undone.")
         }
         }
     }
@@ -483,18 +483,16 @@ struct CharacteristicsTab: View {
         )
     }
     
-    private func getSpecializationAdvanceBinding(for specializationName: String) -> Binding<Int> {
+    private func getSpecializationAdvanceBinding(for specializationName: String, skill skillName: String) -> Binding<Int> {
         return Binding<Int>(
             get: {
                 guard let imperium = imperiumCharacter else { return 0 }
-                return imperium.specializationAdvances[specializationName] ?? 0
+                return imperium.getSpecializationAdvances(specialization: specializationName, skill: skillName)
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
                 let originalSnapshot = store.createSnapshot(of: imperium)
-                var specializationAdvances = imperium.specializationAdvances
-                specializationAdvances[specializationName] = newValue
-                imperium.specializationAdvances = specializationAdvances
+                imperium.setSpecializationAdvances(specialization: specializationName, skill: skillName, advances: newValue)
                 store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
             }
         )
@@ -613,56 +611,48 @@ struct CharacteristicsTab: View {
         if let imperium = imperiumCharacter {
             let specializationAdvances = imperium.specializationAdvances
             
-            // Create reverse mapping from specialization name to skill
-            var specializationToSkillMap: [String: String] = [:]
-            for (skillName, specializations) in SkillSpecializations.specializations {
-                for specialization in specializations {
-                    specializationToSkillMap[specialization] = skillName
-                }
-            }
-            
-            for (specializationName, advances) in specializationAdvances {
-                // Show all specializations that exist in the character's data
-                // Find skill name using improved lookup
-                let skillName = findSkillForSpecialization(specializationName)
+            for (specializationKey, advances) in specializationAdvances {
+                // Parse the composite key to get clean specialization name and skill
+                let (cleanSpecializationName, skillName) = ImperiumCharacter.parseSpecializationKey(specializationKey)
+                let finalSkillName = skillName ?? findSkillForSpecialization(cleanSpecializationName)
                     
-                    // Calculate total value (skill characteristic + specialization advances * 5)
-                    let skillCharacteristicMap = [
-                        "Athletics": "Str",
-                        "Awareness": "Per", 
-                        "Dexterity": "Agi",
-                        "Discipline": "Wil",
-                        "Fortitude": "Tgh",
-                        "Intuition": "Per",
-                        "Linguistics": "Int",
-                        "Logic": "Int",
-                        "Lore": "Int",
-                        "Medicae": "Int",
-                        "Melee": "WS",
-                        "Navigation": "Int",
-                        "Piloting": "Agi",
-                        "Presence": "Wil",
-                        "Psychic Mastery": "Wil",
-                        "Ranged": "BS",
-                        "Rapport": "Fel",
-                        "Reflexes": "Agi",
-                        "Stealth": "Agi",
-                        "Tech": "Int"
-                    ]
-                    
-                    let characteristicAbbrev = skillCharacteristicMap[skillName] ?? "Int"
-                    let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
-                    let skillAdvanceCount = imperium.skillAdvances[skillName] ?? 0
-                    let factionAdvanceCount = imperium.factionSkillAdvances[skillName] ?? 0
-                    let totalSkillValue = characteristicValue + ((skillAdvanceCount + factionAdvanceCount) * 5)
-                    let specializationTotalValue = totalSkillValue + (advances * 5)
-                    
-                    result.append(SpecializationRowData(
-                        name: specializationName,
-                        skillName: skillName,
-                        advances: advances,
-                        totalValue: specializationTotalValue
-                    ))
+                // Calculate total value (skill characteristic + specialization advances * 5)
+                let skillCharacteristicMap = [
+                    "Athletics": "Str",
+                    "Awareness": "Per", 
+                    "Dexterity": "Agi",
+                    "Discipline": "Wil",
+                    "Fortitude": "Tgh",
+                    "Intuition": "Per",
+                    "Linguistics": "Int",
+                    "Logic": "Int",
+                    "Lore": "Int",
+                    "Medicae": "Int",
+                    "Melee": "WS",
+                    "Navigation": "Int",
+                    "Piloting": "Agi",
+                    "Presence": "Wil",
+                    "Psychic Mastery": "Wil",
+                    "Ranged": "BS",
+                    "Rapport": "Fel",
+                    "Reflexes": "Agi",
+                    "Stealth": "Agi",
+                    "Tech": "Int"
+                ]
+                
+                let characteristicAbbrev = skillCharacteristicMap[finalSkillName] ?? "Int"
+                let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
+                let skillAdvanceCount = imperium.skillAdvances[finalSkillName] ?? 0
+                let factionAdvanceCount = imperium.factionSkillAdvances[finalSkillName] ?? 0
+                let totalSkillValue = characteristicValue + ((skillAdvanceCount + factionAdvanceCount) * 5)
+                let specializationTotalValue = totalSkillValue + (advances * 5)
+                
+                result.append(SpecializationRowData(
+                    name: cleanSpecializationName,
+                    skillName: finalSkillName,
+                    advances: advances,
+                    totalValue: specializationTotalValue
+                ))
             }
         }
         
@@ -685,12 +675,10 @@ struct CharacteristicsTab: View {
         }
     }
     
-    private func deleteSpecialization(_ specializationName: String) {
+    private func deleteSpecialization(_ specializationName: String, skill: String) {
         guard let imperium = imperiumCharacter else { return }
         let originalSnapshot = store.createSnapshot(of: imperium)
-        var specializations = imperium.specializationAdvances
-        specializations.removeValue(forKey: specializationName)
-        imperium.specializationAdvances = specializations
+        imperium.setSpecializationAdvances(specialization: specializationName, skill: skill, advances: 0)
         store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
     }
 }
@@ -716,10 +704,9 @@ struct AddSpecializationSheet: View {
             return []
         }
         
-        // Filter out specializations that already exist
-        let currentSpecializations = character.specializationAdvances
+        // Filter out specializations that already exist for this skill
         return skillSpecializations.filter { specialization in
-            currentSpecializations[specialization] == nil
+            character.getSpecializationAdvances(specialization: specialization, skill: selectedSkill) == 0
         }
     }
     
@@ -831,12 +818,13 @@ struct AddSpecializationSheet: View {
     }
     
     private func addSpecialization() {
-        guard !selectedSpecialization.isEmpty else { return }
+        guard !selectedSpecialization.isEmpty, !selectedSkill.isEmpty else { return }
         
         let originalSnapshot = store.createSnapshot(of: character)
-        var specializations = character.specializationAdvances
-        specializations[selectedSpecialization] = initialAdvances
-        character.specializationAdvances = specializations
+        
+        // Use the new method to set specialization advances with composite key
+        character.setSpecializationAdvances(specialization: selectedSpecialization, skill: selectedSkill, advances: initialAdvances)
+        
         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         
         // Reset picker state before dismissing to prevent validation errors
