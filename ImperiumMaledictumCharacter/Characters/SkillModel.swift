@@ -103,4 +103,41 @@ struct SkillSpecializations {
     static func getSpecializations(for skill: String) -> [String] {
         return specializations[skill] ?? []
     }
+    
+    static func findSkillForSpecialization(_ specializationName: String) -> String {
+        var matchingSkills: [String] = []
+        
+        // Find all skills that contain this specialization
+        for (skillName, specializations) in SkillSpecializations.specializations {
+            if specializations.contains(specializationName) {
+                matchingSkills.append(skillName)
+            }
+        }
+        
+        // If not found, try parsing if it has the format "Name (Skill)"
+        if matchingSkills.isEmpty {
+            if let parenRange = specializationName.range(of: " ("),
+               specializationName.hasSuffix(")") {
+                let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
+                let skillEnd = specializationName.index(before: specializationName.endIndex)
+                let skillName = String(specializationName[skillStart..<skillEnd])
+                
+                // Validate that this is a real skill
+                if SkillSpecializations.specializations[skillName] != nil {
+                    return skillName
+                }
+            }
+        }
+        
+        if matchingSkills.isEmpty {
+            return "Unknown"
+        } else if matchingSkills.count == 1 {
+            return matchingSkills[0]
+        } else {
+            // Multiple matches - this is ambiguous!
+            // For ambiguous cases like "Human" or "Forbidden", we cannot reliably determine 
+            // which skill was intended, so we return the first alphabetical match as fallback
+            return matchingSkills.sorted().first ?? "Unknown"
+        }
+    }
 }

@@ -1579,22 +1579,25 @@ struct RoleStage: View {
                 if specialization.hasPrefix("Any (") {
                     // Use custom name if provided
                     if let customName = customSpecializations[specialization], !customName.isEmpty {
-                        // Save specialization without skill name in brackets for clean display
-                        finalSpecializationAdvances[customName] = advances
+                        // Extract skill name from "Any (Skill)" format
+                        let skillName = String(specialization.dropFirst(5).dropLast(1)) // Remove "Any (" and ")"
+                        // Save with composite key format
+                        let compositeKey = ImperiumCharacter.makeSpecializationKey(specialization: customName, skill: skillName)
+                        finalSpecializationAdvances[compositeKey] = advances
                     } else {
                         // Don't save if no custom name provided
                         continue
                     }
                 } else {
-                    // Check if it's a predefined specialization with skill in parentheses like "Forbidden (Linguistics)"
-                    if let parenRange = specialization.range(of: " ("),
-                       specialization.hasSuffix(")") {
-                        // Extract just the specialization name without the skill clarification
-                        let specializationName = String(specialization[..<parenRange.lowerBound])
-                        finalSpecializationAdvances[specializationName] = advances
-                    } else {
-                        // Regular specialization
+                    // Check if it's already in composite format or a regular specialization
+                    if specialization.contains(" (") && specialization.hasSuffix(")") {
+                        // Already in composite format, save as-is
                         finalSpecializationAdvances[specialization] = advances
+                    } else {
+                        // Regular specialization - find its skill and create composite key
+                        let skillName = SkillSpecializations.findSkillForSpecialization(specialization)
+                        let compositeKey = ImperiumCharacter.makeSpecializationKey(specialization: specialization, skill: skillName)
+                        finalSpecializationAdvances[compositeKey] = advances
                     }
                 }
             }
@@ -2077,48 +2080,17 @@ struct CharacterPreviewSheet: View {
         
         return result
     }
-    
-    private func findSkillForSpecialization(_ specializationName: String) -> String {
-        // First try direct lookup
-        for (skillName, specializations) in SkillSpecializations.specializations {
-            if specializations.contains(specializationName) {
-                return skillName
-            }
-        }
-        
-        // If not found, try parsing if it has the format "Name (Skill)"
-        if let parenRange = specializationName.range(of: " ("),
-           specializationName.hasSuffix(")") {
-            let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
-            let skillEnd = specializationName.index(before: specializationName.endIndex)
-            let skillName = String(specializationName[skillStart..<skillEnd])
-            
-            // Validate that this is a real skill
-            if SkillSpecializations.specializations[skillName] != nil {
-                return skillName
-            }
-        }
-        
-        return "Unknown"
-    }
 
     private func getSpecializationsList() -> [SpecializationRowData] {
         var result: [SpecializationRowData] = []
         
         let specializationAdvances = character.specializationAdvances
         
-        // Create reverse mapping from specialization name to skill
-        var specializationToSkillMap: [String: String] = [:]
-        for (skillName, specializations) in SkillSpecializations.specializations {
-            for specialization in specializations {
-                specializationToSkillMap[specialization] = skillName
-            }
-        }
-        
-        for (specializationName, advances) in specializationAdvances {
+        for (specializationKey, advances) in specializationAdvances {
             if advances > 0 {
-                // Find skill name using improved lookup
-                let skillName = findSkillForSpecialization(specializationName)
+                // Parse the composite key to get clean specialization name and skill
+                let (cleanSpecializationName, skillName) = ImperiumCharacter.parseSpecializationKey(specializationKey)
+                let finalSkillName = skillName ?? SkillSpecializations.findSkillForSpecialization(cleanSpecializationName)
                 
                 // Calculate total value (skill characteristic + specialization advances * 5)
                 let skillCharacteristicMap = [
@@ -2144,16 +2116,16 @@ struct CharacterPreviewSheet: View {
                     "Tech": "Int"
                 ]
                 
-                let characteristicAbbrev = skillCharacteristicMap[skillName] ?? "Int"
+                let characteristicAbbrev = skillCharacteristicMap[finalSkillName] ?? "Int"
                 let characteristicValue = getCharacteristicValue(for: characteristicAbbrev)
-                let skillAdvanceCount = character.skillAdvances[skillName] ?? 0
-                let factionAdvanceCount = character.factionSkillAdvances[skillName] ?? 0
+                let skillAdvanceCount = character.skillAdvances[finalSkillName] ?? 0
+                let factionAdvanceCount = character.factionSkillAdvances[finalSkillName] ?? 0
                 let totalSkillValue = characteristicValue + ((skillAdvanceCount + factionAdvanceCount) * 5)
                 let specializationTotalValue = totalSkillValue + (advances * 5)
                 
                 result.append(SpecializationRowData(
-                    name: specializationName,
-                    skillName: skillName,
+                    name: cleanSpecializationName,
+                    skillName: finalSkillName,
                     advances: advances,
                     totalValue: specializationTotalValue
                 ))
