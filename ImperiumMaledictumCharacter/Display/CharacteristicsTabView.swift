@@ -274,11 +274,17 @@ struct CharacteristicsTab: View {
                             Text("Adv.")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 40, alignment: .center)
+                                .frame(width: 50, alignment: .center)
                             Text("Total")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: 35, alignment: .center)
+                                .frame(width: 50, alignment: .center)
+                            
+                            // Space for delete button in edit mode
+                            if isEditMode {
+                                Text("") // Empty header for delete column
+                                    .frame(width: 30, alignment: .center)
+                            }
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 8)
@@ -294,6 +300,7 @@ struct CharacteristicsTab: View {
                                         .font(.caption)
                                         .frame(width: 40, alignment: .center)
                                     
+                                    // Advances column - consistent width in both modes
                                     if isEditMode {
                                         // Editable dropdown for advances
                                         Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name, skill: specialization.skillName)) {
@@ -302,9 +309,21 @@ struct CharacteristicsTab: View {
                                             }
                                         }
                                         .pickerStyle(MenuPickerStyle())
-                                        .frame(width: 60)
-                                        
-                                        // Delete button
+                                        .frame(width: 50, alignment: .center)
+                                    } else {
+                                        Text("\(specialization.advances)")
+                                            .font(.caption)
+                                            .frame(width: 50, alignment: .center)
+                                    }
+                                    
+                                    // Total column
+                                    Text("\(specialization.totalValue)")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .frame(width: 50, alignment: .center)
+                                    
+                                    // Delete button column - only in edit mode, fixed width
+                                    if isEditMode {
                                         Button(action: {
                                             specializationToDelete = (name: specialization.name, skill: specialization.skillName)
                                             showingDeleteConfirmation = true
@@ -313,19 +332,10 @@ struct CharacteristicsTab: View {
                                                 .font(.caption)
                                                 .foregroundColor(.red)
                                         }
-                                        .frame(width: 20, height: 25)
+                                        .frame(width: 30, height: 25)
                                         .background(Color(.systemGray5))
                                         .cornerRadius(6)
-                                    } else {
-                                        Text("\(specialization.advances)")
-                                            .font(.caption)
-                                            .frame(width: 40, alignment: .center)
                                     }
-                                    
-                                    Text("\(specialization.totalValue)")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .frame(width: 35, alignment: .center)
                                 }
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
@@ -582,27 +592,40 @@ struct CharacteristicsTab: View {
     }
     
     private func findSkillForSpecialization(_ specializationName: String) -> String {
-        // First try direct lookup
+        var matchingSkills: [String] = []
+        
+        // Find all skills that contain this specialization
         for (skillName, specializations) in SkillSpecializations.specializations {
             if specializations.contains(specializationName) {
-                return skillName
+                matchingSkills.append(skillName)
             }
         }
         
         // If not found, try parsing if it has the format "Name (Skill)"
-        if let parenRange = specializationName.range(of: " ("),
-           specializationName.hasSuffix(")") {
-            let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
-            let skillEnd = specializationName.index(before: specializationName.endIndex)
-            let skillName = String(specializationName[skillStart..<skillEnd])
-            
-            // Validate that this is a real skill
-            if SkillSpecializations.specializations[skillName] != nil {
-                return skillName
+        if matchingSkills.isEmpty {
+            if let parenRange = specializationName.range(of: " ("),
+               specializationName.hasSuffix(")") {
+                let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
+                let skillEnd = specializationName.index(before: specializationName.endIndex)
+                let skillName = String(specializationName[skillStart..<skillEnd])
+                
+                // Validate that this is a real skill
+                if SkillSpecializations.specializations[skillName] != nil {
+                    return skillName
+                }
             }
         }
         
-        return "Unknown"
+        if matchingSkills.isEmpty {
+            return "Unknown"
+        } else if matchingSkills.count == 1 {
+            return matchingSkills[0]
+        } else {
+            // Multiple matches - this is ambiguous!
+            // For legacy data without composite keys, we cannot reliably determine 
+            // which skill was intended. Return the first alphabetical match as fallback.
+            return matchingSkills.sorted().first ?? "Unknown"
+        }
     }
 
     private func getSpecializationsList() -> [SpecializationRowData] {
@@ -648,7 +671,7 @@ struct CharacteristicsTab: View {
                 let specializationTotalValue = totalSkillValue + (advances * 5)
                 
                 result.append(SpecializationRowData(
-                    name: cleanSpecializationName,
+                    name: "\(cleanSpecializationName) (\(finalSkillName))", // Show skill context in name for clarity
                     skillName: finalSkillName,
                     advances: advances,
                     totalValue: specializationTotalValue
