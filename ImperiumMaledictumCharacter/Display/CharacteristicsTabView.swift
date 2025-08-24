@@ -632,6 +632,9 @@ struct CharacteristicsTab: View {
         var result: [SpecializationRowData] = []
         
         if let imperium = imperiumCharacter {
+            // Migrate legacy specializations before displaying
+            imperium.migrateLegacySpecializations()
+            
             let specializationAdvances = imperium.specializationAdvances
             
             for (specializationKey, advances) in specializationAdvances {
@@ -671,7 +674,7 @@ struct CharacteristicsTab: View {
                 let specializationTotalValue = totalSkillValue + (advances * 5)
                 
                 result.append(SpecializationRowData(
-                    name: "\(cleanSpecializationName) (\(finalSkillName))", // Show skill context in name for clarity
+                    name: cleanSpecializationName,
                     skillName: finalSkillName,
                     advances: advances,
                     totalValue: specializationTotalValue
@@ -844,6 +847,9 @@ struct AddSpecializationSheet: View {
         guard !selectedSpecialization.isEmpty, !selectedSkill.isEmpty else { return }
         
         let originalSnapshot = store.createSnapshot(of: character)
+        
+        // Migrate any legacy data first to prevent conflicts
+        character.migrateLegacySpecializations()
         
         // Use the new method to set specialization advances with composite key
         character.setSpecializationAdvances(specialization: selectedSpecialization, skill: selectedSkill, advances: initialAdvances)

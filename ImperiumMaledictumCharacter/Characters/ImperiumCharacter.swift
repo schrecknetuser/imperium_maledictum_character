@@ -389,6 +389,40 @@ class ImperiumCharacter: BaseCharacter {
         specializationAdvances = currentAdvances
     }
     
+    /// Migrates legacy specialization keys to composite format
+    /// This helps resolve data conflicts where specializations were stored without skill context
+    func migrateLegacySpecializations() {
+        var currentAdvances = specializationAdvances
+        var hasChanges = false
+        
+        // Find legacy keys (those without " (" in them)
+        let legacyKeys = currentAdvances.keys.filter { key in
+            !key.contains(" (") || !key.hasSuffix(")")
+        }
+        
+        for legacyKey in legacyKeys {
+            let advances = currentAdvances[legacyKey] ?? 0
+            if advances > 0 {
+                // Find the appropriate skill for this specialization
+                let skillName = SkillSpecializations.findSkillForSpecialization(legacyKey)
+                if skillName != "Unknown" {
+                    let newKey = ImperiumCharacter.makeSpecializationKey(specialization: legacyKey, skill: skillName)
+                    
+                    // Only migrate if the new key doesn't already exist
+                    if currentAdvances[newKey] == nil {
+                        currentAdvances[newKey] = advances
+                        currentAdvances.removeValue(forKey: legacyKey)
+                        hasChanges = true
+                    }
+                }
+            }
+        }
+        
+        if hasChanges {
+            specializationAdvances = currentAdvances
+        }
+    }
+    
     var talentNames: [String] {
         get {
             guard let data = talentNamesData.data(using: .utf8),
