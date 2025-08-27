@@ -431,6 +431,12 @@ struct CharacteristicsTab: View {
         } message: {
             Text("Are you sure you want to delete the specialization '\(specializationToDelete.name) (\(specializationToDelete.skill))'? This action cannot be undone.")
         }
+        .onAppear {
+            // Migrate legacy specializations when the view appears
+            if let imperium = imperiumCharacter {
+                imperium.migrateLegacySpecializations()
+            }
+        }
         }
     }
     
@@ -591,56 +597,18 @@ struct CharacteristicsTab: View {
         return result
     }
     
-    private func findSkillForSpecialization(_ specializationName: String) -> String {
-        var matchingSkills: [String] = []
-        
-        // Find all skills that contain this specialization
-        for (skillName, specializations) in SkillSpecializations.specializations {
-            if specializations.contains(specializationName) {
-                matchingSkills.append(skillName)
-            }
-        }
-        
-        // If not found, try parsing if it has the format "Name (Skill)"
-        if matchingSkills.isEmpty {
-            if let parenRange = specializationName.range(of: " ("),
-               specializationName.hasSuffix(")") {
-                let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
-                let skillEnd = specializationName.index(before: specializationName.endIndex)
-                let skillName = String(specializationName[skillStart..<skillEnd])
-                
-                // Validate that this is a real skill
-                if SkillSpecializations.specializations[skillName] != nil {
-                    return skillName
-                }
-            }
-        }
-        
-        if matchingSkills.isEmpty {
-            return "Unknown"
-        } else if matchingSkills.count == 1 {
-            return matchingSkills[0]
-        } else {
-            // Multiple matches - this is ambiguous!
-            // For legacy data without composite keys, we cannot reliably determine 
-            // which skill was intended. Return the first alphabetical match as fallback.
-            return matchingSkills.sorted().first ?? "Unknown"
-        }
-    }
+
 
     private func getSpecializationsList() -> [SpecializationRowData] {
         var result: [SpecializationRowData] = []
         
         if let imperium = imperiumCharacter {
-            // Migrate legacy specializations before displaying
-            imperium.migrateLegacySpecializations()
-            
             let specializationAdvances = imperium.specializationAdvances
             
             for (specializationKey, advances) in specializationAdvances {
                 // Parse the composite key to get clean specialization name and skill
                 let (cleanSpecializationName, skillName) = ImperiumCharacter.parseSpecializationKey(specializationKey)
-                let finalSkillName = skillName ?? findSkillForSpecialization(cleanSpecializationName)
+                let finalSkillName = skillName ?? SkillSpecializations.findSkillForSpecialization(cleanSpecializationName)
                     
                 // Calculate total value (skill characteristic + specialization advances * 5)
                 let skillCharacteristicMap = [
