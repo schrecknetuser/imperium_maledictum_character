@@ -1573,7 +1573,6 @@ struct RoleStage: View {
         character.skillAdvances = currentAdvances
         
         // Save specialization advances with custom names for "Any" specializations
-        var finalSpecializationAdvances = character.specializationAdvances
         for (specialization, advances) in specializationAdvancesDistribution {
             if advances > 0 {
                 if specialization.hasPrefix("Any (") {
@@ -1581,28 +1580,25 @@ struct RoleStage: View {
                     if let customName = customSpecializations[specialization], !customName.isEmpty {
                         // Extract skill name from "Any (Skill)" format
                         let skillName = String(specialization.dropFirst(5).dropLast(1)) // Remove "Any (" and ")"
-                        // Save with composite key format
-                        let compositeKey = ImperiumCharacter.makeSpecializationKey(specialization: customName, skill: skillName)
-                        finalSpecializationAdvances[compositeKey] = advances
-                    } else {
-                        // Don't save if no custom name provided
-                        continue
+                        // Save with new system
+                        character.setSpecializationAdvances(specialization: customName, skill: skillName, advances: advances)
                     }
+                    // Don't save if no custom name provided
                 } else {
                     // Check if it's already in composite format or a regular specialization
                     if specialization.contains(" (") && specialization.hasSuffix(")") {
-                        // Already in composite format, save as-is
-                        finalSpecializationAdvances[specialization] = advances
+                        // Parse composite format
+                        let (specName, skillName) = ImperiumCharacter.parseSpecializationKey(specialization)
+                        let finalSkillName = skillName ?? SkillSpecializations.findSkillForSpecialization(specName)
+                        character.setSpecializationAdvances(specialization: specName, skill: finalSkillName, advances: advances)
                     } else {
-                        // Regular specialization - find its skill and create composite key
+                        // Regular specialization - find its skill
                         let skillName = SkillSpecializations.findSkillForSpecialization(specialization)
-                        let compositeKey = ImperiumCharacter.makeSpecializationKey(specialization: specialization, skill: skillName)
-                        finalSpecializationAdvances[compositeKey] = advances
+                        character.setSpecializationAdvances(specialization: specialization, skill: skillName, advances: advances)
                     }
                 }
             }
         }
-        character.specializationAdvances = finalSpecializationAdvances
         
         // Save selected talents (replace to avoid duplication)
         var allTalents = character.talentNames

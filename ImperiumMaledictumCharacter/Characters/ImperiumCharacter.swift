@@ -44,7 +44,8 @@ class ImperiumCharacter: BaseCharacter {
     var characteristicsData: String = "" // JSON data for characteristics
     var skillsAdvancesData: String = "" // JSON data for skill advances
     var factionSkillAdvancesData: String = "" // JSON data for faction-specific skill advances
-    var specializationAdvancesData: String = "" // JSON data for specialization advances
+    var specializationAdvancesData: String = "" // JSON data for specialization advances - DEPRECATED 
+    var skillSpecializationsData: String = "" // JSON data for skill-based specialization storage: [String: [String: Int]]
     var talentNamesData: String = "" // JSON array of talent names
     var equipmentNamesData: String = "" // JSON array of equipment names - DEPRECATED
     var weaponNamesData: String = "" // JSON array of weapon names - DEPRECATED
@@ -157,7 +158,8 @@ class ImperiumCharacter: BaseCharacter {
         characteristicsData = ""
         skillsAdvancesData = ""
         factionSkillAdvancesData = ""
-        specializationAdvancesData = ""
+        specializationAdvancesData = "" // Keep for legacy compatibility
+        skillSpecializationsData = ""
         talentNamesData = ""
         equipmentNamesData = ""
         weaponNamesData = ""
@@ -331,6 +333,94 @@ class ImperiumCharacter: BaseCharacter {
         }
     }
     
+    // MARK: - New Skill-Based Specialization System
+    
+    /// New skill-based specialization storage: [SkillName: [SpecializationName: Advances]]
+    /// A value of 0 means the specialization should not be displayed
+    var skillSpecializations: [String: [String: Int]] {
+        get {
+            guard let data = skillSpecializationsData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String: [String: Int]].self, from: data) else {
+                return [:]
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                skillSpecializationsData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+        }
+    }
+    
+    /// Gets the advances for a specific specialization of a specific skill
+    func getSpecializationAdvances(specialization: String, skill: String) -> Int {
+        return skillSpecializations[skill]?[specialization] ?? 0
+    }
+    
+    /// Sets the advances for a specific specialization of a specific skill
+    /// If advances is 0, the specialization is hidden but not removed
+    func setSpecializationAdvances(specialization: String, skill: String, advances: Int) {
+        var specializations = skillSpecializations
+        
+        if specializations[skill] == nil {
+            specializations[skill] = [:]
+        }
+        
+        specializations[skill]?[specialization] = advances
+        skillSpecializations = specializations
+    }
+    
+    /// Deletes a specialization by setting its advances to 0
+    func deleteSpecialization(specialization: String, skill: String) {
+        setSpecializationAdvances(specialization: specialization, skill: skill, advances: 0)
+    }
+    
+    /// Gets all visible specializations (advances > 0) for display
+    func getVisibleSpecializations() -> [(name: String, skill: String, advances: Int)] {
+        var result: [(name: String, skill: String, advances: Int)] = []
+        
+        for (skillName, specializations) in skillSpecializations {
+            for (specializationName, advances) in specializations {
+                if advances > 0 {
+                    result.append((name: specializationName, skill: skillName, advances: advances))
+                }
+            }
+        }
+        
+        return result.sorted { $0.name < $1.name }
+    }
+    
+    /// Migrates from old composite key system to new skill-based system
+    func migrateFromLegacySpecializations() {
+        // Only migrate if new system is empty and old system has data
+        guard skillSpecializationsData.isEmpty || skillSpecializations.isEmpty,
+              !specializationAdvancesData.isEmpty else {
+            return
+        }
+        
+        let legacyAdvances = specializationAdvances
+        var newSpecializations: [String: [String: Int]] = [:]
+        
+        for (key, advances) in legacyAdvances {
+            if advances > 0 {
+                let parsed = ImperiumCharacter.parseSpecializationKey(key)
+                let specializationName = parsed.specialization
+                let skillName = parsed.skill ?? SkillSpecializations.findSkillForSpecialization(specializationName)
+                
+                if skillName != "Unknown" {
+                    if newSpecializations[skillName] == nil {
+                        newSpecializations[skillName] = [:]
+                    }
+                    newSpecializations[skillName]?[specializationName] = advances
+                }
+            }
+        }
+        
+        skillSpecializations = newSpecializations
+    }
+    
+    // MARK: - Legacy Compatibility (Keep for backwards compatibility)
+    
     var specializationAdvances: [String: Int] {
         get {
             guard let data = specializationAdvancesData.data(using: .utf8),
@@ -343,11 +433,8 @@ class ImperiumCharacter: BaseCharacter {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 specializationAdvancesData = String(data: encoded, encoding: .utf8) ?? ""
             }
-            // Note: lastModified is handled by the change tracking system
         }
     }
-    
-    // MARK: - Specialization Utility Methods
     
     /// Creates a composite key for a specialization that includes the skill name to avoid ambiguity
     /// For example: "Human (Intuition)" or "Forbidden (Lore)"
@@ -369,58 +456,6 @@ class ImperiumCharacter: BaseCharacter {
         }
         // Return the original key as specialization name with no skill if parsing fails
         return (key, nil)
-    }
-    
-    /// Gets the advances for a specific specialization of a specific skill
-    func getSpecializationAdvances(specialization: String, skill: String) -> Int {
-        let key = ImperiumCharacter.makeSpecializationKey(specialization: specialization, skill: skill)
-        return specializationAdvances[key] ?? 0
-    }
-    
-    /// Sets the advances for a specific specialization of a specific skill
-    func setSpecializationAdvances(specialization: String, skill: String, advances: Int) {
-        let key = ImperiumCharacter.makeSpecializationKey(specialization: specialization, skill: skill)
-        var currentAdvances = specializationAdvances
-        if advances <= 0 {
-            currentAdvances.removeValue(forKey: key)
-        } else {
-            currentAdvances[key] = advances
-        }
-        specializationAdvances = currentAdvances
-    }
-    
-    /// Migrates legacy specialization keys to composite format
-    /// This helps resolve data conflicts where specializations were stored without skill context
-    func migrateLegacySpecializations() {
-        var currentAdvances = specializationAdvances
-        var hasChanges = false
-        
-        // Find legacy keys (those without " (" in them)
-        let legacyKeys = currentAdvances.keys.filter { key in
-            !key.contains(" (") || !key.hasSuffix(")")
-        }
-        
-        for legacyKey in legacyKeys {
-            let advances = currentAdvances[legacyKey] ?? 0
-            if advances > 0 {
-                // Find the appropriate skill for this specialization
-                let skillName = SkillSpecializations.findSkillForSpecialization(legacyKey)
-                if skillName != "Unknown" {
-                    let newKey = ImperiumCharacter.makeSpecializationKey(specialization: legacyKey, skill: skillName)
-                    
-                    // Only migrate if the new key doesn't already exist
-                    if currentAdvances[newKey] == nil {
-                        currentAdvances[newKey] = advances
-                        currentAdvances.removeValue(forKey: legacyKey)
-                        hasChanges = true
-                    }
-                }
-            }
-        }
-        
-        if hasChanges {
-            specializationAdvances = currentAdvances
-        }
     }
     
     var talentNames: [String] {
@@ -1116,24 +1151,56 @@ class ImperiumCharacter: BaseCharacter {
     }
     
     private func getDetailedSpecializationAdvancesChanges(originalCharacter: ImperiumCharacter) -> [String] {
-        guard specializationAdvancesData != originalCharacter.specializationAdvancesData else { return [] }
+        // Check both old and new systems for changes
+        let hasLegacyChanges = specializationAdvancesData != originalCharacter.specializationAdvancesData
+        let hasNewChanges = skillSpecializationsData != originalCharacter.skillSpecializationsData
+        
+        guard hasLegacyChanges || hasNewChanges else { return [] }
         
         var changes: [String] = []
-        let currentAdvances = specializationAdvances
-        let originalAdvances = originalCharacter.specializationAdvances
         
-        // Find added/changed specialization advances
-        for (specialization, currentValue) in currentAdvances {
-            let originalValue = originalAdvances[specialization] ?? 0
-            if currentValue != originalValue {
-                changes.append("specialization \(specialization) \(originalValue)→\(currentValue)")
+        // Use new system if it has data, otherwise fall back to legacy
+        if !skillSpecializationsData.isEmpty || !originalCharacter.skillSpecializationsData.isEmpty {
+            let currentSpecs = skillSpecializations
+            let originalSpecs = originalCharacter.skillSpecializations
+            
+            // Find added/changed specializations
+            for (skill, specializations) in currentSpecs {
+                for (specName, currentValue) in specializations {
+                    let originalValue = originalSpecs[skill]?[specName] ?? 0
+                    if currentValue != originalValue && currentValue > 0 {
+                        changes.append("specialization \(specName) (\(skill)) \(originalValue)→\(currentValue)")
+                    }
+                }
             }
-        }
-        
-        // Find removed specialization advances
-        for (specialization, originalValue) in originalAdvances {
-            if currentAdvances[specialization] == nil {
-                changes.append("specialization \(specialization) removed (\(originalValue)→0)")
+            
+            // Find removed specializations (set to 0)
+            for (skill, originalSpecializations) in originalSpecs {
+                for (specName, originalValue) in originalSpecializations {
+                    let currentValue = currentSpecs[skill]?[specName] ?? 0
+                    if originalValue > 0 && currentValue == 0 {
+                        changes.append("specialization \(specName) (\(skill)) removed (\(originalValue)→0)")
+                    }
+                }
+            }
+        } else {
+            // Fall back to legacy system
+            let currentAdvances = specializationAdvances
+            let originalAdvances = originalCharacter.specializationAdvances
+            
+            // Find added/changed specialization advances
+            for (specialization, currentValue) in currentAdvances {
+                let originalValue = originalAdvances[specialization] ?? 0
+                if currentValue != originalValue {
+                    changes.append("specialization \(specialization) \(originalValue)→\(currentValue)")
+                }
+            }
+            
+            // Find removed specialization advances
+            for (specialization, originalValue) in originalAdvances {
+                if currentAdvances[specialization] == nil {
+                    changes.append("specialization \(specialization) removed (\(originalValue)→0)")
+                }
             }
         }
         

@@ -432,10 +432,8 @@ struct CharacteristicsTab: View {
             Text("Are you sure you want to delete the specialization '\(specializationToDelete.name) (\(specializationToDelete.skill))'? This action cannot be undone.")
         }
         .onAppear {
-            // Migrate legacy specializations when the view appears
-            if let imperium = imperiumCharacter {
-                imperium.migrateLegacySpecializations()
-            }
+            // Migration is handled automatically in getSpecializationsList()
+            // No need for explicit migration calls that cause string indexing errors
         }
         }
     }
@@ -603,13 +601,13 @@ struct CharacteristicsTab: View {
         var result: [SpecializationRowData] = []
         
         if let imperium = imperiumCharacter {
-            let specializationAdvances = imperium.specializationAdvances
+            // Migrate legacy data if needed
+            imperium.migrateFromLegacySpecializations()
             
-            for (specializationKey, advances) in specializationAdvances {
-                // Parse the composite key to get clean specialization name and skill
-                let (cleanSpecializationName, skillName) = ImperiumCharacter.parseSpecializationKey(specializationKey)
-                let finalSkillName = skillName ?? SkillSpecializations.findSkillForSpecialization(cleanSpecializationName)
-                    
+            // Get all visible specializations using new system
+            let visibleSpecs = imperium.getVisibleSpecializations()
+            
+            for spec in visibleSpecs {
                 // Calculate total value (skill characteristic + specialization advances * 5)
                 let skillCharacteristicMap = [
                     "Athletics": "Str",
@@ -634,17 +632,17 @@ struct CharacteristicsTab: View {
                     "Tech": "Int"
                 ]
                 
-                let characteristicAbbrev = skillCharacteristicMap[finalSkillName] ?? "Int"
+                let characteristicAbbrev = skillCharacteristicMap[spec.skill] ?? "Int"
                 let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
-                let skillAdvanceCount = imperium.skillAdvances[finalSkillName] ?? 0
-                let factionAdvanceCount = imperium.factionSkillAdvances[finalSkillName] ?? 0
+                let skillAdvanceCount = imperium.skillAdvances[spec.skill] ?? 0
+                let factionAdvanceCount = imperium.factionSkillAdvances[spec.skill] ?? 0
                 let totalSkillValue = characteristicValue + ((skillAdvanceCount + factionAdvanceCount) * 5)
-                let specializationTotalValue = totalSkillValue + (advances * 5)
+                let specializationTotalValue = totalSkillValue + (spec.advances * 5)
                 
                 result.append(SpecializationRowData(
-                    name: cleanSpecializationName,
-                    skillName: finalSkillName,
-                    advances: advances,
+                    name: spec.name,
+                    skillName: spec.skill,
+                    advances: spec.advances,
                     totalValue: specializationTotalValue
                 ))
             }
@@ -672,7 +670,10 @@ struct CharacteristicsTab: View {
     private func deleteSpecialization(_ specializationName: String, skill: String) {
         guard let imperium = imperiumCharacter else { return }
         let originalSnapshot = store.createSnapshot(of: imperium)
-        imperium.setSpecializationAdvances(specialization: specializationName, skill: skill, advances: 0)
+        
+        // Use the new delete method that sets value to 0
+        imperium.deleteSpecialization(specialization: specializationName, skill: skill)
+        
         store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
     }
 }
@@ -816,10 +817,7 @@ struct AddSpecializationSheet: View {
         
         let originalSnapshot = store.createSnapshot(of: character)
         
-        // Migrate any legacy data first to prevent conflicts
-        character.migrateLegacySpecializations()
-        
-        // Use the new method to set specialization advances with composite key
+        // Use the new system to set specialization advances 
         character.setSpecializationAdvances(specialization: selectedSpecialization, skill: selectedSkill, advances: initialAdvances)
         
         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
