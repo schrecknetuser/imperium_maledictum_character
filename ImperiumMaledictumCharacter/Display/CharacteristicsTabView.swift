@@ -290,7 +290,8 @@ struct CharacteristicsTab: View {
                         .padding(.vertical, 8)
                         .background(Color(.systemGray5))
                         
-                        ForEach(Array(getSpecializationsList().enumerated()), id: \.element.name) { index, specialization in
+                        let specializationsList = getSpecializationsList()
+                        ForEach(Array(specializationsList.enumerated()), id: \.element.name) { index, specialization in
                             VStack(spacing: 0) {
                                 HStack {
                                     Text(specialization.name)
@@ -340,7 +341,7 @@ struct CharacteristicsTab: View {
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
                                 
-                                if index < getSpecializationsList().count - 1 {
+                                if index < specializationsList.count - 1 {
                                     Divider()
                                         .padding(.horizontal)
                                 }
