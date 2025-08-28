@@ -339,15 +339,20 @@ class ImperiumCharacter: BaseCharacter {
     /// A value of 0 means the specialization should not be displayed
     var skillSpecializations: [String: [String: Int]] {
         get {
+            print("DEBUG: skillSpecializations getter - skillSpecializationsData: '\(skillSpecializationsData)'")
             guard let data = skillSpecializationsData.data(using: .utf8),
                   let decoded = try? JSONDecoder().decode([String: [String: Int]].self, from: data) else {
+                print("DEBUG: skillSpecializations getter - failed to decode, returning empty dict")
                 return [:]
             }
+            print("DEBUG: skillSpecializations getter - decoded: \(decoded)")
             return decoded
         }
         set {
+            print("DEBUG: skillSpecializations setter - setting value: \(newValue)")
             if let encoded = try? JSONEncoder().encode(newValue) {
                 skillSpecializationsData = String(data: encoded, encoding: .utf8) ?? ""
+                print("DEBUG: skillSpecializations setter - encoded to: '\(skillSpecializationsData)'")
             }
         }
     }
@@ -409,30 +414,42 @@ class ImperiumCharacter: BaseCharacter {
     /// Migrates from old composite key system to new skill-based system
     func migrateFromLegacySpecializations() {
         // Only migrate if new system is empty and old system has data
-        guard skillSpecializationsData.isEmpty || skillSpecializations.isEmpty,
+        guard (skillSpecializationsData.isEmpty || skillSpecializations.isEmpty) &&
               !specializationAdvancesData.isEmpty else {
+            print("DEBUG: Migration skipped - skillSpecializationsData.isEmpty: \(skillSpecializationsData.isEmpty), skillSpecializations.isEmpty: \(skillSpecializations.isEmpty), specializationAdvancesData.isEmpty: \(specializationAdvancesData.isEmpty)")
             return
         }
         
+        print("DEBUG: Starting migration from legacy specializations")
         let legacyAdvances = specializationAdvances
         var newSpecializations: [String: [String: Int]] = [:]
         
+        print("DEBUG: Legacy advances: \(legacyAdvances)")
+        
         for (key, advances) in legacyAdvances {
+            print("DEBUG: Processing legacy key: '\(key)' with advances: \(advances)")
             if advances > 0 {
                 let parsed = ImperiumCharacter.parseSpecializationKey(key)
                 let specializationName = parsed.specialization
                 let skillName = parsed.skill ?? SkillSpecializations.findSkillForSpecialization(specializationName)
+                
+                print("DEBUG: Parsed - specialization: '\(specializationName)', skill: '\(skillName)'")
                 
                 if skillName != "Unknown" {
                     if newSpecializations[skillName] == nil {
                         newSpecializations[skillName] = [:]
                     }
                     newSpecializations[skillName]?[specializationName] = advances
+                    print("DEBUG: Added to newSpecializations - \(skillName): \(specializationName) = \(advances)")
+                } else {
+                    print("DEBUG: Skipped specialization with unknown skill: \(specializationName)")
                 }
             }
         }
         
+        print("DEBUG: Migration complete, newSpecializations: \(newSpecializations)")
         skillSpecializations = newSpecializations
+        print("DEBUG: skillSpecializations set to: \(skillSpecializations)")
     }
     
     // MARK: - Legacy Compatibility (Keep for backwards compatibility)
