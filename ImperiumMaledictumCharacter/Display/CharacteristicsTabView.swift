@@ -468,6 +468,8 @@ struct CharacteristicsTab: View {
                     characteristics[characteristicName] = characteristic
                     imperium.characteristics = characteristics
                     store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                    // Refresh specializations list since characteristic values affect specialization totals
+                    refreshSpecializationsList()
                 }
             }
         )
@@ -489,6 +491,8 @@ struct CharacteristicsTab: View {
                     characteristics[characteristicName] = characteristic
                     imperium.characteristics = characteristics
                     store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                    // Refresh specializations list since characteristic values affect specialization totals
+                    refreshSpecializationsList()
                 }
             }
         )
@@ -507,6 +511,8 @@ struct CharacteristicsTab: View {
                 skillAdvances[skillName] = newValue
                 imperium.skillAdvances = skillAdvances
                 store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                // Refresh specializations list since skill advances affect specialization totals
+                refreshSpecializationsList()
             }
         )
     }
