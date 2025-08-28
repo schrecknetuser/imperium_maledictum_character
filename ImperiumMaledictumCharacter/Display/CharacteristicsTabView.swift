@@ -31,17 +31,10 @@ struct CharacteristicsTab: View {
         )
     }
     
-    @State private var cachedSpecializationsList: [SpecializationRowData] = []
-    @State private var lastDataUpdate: String = ""
-    
+
     var specializationsList: [SpecializationRowData] {
-        // Cache the result to prevent recalculation on each view update
-        let currentData = imperiumCharacter?.skillSpecializationsData ?? ""
-        if cachedSpecializationsList.isEmpty || currentData != lastDataUpdate {
-            cachedSpecializationsList = getSpecializationsList()
-            lastDataUpdate = currentData
-        }
-        return cachedSpecializationsList
+        // Always get fresh data - let SwiftUI handle the caching
+        return getSpecializationsList()
     }
     
     var body: some View {
@@ -447,9 +440,6 @@ struct CharacteristicsTab: View {
         .onAppear {
             // Migrate legacy data if needed when view appears
             imperiumCharacter?.migrateFromLegacySpecializations()
-            // Force refresh of cached list
-            cachedSpecializationsList = []
-            lastDataUpdate = ""
         }
         }
     }
@@ -619,8 +609,11 @@ struct CharacteristicsTab: View {
         if let imperium = imperiumCharacter {
             // Get all visible specializations using new system
             let visibleSpecs = imperium.getVisibleSpecializations()
+            print("DEBUG: getSpecializationsList - Found \(visibleSpecs.count) visible specializations")
+            print("DEBUG: skillSpecializationsData = '\(imperium.skillSpecializationsData)'")
             
             for spec in visibleSpecs {
+                print("DEBUG: Processing specialization: \(spec.name) for skill: \(spec.skill) with advances: \(spec.advances)")
                 // Calculate total value (skill characteristic + specialization advances * 5)
                 let skillCharacteristicMap = [
                     "Athletics": "Str",
@@ -659,8 +652,11 @@ struct CharacteristicsTab: View {
                     totalValue: specializationTotalValue
                 ))
             }
+        } else {
+            print("DEBUG: imperiumCharacter is nil")
         }
         
+        print("DEBUG: getSpecializationsList returning \(result.count) items")
         return result.sorted { $0.name < $1.name }
     }
     

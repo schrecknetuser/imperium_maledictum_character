@@ -379,21 +379,31 @@ class ImperiumCharacter: BaseCharacter {
     func getVisibleSpecializations() -> [(name: String, skill: String, advances: Int)] {
         var result: [(name: String, skill: String, advances: Int)] = []
         
+        print("DEBUG: getVisibleSpecializations - skillSpecializations = \(skillSpecializations)")
+        
         for (skillName, specializations) in skillSpecializations {
+            print("DEBUG: Processing skill: \(skillName) with specializations: \(specializations)")
             for (specializationName, advances) in specializations {
+                print("DEBUG: Specialization: \(specializationName), advances: \(advances)")
                 if advances > 0 {
                     result.append((name: specializationName, skill: skillName, advances: advances))
+                    print("DEBUG: Added specialization: \(specializationName) for skill: \(skillName)")
+                } else {
+                    print("DEBUG: Skipped specialization \(specializationName) with 0 advances")
                 }
             }
         }
         
         // Stable sort: first by specialization name, then by skill name
-        return result.sorted { 
+        let sortedResult = result.sorted { 
             if $0.name == $1.name {
                 return $0.skill < $1.skill
             }
             return $0.name < $1.name 
         }
+        
+        print("DEBUG: getVisibleSpecializations returning \(sortedResult.count) specializations: \(sortedResult)")
+        return sortedResult
     }
     
     /// Migrates from old composite key system to new skill-based system
