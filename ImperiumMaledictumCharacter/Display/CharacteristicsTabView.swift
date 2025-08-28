@@ -31,6 +31,10 @@ struct CharacteristicsTab: View {
         )
     }
     
+    var specializationsList: [SpecializationRowData] {
+        return getSpecializationsList()
+    }
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -290,7 +294,6 @@ struct CharacteristicsTab: View {
                         .padding(.vertical, 8)
                         .background(Color(.systemGray5))
                         
-                        let specializationsList = getSpecializationsList()
                         ForEach(Array(specializationsList.enumerated()), id: \.element.name) { index, specialization in
                             VStack(spacing: 0) {
                                 HStack {
