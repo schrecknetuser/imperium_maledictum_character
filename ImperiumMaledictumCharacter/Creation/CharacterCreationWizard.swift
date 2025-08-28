@@ -1471,7 +1471,6 @@ struct RoleStage: View {
         // Save changes immediately to ensure persistence
         saveRoleSelectionsToCharacter()
     }
-    }
     
     // Helper function to determine if a talent is auto-granted by a role
     private func isAutoGrantedByRole(_ talent: String, role: Role) -> Bool {
@@ -1704,6 +1703,7 @@ struct RoleStage: View {
             selectedEquipment[choiceIndex] = equipment
         }
     }
+}
 
 struct TalentSelectionField: View {
     let talentName: String
