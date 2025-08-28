@@ -1704,7 +1704,6 @@ struct RoleStage: View {
             selectedEquipment[choiceIndex] = equipment
         }
     }
-}
 
 struct TalentSelectionField: View {
     let talentName: String
