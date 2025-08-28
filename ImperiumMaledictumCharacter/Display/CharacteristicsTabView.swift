@@ -32,9 +32,10 @@ struct CharacteristicsTab: View {
     }
     
 
-    var specializationsList: [SpecializationRowData] {
-        // Always get fresh data - let SwiftUI handle the caching
-        return getSpecializationsList()
+    @State private var specializationsList: [SpecializationRowData] = []
+    
+    private func refreshSpecializationsList() {
+        specializationsList = getSpecializationsList()
     }
     
     var body: some View {
@@ -418,6 +419,9 @@ struct CharacteristicsTab: View {
             if let imperium = imperiumCharacter {
                 AddSpecializationSheet(character: imperium, store: store)
             }
+        } onDismiss: {
+            // Refresh the specializations list when sheet is dismissed (in case something was added)
+            refreshSpecializationsList()
         }
         .sheet(isPresented: $showingUnifiedStatusPopup) {
             if let binding = imperiumCharacterBinding {
@@ -440,6 +444,8 @@ struct CharacteristicsTab: View {
         .onAppear {
             // Migrate legacy data if needed when view appears
             imperiumCharacter?.migrateFromLegacySpecializations()
+            // Refresh the specializations list
+            refreshSpecializationsList()
         }
         }
     }
@@ -609,11 +615,8 @@ struct CharacteristicsTab: View {
         if let imperium = imperiumCharacter {
             // Get all visible specializations using new system
             let visibleSpecs = imperium.getVisibleSpecializations()
-            print("DEBUG: getSpecializationsList - Found \(visibleSpecs.count) visible specializations")
-            print("DEBUG: skillSpecializationsData = '\(imperium.skillSpecializationsData)'")
             
             for spec in visibleSpecs {
-                print("DEBUG: Processing specialization: \(spec.name) for skill: \(spec.skill) with advances: \(spec.advances)")
                 // Calculate total value (skill characteristic + specialization advances * 5)
                 let skillCharacteristicMap = [
                     "Athletics": "Str",
@@ -652,11 +655,8 @@ struct CharacteristicsTab: View {
                     totalValue: specializationTotalValue
                 ))
             }
-        } else {
-            print("DEBUG: imperiumCharacter is nil")
         }
         
-        print("DEBUG: getSpecializationsList returning \(result.count) items")
         return result.sorted { $0.name < $1.name }
     }
     
@@ -684,6 +684,9 @@ struct CharacteristicsTab: View {
         imperium.deleteSpecialization(specialization: specializationName, skill: skill)
         
         store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+        
+        // Refresh the specializations list after deletion
+        refreshSpecializationsList()
     }
 }
 
