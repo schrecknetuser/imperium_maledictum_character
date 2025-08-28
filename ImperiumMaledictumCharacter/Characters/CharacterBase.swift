@@ -170,9 +170,18 @@ struct SkillRowData {
     let totalValue: Int
 }
 
-struct SpecializationRowData {
+struct SpecializationRowData: Identifiable {
+    let id: String
     let name: String
     let skillName: String
     let advances: Int
     let totalValue: Int
+    
+    init(name: String, skillName: String, advances: Int, totalValue: Int) {
+        self.name = name
+        self.skillName = skillName
+        self.advances = advances
+        self.totalValue = totalValue
+        self.id = "\(name)_\(skillName)"
+    }
 }

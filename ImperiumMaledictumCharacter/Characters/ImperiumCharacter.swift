@@ -387,7 +387,13 @@ class ImperiumCharacter: BaseCharacter {
             }
         }
         
-        return result.sorted { $0.name < $1.name }
+        // Stable sort: first by specialization name, then by skill name
+        return result.sorted { 
+            if $0.name == $1.name {
+                return $0.skill < $1.skill
+            }
+            return $0.name < $1.name 
+        }
     }
     
     /// Migrates from old composite key system to new skill-based system

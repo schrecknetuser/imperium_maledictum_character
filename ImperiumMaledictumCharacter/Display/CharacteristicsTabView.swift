@@ -31,8 +31,17 @@ struct CharacteristicsTab: View {
         )
     }
     
+    @State private var cachedSpecializationsList: [SpecializationRowData] = []
+    @State private var lastDataUpdate: String = ""
+    
     var specializationsList: [SpecializationRowData] {
-        return getSpecializationsList()
+        // Cache the result to prevent recalculation on each view update
+        let currentData = imperiumCharacter?.skillSpecializationsData ?? ""
+        if cachedSpecializationsList.isEmpty || currentData != lastDataUpdate {
+            cachedSpecializationsList = getSpecializationsList()
+            lastDataUpdate = currentData
+        }
+        return cachedSpecializationsList
     }
     
     var body: some View {
@@ -294,7 +303,7 @@ struct CharacteristicsTab: View {
                         .padding(.vertical, 8)
                         .background(Color(.systemGray5))
                         
-                        ForEach(Array(specializationsList.enumerated()), id: \.element.name) { index, specialization in
+                        ForEach(Array(specializationsList.enumerated()), id: \.element.id) { index, specialization in
                             VStack(spacing: 0) {
                                 HStack {
                                     Text(specialization.name)
@@ -436,8 +445,11 @@ struct CharacteristicsTab: View {
             Text("Are you sure you want to delete the specialization '\(specializationToDelete.name) (\(specializationToDelete.skill))'? This action cannot be undone.")
         }
         .onAppear {
-            // Migration is handled automatically in getSpecializationsList()
-            // No need for explicit migration calls that cause string indexing errors
+            // Migrate legacy data if needed when view appears
+            imperiumCharacter?.migrateFromLegacySpecializations()
+            // Force refresh of cached list
+            cachedSpecializationsList = []
+            lastDataUpdate = ""
         }
         }
     }
@@ -605,9 +617,6 @@ struct CharacteristicsTab: View {
         var result: [SpecializationRowData] = []
         
         if let imperium = imperiumCharacter {
-            // Migrate legacy data if needed
-            imperium.migrateFromLegacySpecializations()
-            
             // Get all visible specializations using new system
             let visibleSpecs = imperium.getVisibleSpecializations()
             
