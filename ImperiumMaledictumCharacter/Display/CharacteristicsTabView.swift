@@ -271,21 +271,21 @@ struct CharacteristicsTab: View {
                         // Header row
                         HStack {
                             Text("Specialization")
-                                .font(.caption)
+                                .font(.system(.caption, design: .default))
                                 .fontWeight(.medium)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(width: 120, alignment: .leading)
                             Text("Skill")
-                                .font(.caption)
+                                .font(.system(.caption, design: .default))
                                 .fontWeight(.medium)
-                                .frame(width: 40, alignment: .center)
+                                .frame(width: 80, alignment: .center)
                             Text("Adv.")
-                                .font(.caption)
+                                .font(.system(.caption, design: .default))
                                 .fontWeight(.medium)
-                                .frame(width: 50, alignment: .center)
+                                .frame(width: 45, alignment: .center)
                             Text("Total")
-                                .font(.caption)
+                                .font(.system(.caption, design: .default))
                                 .fontWeight(.medium)
-                                .frame(width: 50, alignment: .center)
+                                .frame(width: 45, alignment: .center)
                             
                             // Space for delete button in edit mode
                             if isEditMode {
@@ -301,11 +301,13 @@ struct CharacteristicsTab: View {
                             VStack(spacing: 0) {
                                 HStack {
                                     Text(specialization.name)
-                                        .font(.caption)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .font(.system(.caption, design: .default))
+                                        .lineLimit(2)
+                                        .frame(width: 120, alignment: .leading)
                                     Text(specialization.skillName)
-                                        .font(.caption)
-                                        .frame(width: 40, alignment: .center)
+                                        .font(.system(.caption, design: .default))
+                                        .lineLimit(1)
+                                        .frame(width: 80, alignment: .center)
                                     
                                     // Advances column - consistent width in both modes
                                     if isEditMode {
@@ -316,18 +318,18 @@ struct CharacteristicsTab: View {
                                             }
                                         }
                                         .pickerStyle(MenuPickerStyle())
-                                        .frame(width: 50, alignment: .center)
+                                        .frame(width: 45, alignment: .center)
                                     } else {
                                         Text("\(specialization.advances)")
-                                            .font(.caption)
-                                            .frame(width: 50, alignment: .center)
+                                            .font(.system(.caption, design: .default))
+                                            .frame(width: 45, alignment: .center)
                                     }
                                     
                                     // Total column
                                     Text("\(specialization.totalValue)")
-                                        .font(.caption)
+                                        .font(.system(.caption, design: .default))
                                         .fontWeight(.medium)
-                                        .frame(width: 50, alignment: .center)
+                                        .frame(width: 45, alignment: .center)
                                     
                                     // Delete button column - only in edit mode, fixed width
                                     if isEditMode {
@@ -336,7 +338,7 @@ struct CharacteristicsTab: View {
                                             showingDeleteConfirmation = true
                                         }) {
                                             Image(systemName: "trash")
-                                                .font(.caption)
+                                                .font(.system(.caption, design: .default))
                                                 .foregroundColor(.red)
                                         }
                                         .frame(width: 30, height: 25)
@@ -361,9 +363,9 @@ struct CharacteristicsTab: View {
                             }) {
                                 HStack {
                                     Image(systemName: "plus")
-                                        .font(.caption)
+                                        .font(.system(.caption, design: .default))
                                     Text("Add Specialization")
-                                        .font(.caption)
+                                        .font(.system(.caption, design: .default))
                                     Spacer()
                                 }
                                 .padding(.horizontal)
