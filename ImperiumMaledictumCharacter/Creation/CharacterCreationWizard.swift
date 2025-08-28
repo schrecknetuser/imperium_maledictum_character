@@ -1460,12 +1460,17 @@ struct RoleStage: View {
             get: { customSpecializations[specialization] ?? "" },
             set: { newValue in
                 customSpecializations[specialization] = newValue
+                // Save changes immediately to ensure persistence
+                saveRoleSelectionsToCharacter()
             }
         )
     }
     
     private func updateCustomSpecialization(_ anySpecialization: String, newName: String) {
         customSpecializations[anySpecialization] = newName
+        // Save changes immediately to ensure persistence
+        saveRoleSelectionsToCharacter()
+    }
     }
     
     // Helper function to determine if a talent is auto-granted by a role
@@ -1670,6 +1675,8 @@ struct RoleStage: View {
             set: { newValue in
                 specializationAdvancesDistribution[specialization] = max(0, newValue)
                 updateRemainingSpecializationAdvances()
+                // Save changes immediately to ensure persistence
+                saveRoleSelectionsToCharacter()
             }
         )
     }
