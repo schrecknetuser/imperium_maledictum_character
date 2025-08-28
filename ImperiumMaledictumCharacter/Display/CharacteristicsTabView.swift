@@ -415,13 +415,13 @@ struct CharacteristicsTab: View {
             .padding(.trailing, 20)
             .padding(.bottom, 20)
         }
-        .sheet(isPresented: $showingAddSpecializationSheet) {
+        .sheet(isPresented: $showingAddSpecializationSheet, onDismiss: {
+            // Refresh the specializations list when sheet is dismissed (in case something was added)
+            refreshSpecializationsList()
+        }) {
             if let imperium = imperiumCharacter {
                 AddSpecializationSheet(character: imperium, store: store)
             }
-        } onDismiss: {
-            // Refresh the specializations list when sheet is dismissed (in case something was added)
-            refreshSpecializationsList()
         }
         .sheet(isPresented: $showingUnifiedStatusPopup) {
             if let binding = imperiumCharacterBinding {
