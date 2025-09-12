@@ -168,127 +168,6 @@ struct CharacterCreationWizard: View {
     }
     
     private func completeCreation() {
-        // Ensure all current stage selections are saved before completion
-        switch currentStage {
-        case 1: // Characteristics - ensure they're saved
-            let characteristicsStage = CharacteristicsStage(character: $character)
-            // The characteristics stage should auto-save on disappear, but let's ensure it's done
-            break
-        case 2: // Origin - ensure selections are saved
-            if let origin = OriginDefinitions.getOrigin(by: character.homeworld) {
-                // Re-apply origin bonuses to ensure they're current
-                var characteristics = character.characteristics
-                
-                // Apply mandatory bonus
-                if let characteristic = characteristics[origin.mandatoryBonus.characteristic] {
-                    // Check if already applied
-                    let expectedMinimum = 20 + origin.mandatoryBonus.bonus
-                    if characteristic.initialValue < expectedMinimum {
-                        characteristics[origin.mandatoryBonus.characteristic] = Characteristic(
-                            name: characteristic.name,
-                            initialValue: characteristic.initialValue + origin.mandatoryBonus.bonus,
-                            advances: characteristic.advances
-                        )
-                    }
-                } else {
-                    characteristics[origin.mandatoryBonus.characteristic] = Characteristic(
-                        name: origin.mandatoryBonus.characteristic,
-                        initialValue: 20 + origin.mandatoryBonus.bonus,
-                        advances: 0
-                    )
-                }
-                
-                character.characteristics = characteristics
-                
-                // Ensure equipment is added
-                var allEquipment = character.equipmentNames
-                for equipment in origin.grantedEquipment {
-                    if !allEquipment.contains(equipment) {
-                        allEquipment.append(equipment)
-                    }
-                }
-                character.equipmentNames = allEquipment
-            }
-            break
-        case 3: // Faction - ensure selections are saved
-            if let faction = FactionDefinitions.getFaction(by: character.faction) {
-                // Ensure faction bonuses are applied
-                let factionKey = faction.name
-                var appliedBonuses = character.appliedFactionBonusesTracker
-                
-                if appliedBonuses[factionKey] != true {
-                    var characteristics = character.characteristics
-                    
-                    // Apply mandatory bonus
-                    if let characteristic = characteristics[faction.mandatoryBonus.characteristic] {
-                        characteristics[faction.mandatoryBonus.characteristic] = Characteristic(
-                            name: characteristic.name,
-                            initialValue: characteristic.initialValue + faction.mandatoryBonus.bonus,
-                            advances: characteristic.advances
-                        )
-                    } else {
-                        characteristics[faction.mandatoryBonus.characteristic] = Characteristic(
-                            name: faction.mandatoryBonus.characteristic,
-                            initialValue: 20 + faction.mandatoryBonus.bonus,
-                            advances: 0
-                        )
-                    }
-                    
-                    character.characteristics = characteristics
-                    appliedBonuses[factionKey] = true
-                    character.appliedFactionBonusesTracker = appliedBonuses
-                }
-                
-                // Add faction talents
-                var allTalents = character.talentNames
-                for talent in faction.talents {
-                    if !allTalents.contains(talent) {
-                        allTalents.append(talent)
-                    }
-                }
-                
-                // Add talents from selected choice
-                if !character.selectedFactionTalentChoice.isEmpty {
-                    if let selectedChoice = faction.talentChoices.first(where: { $0.name == character.selectedFactionTalentChoice }) {
-                        for talent in selectedChoice.talents {
-                            if !allTalents.contains(talent) {
-                                allTalents.append(talent)
-                            }
-                        }
-                    }
-                }
-                
-                character.talentNames = allTalents
-                
-                // Add faction equipment
-                var allEquipment = character.equipmentNames
-                for equipment in faction.equipment {
-                    if !allEquipment.contains(equipment) {
-                        allEquipment.append(equipment)
-                    }
-                }
-                character.equipmentNames = allEquipment
-                
-                // Set starting solars
-                character.solars = faction.solars
-            }
-            break
-        case 4: // Role - ensure selections are saved
-            if let role = RoleDefinitions.getRole(by: character.role) {
-                // Ensure role equipment is added
-                var allEquipment = character.equipmentNames
-                for equipment in role.equipment {
-                    if !allEquipment.contains(equipment) {
-                        allEquipment.append(equipment)
-                    }
-                }
-                character.equipmentNames = allEquipment
-            }
-            break
-        default:
-            break
-        }
-        
         character.completeCreation()
         
         // Add character to store if it's new
@@ -538,35 +417,56 @@ struct CharacteristicsStage: View {
         let characteristics = character.characteristics
         for name in CharacteristicNames.allCharacteristics {
             let characteristic = characteristics[name] ?? Characteristic(name: name, initialValue: 20, advances: 0)
-            // Calculate allocated points as (current value - 20 - any bonuses from origin/faction)
-            // We need to separate user allocation from bonuses
-            let totalValue = characteristic.initialValue
             
-            // Try to determine how much of this is from origin/faction bonuses
-            var bonusesFromOriginFaction = 0
+            // Calculate how much is user allocation vs bonuses
+            let currentValue = characteristic.initialValue
             
-            // Check origin bonuses
-            if !character.homeworld.isEmpty {
-                if let origin = OriginDefinitions.getOrigin(by: character.homeworld) {
-                    if origin.mandatoryBonus.characteristic == name {
-                        bonusesFromOriginFaction += origin.mandatoryBonus.bonus
+            // Calculate total bonuses from origin and faction
+            var totalBonuses = 0
+            
+            // Origin bonuses
+            if !character.homeworld.isEmpty, let origin = OriginDefinitions.getOrigin(by: character.homeworld) {
+                if origin.mandatoryBonus.characteristic == name {
+                    totalBonuses += origin.mandatoryBonus.bonus
+                }
+                // For choice bonuses, we need to detect which one was chosen
+                // We can do this by checking if the tracking shows origin bonuses were applied
+                if character.appliedOriginBonusesTracker[character.homeworld] == true {
+                    // Check each choice to see which would make sense
+                    for choiceBonus in origin.choiceBonus {
+                        if choiceBonus.characteristic == name {
+                            // If current value suggests this bonus was applied, include it
+                            let baseWithMandatory = 20 + (totalBonuses)
+                            if currentValue >= baseWithMandatory + choiceBonus.bonus {
+                                totalBonuses += choiceBonus.bonus
+                                break // Only one choice bonus
+                            }
+                        }
                     }
-                    // Note: choice bonus is handled separately since we don't know which was selected yet
                 }
             }
             
-            // Check faction bonuses 
-            if !character.faction.isEmpty {
-                if let faction = FactionDefinitions.getFaction(by: character.faction) {
-                    if faction.mandatoryBonus.characteristic == name {
-                        bonusesFromOriginFaction += faction.mandatoryBonus.bonus
+            // Faction bonuses
+            if !character.faction.isEmpty, let faction = FactionDefinitions.getFaction(by: character.faction) {
+                if faction.mandatoryBonus.characteristic == name {
+                    totalBonuses += faction.mandatoryBonus.bonus
+                }
+                // Similar logic for faction choice bonuses
+                if character.appliedFactionBonusesTracker[character.faction] == true {
+                    for choiceBonus in faction.choiceBonus {
+                        if choiceBonus.characteristic == name {
+                            let baseWithPreviousBonuses = 20 + totalBonuses
+                            if currentValue >= baseWithPreviousBonuses + choiceBonus.bonus {
+                                totalBonuses += choiceBonus.bonus
+                                break
+                            }
+                        }
                     }
-                    // Note: choice bonus is handled separately since we don't know which was selected yet
                 }
             }
             
-            // User allocation is what's left after removing base (20) and any bonuses
-            let userAllocation = max(0, totalValue - 20 - bonusesFromOriginFaction)
+            // User allocation is what's left after removing base and bonuses
+            let userAllocation = max(0, currentValue - 20 - totalBonuses)
             allocatedPoints[name] = userAllocation
         }
         updateRemainingPoints()
@@ -575,14 +475,9 @@ struct CharacteristicsStage: View {
     private func saveCharacteristicsToCharacter() {
         var characteristics = character.characteristics
         for (name, points) in allocatedPoints {
-            if let existing = characteristics[name] {
-                // Preserve existing bonuses and only update the base user allocation
-                // The initial value should be: base allocation (20 + points) + any bonuses from origin/faction
-                let bonusesFromOriginFaction = existing.initialValue - 20
-                characteristics[name] = Characteristic(name: name, initialValue: 20 + points + bonusesFromOriginFaction, advances: existing.advances)
-            } else {
-                characteristics[name] = Characteristic(name: name, initialValue: 20 + points, advances: 0)
-            }
+            // Always set the characteristic to base 20 + user points
+            // Origin and faction bonuses will be applied separately later
+            characteristics[name] = Characteristic(name: name, initialValue: 20 + points, advances: 0)
         }
         character.characteristics = characteristics
     }
@@ -1960,7 +1855,9 @@ struct RoleStage: View {
         
         // Add granted equipment from role
         for equipment in role.equipment {
-            allEquipment.append(equipment)
+            if !allEquipment.contains(equipment) {
+                allEquipment.append(equipment)
+            }
         }
         
         character.equipmentNames = allEquipment
