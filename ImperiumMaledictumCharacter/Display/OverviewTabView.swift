@@ -13,8 +13,6 @@ struct OverviewTab: View {
     @Binding var isEditMode: Bool
     @State private var showingUnifiedStatusPopup = false
     @State private var showingChangeHistoryPopup = false
-    @State private var tempSolars: Int = 0
-    @State private var originalSolars: Int = 0
     @State private var originalSnapshot: CharacterSnapshot? = nil
     
     var imperiumCharacter: ImperiumCharacter? {
@@ -235,45 +233,7 @@ struct OverviewTab: View {
                             DetailRow(title: "Background", value: imperium.background)
                         }
                         
-                        if isEditMode {
-                            HStack {
-                                Text("Wealth (Solars)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                                TextField("Solars", value: $tempSolars, format: .number)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .frame(width: 80)
-                                    .keyboardType(.numberPad)
-                                    .onAppear {
-                                        if let imperium = imperiumCharacter {
-                                            tempSolars = imperium.solars
-                                            originalSolars = imperium.solars
-                                            originalSnapshot = store.createSnapshot(of: imperium)
-                                        }
-                                    }
-                                    .onSubmit {
-                                        saveSolarsChanges()
-                                    }
-                                    .onChange(of: isEditMode) { newValue in
-                                        if !newValue {
-                                            saveSolarsChanges()
-                                        } else if let imperium = imperiumCharacter {
-                                            // Entering edit mode - capture snapshot
-                                            tempSolars = imperium.solars
-                                            originalSolars = imperium.solars
-                                            originalSnapshot = store.createSnapshot(of: imperium)
-                                        }
-                                    }
-                                    .onDisappear {
-                                        saveSolarsChanges()
-                                    }
-                            }
-                        } else if imperium.solars > 0 {
-                            DetailRow(title: "Wealth", value: "\(imperium.solars) Solars")
-                        }
-                        
-                        if imperium.background.isEmpty && imperium.solars == 0 {
+                        if imperium.background.isEmpty {
                             Text("No background details provided")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
@@ -466,16 +426,5 @@ struct OverviewTab: View {
                 ChangeHistoryPopupView(character: binding, store: store)
             }
         }
-    }
-    
-    private func saveSolarsChanges() {
-        guard let imperium = imperiumCharacter,
-              let snapshot = originalSnapshot,
-              tempSolars != originalSolars else { return }
-        
-        imperium.solars = tempSolars
-        store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: snapshot)
-        originalSolars = tempSolars
-        originalSnapshot = store.createSnapshot(of: imperium) // Update snapshot for potential future changes
     }
 }

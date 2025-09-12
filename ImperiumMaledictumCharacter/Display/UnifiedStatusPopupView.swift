@@ -64,6 +64,7 @@ struct StatusContentView: View {
     @State private var corruption: Int = 0
     @State private var fate: Int = 0
     @State private var spentFate: Int = 0
+    @State private var solars: Int = 0
     
     // Store original snapshot for change tracking
     @State private var originalSnapshot: CharacterSnapshot?
@@ -271,6 +272,47 @@ struct StatusContentView: View {
                         .foregroundColor(.secondary)
                 }
             }
+            
+            Section("Wealth") {
+                // Solars
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Solars")
+                        .font(.headline)
+                    
+                    HStack {
+                        Button(action: {
+                            if solars > 0 {
+                                solars -= 1
+                                updateCharacter()
+                            }
+                        }) {
+                            Image(systemName: "minus.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.green)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .disabled(solars <= 0)
+                        
+                        Spacer()
+                        
+                        Text("\(solars)")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            solars += 1
+                            updateCharacter()
+                        }) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.green)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+            }
         }
         .onAppear {
             // Initialize state from character
@@ -278,6 +320,7 @@ struct StatusContentView: View {
             corruption = character.corruption
             fate = character.fate
             spentFate = character.spentFate
+            solars = character.solars
             
             // Create original snapshot for change tracking
             originalSnapshot = store.createSnapshot(of: character)
@@ -289,6 +332,7 @@ struct StatusContentView: View {
         character.corruption = corruption
         character.fate = fate
         character.spentFate = spentFate
+        character.solars = solars
         
         // Save with change tracking if we have the original snapshot
         if let snapshot = originalSnapshot {
