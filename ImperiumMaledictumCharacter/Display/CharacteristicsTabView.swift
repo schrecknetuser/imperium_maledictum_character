@@ -13,7 +13,7 @@ struct CharacteristicsTab: View {
     @Binding var isEditMode: Bool
     @State private var showingAddSpecializationSheet = false
     @State private var showingDeleteConfirmation = false
-    @State private var specializationToDelete: String = ""
+    @State private var specializationToDelete: (name: String, skill: String) = ("", "")
     @State private var showingUnifiedStatusPopup = false
     @State private var showingChangeHistoryPopup = false
     
@@ -29,6 +29,13 @@ struct CharacteristicsTab: View {
                 // This won't modify the original character since it's let, but needed for binding
             }
         )
+    }
+    
+
+    @State private var specializationsList: [SpecializationRowData] = []
+    
+    private func refreshSpecializationsList() {
+        specializationsList = getSpecializationsList()
     }
     
     var body: some View {
@@ -264,73 +271,85 @@ struct CharacteristicsTab: View {
                         // Header row
                         HStack {
                             Text("Specialization")
-                                .font(.caption)
+                                .font(.system(.caption, design: .default))
                                 .fontWeight(.medium)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(width: 120, alignment: .leading)
                             Text("Skill")
-                                .font(.caption)
+                                .font(.system(.caption, design: .default))
                                 .fontWeight(.medium)
-                                .frame(width: 40, alignment: .center)
+                                .frame(width: 80, alignment: .center)
                             Text("Adv.")
-                                .font(.caption)
+                                .font(.system(.caption, design: .default))
                                 .fontWeight(.medium)
-                                .frame(width: 40, alignment: .center)
+                                .frame(width: 45, alignment: .center)
                             Text("Total")
-                                .font(.caption)
+                                .font(.system(.caption, design: .default))
                                 .fontWeight(.medium)
-                                .frame(width: 35, alignment: .center)
+                                .frame(width: 45, alignment: .center)
+                            
+                            // Space for delete button in edit mode
+                            if isEditMode {
+                                Text("") // Empty header for delete column
+                                    .frame(width: 30, alignment: .center)
+                            }
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 8)
                         .background(Color(.systemGray5))
                         
-                        ForEach(Array(getSpecializationsList().enumerated()), id: \.element.name) { index, specialization in
+                        ForEach(Array(specializationsList.enumerated()), id: \.element.id) { index, specialization in
                             VStack(spacing: 0) {
                                 HStack {
                                     Text(specialization.name)
-                                        .font(.caption)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .font(.system(.caption, design: .default))
+                                        .lineLimit(2)
+                                        .frame(width: 120, alignment: .leading)
                                     Text(specialization.skillName)
-                                        .font(.caption)
-                                        .frame(width: 40, alignment: .center)
+                                        .font(.system(.caption, design: .default))
+                                        .lineLimit(1)
+                                        .frame(width: 80, alignment: .center)
                                     
+                                    // Advances column - consistent width in both modes
                                     if isEditMode {
                                         // Editable dropdown for advances
-                                        Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name)) {
+                                        Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name, skill: specialization.skillName)) {
                                             ForEach(0...4, id: \.self) { value in
                                                 Text("\(value)").tag(value)
                                             }
                                         }
                                         .pickerStyle(MenuPickerStyle())
-                                        .frame(width: 60)
-                                        
-                                        // Delete button
+                                        .frame(width: 45, alignment: .center)
+                                    } else {
+                                        Text("\(specialization.advances)")
+                                            .font(.system(.caption, design: .default))
+                                            .frame(width: 45, alignment: .center)
+                                    }
+                                    
+                                    // Total column
+                                    Text("\(specialization.totalValue)")
+                                        .font(.system(.caption, design: .default))
+                                        .fontWeight(.medium)
+                                        .frame(width: 45, alignment: .center)
+                                    
+                                    // Delete button column - only in edit mode, fixed width
+                                    if isEditMode {
                                         Button(action: {
-                                            specializationToDelete = specialization.name
+                                            specializationToDelete = (name: specialization.name, skill: specialization.skillName)
                                             showingDeleteConfirmation = true
                                         }) {
                                             Image(systemName: "trash")
-                                                .font(.caption)
+                                                .font(.system(.caption, design: .default))
                                                 .foregroundColor(.red)
                                         }
-                                        .frame(width: 20, height: 25)
+                                        .frame(width: 30, height: 25)
                                         .background(Color(.systemGray5))
                                         .cornerRadius(6)
-                                    } else {
-                                        Text("\(specialization.advances)")
-                                            .font(.caption)
-                                            .frame(width: 40, alignment: .center)
                                     }
-                                    
-                                    Text("\(specialization.totalValue)")
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .frame(width: 35, alignment: .center)
                                 }
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
                                 
-                                if index < getSpecializationsList().count - 1 {
+                                if index < specializationsList.count - 1 {
                                     Divider()
                                         .padding(.horizontal)
                                 }
@@ -344,9 +363,9 @@ struct CharacteristicsTab: View {
                             }) {
                                 HStack {
                                     Image(systemName: "plus")
-                                        .font(.caption)
+                                        .font(.system(.caption, design: .default))
                                     Text("Add Specialization")
-                                        .font(.caption)
+                                        .font(.system(.caption, design: .default))
                                     Spacer()
                                 }
                                 .padding(.horizontal)
@@ -398,7 +417,10 @@ struct CharacteristicsTab: View {
             .padding(.trailing, 20)
             .padding(.bottom, 20)
         }
-        .sheet(isPresented: $showingAddSpecializationSheet) {
+        .sheet(isPresented: $showingAddSpecializationSheet, onDismiss: {
+            // Refresh the specializations list when sheet is dismissed (in case something was added)
+            refreshSpecializationsList()
+        }) {
             if let imperium = imperiumCharacter {
                 AddSpecializationSheet(character: imperium, store: store)
             }
@@ -416,10 +438,16 @@ struct CharacteristicsTab: View {
         .alert("Delete Specialization", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
-                deleteSpecialization(specializationToDelete)
+                deleteSpecialization(specializationToDelete.name, skill: specializationToDelete.skill)
             }
         } message: {
-            Text("Are you sure you want to delete the specialization '\(specializationToDelete)'? This action cannot be undone.")
+            Text("Are you sure you want to delete the specialization '\(specializationToDelete.name) (\(specializationToDelete.skill))'? This action cannot be undone.")
+        }
+        .onAppear {
+            // Migrate legacy data if needed when view appears
+            imperiumCharacter?.migrateFromLegacySpecializations()
+            // Refresh the specializations list
+            refreshSpecializationsList()
         }
         }
     }
@@ -440,6 +468,8 @@ struct CharacteristicsTab: View {
                     characteristics[characteristicName] = characteristic
                     imperium.characteristics = characteristics
                     store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                    // Refresh specializations list since characteristic values affect specialization totals
+                    refreshSpecializationsList()
                 }
             }
         )
@@ -461,6 +491,8 @@ struct CharacteristicsTab: View {
                     characteristics[characteristicName] = characteristic
                     imperium.characteristics = characteristics
                     store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                    // Refresh specializations list since characteristic values affect specialization totals
+                    refreshSpecializationsList()
                 }
             }
         )
@@ -479,22 +511,22 @@ struct CharacteristicsTab: View {
                 skillAdvances[skillName] = newValue
                 imperium.skillAdvances = skillAdvances
                 store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                // Refresh specializations list since skill advances affect specialization totals
+                refreshSpecializationsList()
             }
         )
     }
     
-    private func getSpecializationAdvanceBinding(for specializationName: String) -> Binding<Int> {
+    private func getSpecializationAdvanceBinding(for specializationName: String, skill skillName: String) -> Binding<Int> {
         return Binding<Int>(
             get: {
                 guard let imperium = imperiumCharacter else { return 0 }
-                return imperium.specializationAdvances[specializationName] ?? 0
+                return imperium.getSpecializationAdvances(specialization: specializationName, skill: skillName)
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
                 let originalSnapshot = store.createSnapshot(of: imperium)
-                var specializationAdvances = imperium.specializationAdvances
-                specializationAdvances[specializationName] = newValue
-                imperium.specializationAdvances = specializationAdvances
+                imperium.setSpecializationAdvances(specialization: specializationName, skill: skillName, advances: newValue)
                 store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
             }
         )
@@ -583,86 +615,53 @@ struct CharacteristicsTab: View {
         return result
     }
     
-    private func findSkillForSpecialization(_ specializationName: String) -> String {
-        // First try direct lookup
-        for (skillName, specializations) in SkillSpecializations.specializations {
-            if specializations.contains(specializationName) {
-                return skillName
-            }
-        }
-        
-        // If not found, try parsing if it has the format "Name (Skill)"
-        if let parenRange = specializationName.range(of: " ("),
-           specializationName.hasSuffix(")") {
-            let skillStart = specializationName.index(parenRange.upperBound, offsetBy: 0)
-            let skillEnd = specializationName.index(before: specializationName.endIndex)
-            let skillName = String(specializationName[skillStart..<skillEnd])
-            
-            // Validate that this is a real skill
-            if SkillSpecializations.specializations[skillName] != nil {
-                return skillName
-            }
-        }
-        
-        return "Unknown"
-    }
+
 
     private func getSpecializationsList() -> [SpecializationRowData] {
         var result: [SpecializationRowData] = []
         
         if let imperium = imperiumCharacter {
-            let specializationAdvances = imperium.specializationAdvances
+            // Get all visible specializations using new system
+            let visibleSpecs = imperium.getVisibleSpecializations()
             
-            // Create reverse mapping from specialization name to skill
-            var specializationToSkillMap: [String: String] = [:]
-            for (skillName, specializations) in SkillSpecializations.specializations {
-                for specialization in specializations {
-                    specializationToSkillMap[specialization] = skillName
-                }
-            }
-            
-            for (specializationName, advances) in specializationAdvances {
-                // Show all specializations that exist in the character's data
-                // Find skill name using improved lookup
-                let skillName = findSkillForSpecialization(specializationName)
-                    
-                    // Calculate total value (skill characteristic + specialization advances * 5)
-                    let skillCharacteristicMap = [
-                        "Athletics": "Str",
-                        "Awareness": "Per", 
-                        "Dexterity": "Agi",
-                        "Discipline": "Wil",
-                        "Fortitude": "Tgh",
-                        "Intuition": "Per",
-                        "Linguistics": "Int",
-                        "Logic": "Int",
-                        "Lore": "Int",
-                        "Medicae": "Int",
-                        "Melee": "WS",
-                        "Navigation": "Int",
-                        "Piloting": "Agi",
-                        "Presence": "Wil",
-                        "Psychic Mastery": "Wil",
-                        "Ranged": "BS",
-                        "Rapport": "Fel",
-                        "Reflexes": "Agi",
-                        "Stealth": "Agi",
-                        "Tech": "Int"
-                    ]
-                    
-                    let characteristicAbbrev = skillCharacteristicMap[skillName] ?? "Int"
-                    let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
-                    let skillAdvanceCount = imperium.skillAdvances[skillName] ?? 0
-                    let factionAdvanceCount = imperium.factionSkillAdvances[skillName] ?? 0
-                    let totalSkillValue = characteristicValue + ((skillAdvanceCount + factionAdvanceCount) * 5)
-                    let specializationTotalValue = totalSkillValue + (advances * 5)
-                    
-                    result.append(SpecializationRowData(
-                        name: specializationName,
-                        skillName: skillName,
-                        advances: advances,
-                        totalValue: specializationTotalValue
-                    ))
+            for spec in visibleSpecs {
+                // Calculate total value (skill characteristic + specialization advances * 5)
+                let skillCharacteristicMap = [
+                    "Athletics": "Str",
+                    "Awareness": "Per", 
+                    "Dexterity": "Agi",
+                    "Discipline": "Wil",
+                    "Fortitude": "Tgh",
+                    "Intuition": "Per",
+                    "Linguistics": "Int",
+                    "Logic": "Int",
+                    "Lore": "Int",
+                    "Medicae": "Int",
+                    "Melee": "WS",
+                    "Navigation": "Int",
+                    "Piloting": "Agi",
+                    "Presence": "Wil",
+                    "Psychic Mastery": "Wil",
+                    "Ranged": "BS",
+                    "Rapport": "Fel",
+                    "Reflexes": "Agi",
+                    "Stealth": "Agi",
+                    "Tech": "Int"
+                ]
+                
+                let characteristicAbbrev = skillCharacteristicMap[spec.skill] ?? "Int"
+                let characteristicValue = getCharacteristicValue(for: characteristicAbbrev, from: imperium)
+                let skillAdvanceCount = imperium.skillAdvances[spec.skill] ?? 0
+                let factionAdvanceCount = imperium.factionSkillAdvances[spec.skill] ?? 0
+                let totalSkillValue = characteristicValue + ((skillAdvanceCount + factionAdvanceCount) * 5)
+                let specializationTotalValue = totalSkillValue + (spec.advances * 5)
+                
+                result.append(SpecializationRowData(
+                    name: spec.name,
+                    skillName: spec.skill,
+                    advances: spec.advances,
+                    totalValue: specializationTotalValue
+                ))
             }
         }
         
@@ -685,13 +684,17 @@ struct CharacteristicsTab: View {
         }
     }
     
-    private func deleteSpecialization(_ specializationName: String) {
+    private func deleteSpecialization(_ specializationName: String, skill: String) {
         guard let imperium = imperiumCharacter else { return }
         let originalSnapshot = store.createSnapshot(of: imperium)
-        var specializations = imperium.specializationAdvances
-        specializations.removeValue(forKey: specializationName)
-        imperium.specializationAdvances = specializations
+        
+        // Use the new delete method that sets value to 0
+        imperium.deleteSpecialization(specialization: specializationName, skill: skill)
+        
         store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+        
+        // Refresh the specializations list after deletion
+        refreshSpecializationsList()
     }
 }
 
@@ -716,10 +719,9 @@ struct AddSpecializationSheet: View {
             return []
         }
         
-        // Filter out specializations that already exist
-        let currentSpecializations = character.specializationAdvances
+        // Filter out specializations that already exist for this skill
         return skillSpecializations.filter { specialization in
-            currentSpecializations[specialization] == nil
+            character.getSpecializationAdvances(specialization: specialization, skill: selectedSkill) == 0
         }
     }
     
@@ -831,12 +833,13 @@ struct AddSpecializationSheet: View {
     }
     
     private func addSpecialization() {
-        guard !selectedSpecialization.isEmpty else { return }
+        guard !selectedSpecialization.isEmpty, !selectedSkill.isEmpty else { return }
         
         let originalSnapshot = store.createSnapshot(of: character)
-        var specializations = character.specializationAdvances
-        specializations[selectedSpecialization] = initialAdvances
-        character.specializationAdvances = specializations
+        
+        // Use the new system to set specialization advances 
+        character.setSpecializationAdvances(specialization: selectedSpecialization, skill: selectedSkill, advances: initialAdvances)
+        
         store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
         
         // Reset picker state before dismissing to prevent validation errors
