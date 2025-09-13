@@ -783,12 +783,21 @@ struct OriginStage: View {
         // Apply bonuses one final time to ensure they're saved
         applyOriginBonuses()
         
-        // Add granted equipment
-        var allEquipment = character.equipmentNames
+        // Add granted equipment to equipment list
+        var equipmentList = character.equipmentList
         for equipment in origin.grantedEquipment {
-            allEquipment.append(equipment)
+            if !equipmentList.contains(where: { $0.name == equipment }) {
+                if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                    equipmentList.append(template.createEquipment())
+                } else {
+                    // Fallback: create basic equipment object if template not found
+                    let basicEquipment = Equipment(name: equipment, category: EquipmentCategories.tools, encumbrance: 1, cost: 0, availability: "Common")
+                    basicEquipment.equipmentDescription = "Origin granted equipment"
+                    equipmentList.append(basicEquipment)
+                }
+            }
         }
-        character.equipmentNames = allEquipment
+        character.equipmentList = equipmentList
     }
 }
 struct FactionStage: View {
@@ -1076,12 +1085,21 @@ struct FactionStage: View {
         
         character.talentNames = allTalents
         
-        // Add faction equipment
-        var allEquipment = character.equipmentNames
+        // Add faction equipment to equipment list
+        var equipmentList = character.equipmentList
         for equipment in faction.equipment {
-            allEquipment.append(equipment)
+            if !equipmentList.contains(where: { $0.name == equipment }) {
+                if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                    equipmentList.append(template.createEquipment())
+                } else {
+                    // Fallback: create basic equipment object if template not found
+                    let basicEquipment = Equipment(name: equipment, category: EquipmentCategories.tools, encumbrance: 1, cost: 0, availability: "Common")
+                    basicEquipment.equipmentDescription = "Faction granted equipment"
+                    equipmentList.append(basicEquipment)
+                }
+            }
         }
-        character.equipmentNames = allEquipment
+        character.equipmentList = equipmentList
         
         // Set starting solars
         character.solars = faction.solars
@@ -1649,10 +1667,10 @@ struct RoleStage: View {
         
         // Initialize weapon choices array and try to restore previous selections
         selectedWeapons = Array(repeating: "", count: role.weaponChoices.count)
-        let existingWeapons = character.weaponNames
+        let existingWeaponNames = character.weaponList.map { $0.name }
         for (choiceIndex, weaponOptions) in role.weaponChoices.enumerated() {
             for weapon in weaponOptions {
-                if existingWeapons.contains(weapon) {
+                if existingWeaponNames.contains(weapon) {
                     selectedWeapons[choiceIndex] = weapon
                     break // Only select one weapon per choice
                 }
@@ -1661,10 +1679,10 @@ struct RoleStage: View {
         
         // Initialize equipment choices array and try to restore previous selections
         selectedEquipment = Array(repeating: "", count: role.equipmentChoices.count)
-        let existingEquipment = character.equipmentNames
+        let existingEquipmentNames = character.equipmentList.map { $0.name }
         for (choiceIndex, equipmentOptions) in role.equipmentChoices.enumerated() {
             for equipment in equipmentOptions {
-                if existingEquipment.contains(equipment) {
+                if existingEquipmentNames.contains(equipment) {
                     selectedEquipment[choiceIndex] = equipment
                     break // Only select one equipment per choice
                 }
@@ -1797,31 +1815,59 @@ struct RoleStage: View {
         }
         character.talentNames = allTalents
         
-        // Save weapon selections
-        var allWeapons = character.weaponNames
+        // Save weapon selections by creating weapon objects from templates
+        var weaponList = character.weaponList
         for weapon in selectedWeapons {
-            if !weapon.isEmpty && !allWeapons.contains(weapon) {
-                allWeapons.append(weapon)
+            if !weapon.isEmpty {
+                // Check if weapon already exists
+                if !weaponList.contains(where: { $0.name == weapon }) {
+                    // Find weapon template and create weapon object
+                    if let template = WeaponTemplateDefinitions.getTemplate(for: weapon) {
+                        weaponList.append(template.createWeapon())
+                    } else {
+                        // Fallback: create basic weapon object if template not found
+                        let basicWeapon = Weapon(name: weapon, category: WeaponCategories.melee, specialization: WeaponSpecializations.basic, damage: "1", range: WeaponRanges.close, magazine: 0, encumbrance: 1, cost: 0, availability: "Common")
+                        weaponList.append(basicWeapon)
+                    }
+                }
             }
         }
-        character.weaponNames = allWeapons
+        character.weaponList = weaponList
         
-        // Save equipment selections  
-        var allEquipment = character.equipmentNames
+        // Save equipment selections by creating equipment objects from templates
+        var equipmentList = character.equipmentList
         for equipment in selectedEquipment {
-            if !equipment.isEmpty && !allEquipment.contains(equipment) {
-                allEquipment.append(equipment)
+            if !equipment.isEmpty {
+                // Check if equipment already exists
+                if !equipmentList.contains(where: { $0.name == equipment }) {
+                    // Find equipment template and create equipment object
+                    if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                        equipmentList.append(template.createEquipment())
+                    } else {
+                        // Fallback: create basic equipment object if template not found
+                        let basicEquipment = Equipment(name: equipment, category: EquipmentCategories.tools, encumbrance: 1, cost: 0, availability: "Common")
+                        basicEquipment.equipmentDescription = "Equipment from character creation"
+                        equipmentList.append(basicEquipment)
+                    }
+                }
             }
         }
         
         // Add granted equipment from role
         for equipment in role.equipment {
-            if !allEquipment.contains(equipment) {
-                allEquipment.append(equipment)
+            if !equipmentList.contains(where: { $0.name == equipment }) {
+                if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                    equipmentList.append(template.createEquipment())
+                } else {
+                    // Fallback: create basic equipment object if template not found
+                    let basicEquipment = Equipment(name: equipment, category: EquipmentCategories.tools, encumbrance: 1, cost: 0, availability: "Common")
+                    basicEquipment.equipmentDescription = "Role granted equipment"
+                    equipmentList.append(basicEquipment)
+                }
             }
         }
         
-        character.equipmentNames = allEquipment
+        character.equipmentList = equipmentList
     }
     
     private func skillBinding(for skill: String) -> Binding<Int> {
