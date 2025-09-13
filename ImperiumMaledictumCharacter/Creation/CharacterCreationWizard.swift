@@ -414,6 +414,7 @@ struct CharacteristicsStage: View {
     }
     
     private func initializeAllocatedPoints() {
+        print("DEBUG: initializeAllocatedPoints() called")
         let characteristics = character.characteristics
         for name in CharacteristicNames.allCharacteristics {
             let characteristic = characteristics[name] ?? Characteristic(name: name, initialValue: 20, advances: 0)
@@ -425,11 +426,15 @@ struct CharacteristicsStage: View {
             // User allocation is what's left after removing base and bonuses
             let userAllocation = max(0, currentValue - 20 - totalBonuses)
             allocatedPoints[name] = userAllocation
+            
+            print("DEBUG: \(name) - currentValue: \(currentValue), totalBonuses: \(totalBonuses), userAllocation: \(userAllocation)")
         }
         updateRemainingPoints()
+        print("DEBUG: initializeAllocatedPoints() completed")
     }
     
     private func saveCharacteristicsToCharacter() {
+        print("DEBUG: saveCharacteristicsToCharacter() called")
         var characteristics = character.characteristics
         for (name, points) in allocatedPoints {
             // Get the current characteristic value to preserve any applied bonuses
@@ -438,17 +443,24 @@ struct CharacteristicsStage: View {
             
             // Calculate what the base value was before user points were allocated
             // The user previously allocated some points, we need to remove those and add the new points
-            let previousUserPoints = currentValue - 20 - getAppliedBonusesForCharacteristic(name)
+            let totalBonuses = getAppliedBonusesForCharacteristic(name)
+            let previousUserPoints = currentValue - 20 - totalBonuses
             let baseWithBonuses = currentValue - previousUserPoints
             
+            print("DEBUG: \(name) - currentValue: \(currentValue), totalBonuses: \(totalBonuses), previousUserPoints: \(previousUserPoints), baseWithBonuses: \(baseWithBonuses), points: \(points)")
+            
             // Set new value: base with bonuses + new user points
+            let newValue = baseWithBonuses + points
             characteristics[name] = Characteristic(
                 name: name, 
-                initialValue: baseWithBonuses + points, 
+                initialValue: newValue, 
                 advances: currentCharacteristic.advances
             )
+            
+            print("DEBUG: \(name) set to \(newValue)")
         }
         character.characteristics = characteristics
+        print("DEBUG: saveCharacteristicsToCharacter() completed")
     }
     
     private func getAppliedBonusesForCharacteristic(_ characteristicName: String) -> Int {
@@ -459,11 +471,13 @@ struct CharacteristicsStage: View {
             // Mandatory bonus
             if origin.mandatoryBonus.characteristic == characteristicName {
                 totalBonuses += origin.mandatoryBonus.bonus
+                print("DEBUG: Adding origin mandatory bonus \(origin.mandatoryBonus.bonus) to \(characteristicName)")
             }
             // Choice bonus
             if character.selectedOriginChoice == characteristicName {
                 if let choiceBonus = origin.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
                     totalBonuses += choiceBonus.bonus
+                    print("DEBUG: Adding origin choice bonus \(choiceBonus.bonus) to \(characteristicName)")
                 }
             }
         }
@@ -473,15 +487,18 @@ struct CharacteristicsStage: View {
             // Mandatory bonus
             if faction.mandatoryBonus.characteristic == characteristicName {
                 totalBonuses += faction.mandatoryBonus.bonus
+                print("DEBUG: Adding faction mandatory bonus \(faction.mandatoryBonus.bonus) to \(characteristicName)")
             }
             // Choice bonus
             if character.selectedFactionChoice == characteristicName {
                 if let choiceBonus = faction.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
                     totalBonuses += choiceBonus.bonus
+                    print("DEBUG: Adding faction choice bonus \(choiceBonus.bonus) to \(characteristicName)")
                 }
             }
         }
         
+        print("DEBUG: Total bonuses for \(characteristicName): \(totalBonuses), originChoice: '\(character.selectedOriginChoice)', factionChoice: '\(character.selectedFactionChoice)'")
         return totalBonuses
     }
     
