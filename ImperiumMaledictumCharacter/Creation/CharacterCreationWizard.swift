@@ -420,50 +420,7 @@ struct CharacteristicsStage: View {
             
             // Calculate how much is user allocation vs bonuses
             let currentValue = characteristic.initialValue
-            
-            // Calculate total bonuses from origin and faction
-            var totalBonuses = 0
-            
-            // Origin bonuses
-            if !character.homeworld.isEmpty, let origin = OriginDefinitions.getOrigin(by: character.homeworld) {
-                if origin.mandatoryBonus.characteristic == name {
-                    totalBonuses += origin.mandatoryBonus.bonus
-                }
-                // For choice bonuses, we need to detect which one was chosen
-                // We can do this by checking if the tracking shows origin bonuses were applied
-                if character.appliedOriginBonusesTracker[character.homeworld] == true {
-                    // Check each choice to see which would make sense
-                    for choiceBonus in origin.choiceBonus {
-                        if choiceBonus.characteristic == name {
-                            // If current value suggests this bonus was applied, include it
-                            let baseWithMandatory = 20 + (totalBonuses)
-                            if currentValue >= baseWithMandatory + choiceBonus.bonus {
-                                totalBonuses += choiceBonus.bonus
-                                break // Only one choice bonus
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Faction bonuses
-            if !character.faction.isEmpty, let faction = FactionDefinitions.getFaction(by: character.faction) {
-                if faction.mandatoryBonus.characteristic == name {
-                    totalBonuses += faction.mandatoryBonus.bonus
-                }
-                // Similar logic for faction choice bonuses
-                if character.appliedFactionBonusesTracker[character.faction] == true {
-                    for choiceBonus in faction.choiceBonus {
-                        if choiceBonus.characteristic == name {
-                            let baseWithPreviousBonuses = 20 + totalBonuses
-                            if currentValue >= baseWithPreviousBonuses + choiceBonus.bonus {
-                                totalBonuses += choiceBonus.bonus
-                                break
-                            }
-                        }
-                    }
-                }
-            }
+            let totalBonuses = getAppliedBonusesForCharacteristic(name)
             
             // User allocation is what's left after removing base and bonuses
             let userAllocation = max(0, currentValue - 20 - totalBonuses)
@@ -475,54 +432,57 @@ struct CharacteristicsStage: View {
     private func saveCharacteristicsToCharacter() {
         var characteristics = character.characteristics
         for (name, points) in allocatedPoints {
-            // Calculate total bonuses from origin and faction that should be preserved
-            var totalBonuses = 0
+            // Get the current characteristic value to preserve any applied bonuses
+            let currentCharacteristic = characteristics[name] ?? Characteristic(name: name, initialValue: 20, advances: 0)
+            let currentValue = currentCharacteristic.initialValue
             
-            // Origin bonuses
-            if !character.homeworld.isEmpty, let origin = OriginDefinitions.getOrigin(by: character.homeworld) {
-                if origin.mandatoryBonus.characteristic == name {
-                    totalBonuses += origin.mandatoryBonus.bonus
-                }
-                // Check for applied choice bonuses
-                if character.appliedOriginBonusesTracker[character.homeworld] == true {
-                    for choiceBonus in origin.choiceBonus {
-                        if choiceBonus.characteristic == name {
-                            // Check if this characteristic was selected for the choice bonus
-                            let currentValue = characteristics[name]?.initialValue ?? 20
-                            let baseWithMandatory = 20 + totalBonuses
-                            if currentValue >= baseWithMandatory + choiceBonus.bonus {
-                                totalBonuses += choiceBonus.bonus
-                                break
-                            }
-                        }
-                    }
-                }
-            }
+            // Calculate what the base value was before user points were allocated
+            // The user previously allocated some points, we need to remove those and add the new points
+            let previousUserPoints = currentValue - 20 - getAppliedBonusesForCharacteristic(name)
+            let baseWithBonuses = currentValue - previousUserPoints
             
-            // Faction bonuses
-            if !character.faction.isEmpty, let faction = FactionDefinitions.getFaction(by: character.faction) {
-                if faction.mandatoryBonus.characteristic == name {
-                    totalBonuses += faction.mandatoryBonus.bonus
-                }
-                // Check for applied faction choice bonuses
-                if character.appliedFactionBonusesTracker[character.faction] == true {
-                    for choiceBonus in faction.choiceBonus {
-                        if choiceBonus.characteristic == name {
-                            let currentValue = characteristics[name]?.initialValue ?? 20
-                            let baseWithPreviousBonuses = 20 + totalBonuses
-                            if currentValue >= baseWithPreviousBonuses + choiceBonus.bonus {
-                                totalBonuses += choiceBonus.bonus
-                                break
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Set characteristic to base 20 + user points + preserved bonuses
-            characteristics[name] = Characteristic(name: name, initialValue: 20 + points + totalBonuses, advances: 0)
+            // Set new value: base with bonuses + new user points
+            characteristics[name] = Characteristic(
+                name: name, 
+                initialValue: baseWithBonuses + points, 
+                advances: currentCharacteristic.advances
+            )
         }
         character.characteristics = characteristics
+    }
+    
+    private func getAppliedBonusesForCharacteristic(_ characteristicName: String) -> Int {
+        var totalBonuses = 0
+        
+        // Origin bonuses
+        if !character.homeworld.isEmpty, let origin = OriginDefinitions.getOrigin(by: character.homeworld) {
+            // Mandatory bonus
+            if origin.mandatoryBonus.characteristic == characteristicName {
+                totalBonuses += origin.mandatoryBonus.bonus
+            }
+            // Choice bonus
+            if character.selectedOriginChoice == characteristicName {
+                if let choiceBonus = origin.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
+                    totalBonuses += choiceBonus.bonus
+                }
+            }
+        }
+        
+        // Faction bonuses
+        if !character.faction.isEmpty, let faction = FactionDefinitions.getFaction(by: character.faction) {
+            // Mandatory bonus
+            if faction.mandatoryBonus.characteristic == characteristicName {
+                totalBonuses += faction.mandatoryBonus.bonus
+            }
+            // Choice bonus
+            if character.selectedFactionChoice == characteristicName {
+                if let choiceBonus = faction.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
+                    totalBonuses += choiceBonus.bonus
+                }
+            }
+        }
+        
+        return totalBonuses
     }
     
     private func binding(for characteristic: String) -> Binding<Int> {
@@ -722,34 +682,9 @@ struct OriginStage: View {
     
     private func initializeOriginSelections() {
         // Initialize from existing character data if available
-        if let origin = selectedOrigin {
-            // Try to determine which choice bonus was previously selected
-            // by checking which characteristic has more bonus than just the mandatory one
-            let mandatoryChar = origin.mandatoryBonus.characteristic
-            let mandatoryBonus = origin.mandatoryBonus.bonus
-            
-            for choiceBonus in origin.choiceBonus {
-                let charName = choiceBonus.characteristic
-                if charName != mandatoryChar {
-                    // For characteristics different from mandatory, check if they have the choice bonus
-                    if let characteristic = character.characteristics[charName] {
-                        let expectedWithChoice = 20 + choiceBonus.bonus
-                        if characteristic.initialValue >= expectedWithChoice {
-                            selectedChoice = charName
-                            break
-                        }
-                    }
-                } else {
-                    // For the same characteristic as mandatory, check if it has both bonuses
-                    if let characteristic = character.characteristics[charName] {
-                        let expectedWithBoth = 20 + mandatoryBonus + choiceBonus.bonus
-                        if characteristic.initialValue >= expectedWithBoth {
-                            selectedChoice = charName
-                            break
-                        }
-                    }
-                }
-            }
+        if selectedOrigin != nil {
+            // Restore the previously selected choice from stored data
+            selectedChoice = character.selectedOriginChoice
         }
     }
     
@@ -806,6 +741,9 @@ struct OriginStage: View {
         // Mark this origin as having bonuses applied
         appliedBonuses[originKey] = true
         character.appliedOriginBonusesTracker = appliedBonuses
+        
+        // Save the selected choice
+        character.selectedOriginChoice = selectedChoice
     }
     
     private func removeOriginBonuses(origin: Origin) {
@@ -834,6 +772,9 @@ struct OriginStage: View {
         }
         
         character.characteristics = characteristics
+        
+        // Clear the selected choice when removing bonuses
+        character.selectedOriginChoice = ""
     }
     
     private func saveOriginSelectionsToCharacter() {
@@ -1059,27 +1000,8 @@ struct FactionStage: View {
     private func initializeFactionSelections() {
         guard let faction = selectedFaction else { return }
         
-        // Only try to restore previous choice selection if this faction's bonuses were actually applied
-        // This prevents false detection when characteristics have bonuses from other sources
-        if !faction.choiceBonus.isEmpty && character.appliedFactionBonusesTracker[faction.name] == true {
-            // Simple detection: check which characteristic has the exact bonus amount expected from faction choice
-            for choiceBonus in faction.choiceBonus {
-                let charName = choiceBonus.characteristic
-                if let characteristic = character.characteristics[charName] {
-                    let currentValue = characteristic.initialValue
-                    
-                    // Calculate what the value should be without this faction's choice bonus
-                    var expectedWithoutFactionChoice = currentValue - choiceBonus.bonus
-                    
-                    // Verify that removing the bonus still leaves a reasonable value (at least 20)
-                    if expectedWithoutFactionChoice >= 20 {
-                        selectedChoice = charName
-                        break
-                    }
-                }
-            }
-        }
-        // If appliedFactionBonusesTracker[faction.name] is not true, selectedChoice remains empty
+        // Restore the previously selected choice from stored data
+        selectedChoice = character.selectedFactionChoice
         
         // Always reset to current character state when appearing
         let existingAdvances = character.factionSkillAdvances
@@ -1232,6 +1154,9 @@ struct FactionStage: View {
         // Mark this faction as having bonuses applied
         appliedBonuses[factionKey] = true
         character.appliedFactionBonusesTracker = appliedBonuses
+        
+        // Save the selected choice
+        character.selectedFactionChoice = selectedChoice
     }
     
     private func removeFactionBonuses(faction: Faction) {
@@ -1260,6 +1185,9 @@ struct FactionStage: View {
         }
         
         character.characteristics = characteristics
+        
+        // Clear the selected choice when removing bonuses
+        character.selectedFactionChoice = ""
         
         // Remove reputation influence bonus
         var reputations = character.reputations

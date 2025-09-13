@@ -56,6 +56,8 @@ class ImperiumCharacter: BaseCharacter {
     // Bonus tracking to prevent double application
     var appliedOriginBonuses: String = "" // JSON string tracking which origin bonuses have been applied
     var appliedFactionBonuses: String = "" // JSON string tracking which faction bonuses have been applied
+    var selectedOriginChoice: String = "" // The characteristic selected for origin choice bonus (e.g., "toughness")
+    var selectedFactionChoice: String = "" // The characteristic selected for faction choice bonus (e.g., "toughness")
     
     // Legacy characteristic properties for backward compatibility
     var weaponSkill: Int = 25
