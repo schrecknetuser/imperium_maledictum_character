@@ -1483,9 +1483,6 @@ class ImperiumCharacter: BaseCharacter {
     }
     
     func recalculateCharacteristics() {
-        print("DEBUG: recalculateCharacteristics() called")
-        print("DEBUG: selectedOriginChoice: '\(selectedOriginChoice)', selectedFactionChoice: '\(selectedFactionChoice)'")
-        
         // Recalculate all characteristics based on base + user allocations + bonuses
         var newCharacteristics: [String: Characteristic] = [:]
         
@@ -1495,7 +1492,6 @@ class ImperiumCharacter: BaseCharacter {
             let bonuses = calculateBonusesForCharacteristic(characteristicName)
             
             let finalValue = baseValue + userAllocation + bonuses
-            print("DEBUG: \(characteristicName) = \(baseValue) + \(userAllocation) + \(bonuses) = \(finalValue)")
             newCharacteristics[characteristicName] = Characteristic(
                 name: characteristicName,
                 initialValue: finalValue,
@@ -1505,7 +1501,6 @@ class ImperiumCharacter: BaseCharacter {
         
         characteristics = newCharacteristics
         lastModified = Date()
-        print("DEBUG: recalculateCharacteristics() completed")
     }
     
     private func calculateBonusesForCharacteristic(_ characteristicName: String) -> Int {
@@ -1516,13 +1511,11 @@ class ImperiumCharacter: BaseCharacter {
             // Mandatory bonus
             if origin.mandatoryBonus.characteristic == characteristicName {
                 totalBonuses += origin.mandatoryBonus.bonus
-                print("DEBUG: Adding origin mandatory bonus \(origin.mandatoryBonus.bonus) for \(characteristicName)")
             }
             // Choice bonus
             if selectedOriginChoice == characteristicName {
                 if let choiceBonus = origin.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
                     totalBonuses += choiceBonus.bonus
-                    print("DEBUG: Adding origin choice bonus \(choiceBonus.bonus) for \(characteristicName)")
                 }
             }
         }
@@ -1532,13 +1525,11 @@ class ImperiumCharacter: BaseCharacter {
             // Mandatory bonus
             if faction.mandatoryBonus.characteristic == characteristicName {
                 totalBonuses += faction.mandatoryBonus.bonus
-                print("DEBUG: Adding faction mandatory bonus \(faction.mandatoryBonus.bonus) for \(characteristicName)")
             }
             // Choice bonus
             if selectedFactionChoice == characteristicName {
                 if let choiceBonus = faction.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
                     totalBonuses += choiceBonus.bonus
-                    print("DEBUG: Adding faction choice bonus \(choiceBonus.bonus) for \(characteristicName)")
                 }
             }
         }

@@ -414,8 +414,6 @@ struct CharacteristicsStage: View {
     }
     
     private func initializeAllocatedPoints() {
-        print("DEBUG: initializeAllocatedPoints() called")
-        
         // Load user allocations from character
         allocatedPoints = character.userCharacteristicAllocationsDict
         
@@ -432,30 +430,21 @@ struct CharacteristicsStage: View {
                 // User allocation is what's left after removing base and bonuses
                 let userAllocation = max(0, currentValue - 20 - totalBonuses)
                 allocatedPoints[name] = userAllocation
-                
-                print("DEBUG: \(name) - currentValue: \(currentValue), totalBonuses: \(totalBonuses), userAllocation: \(userAllocation)")
             }
             
             // Save the initialized allocations
             character.userCharacteristicAllocationsDict = allocatedPoints
-        } else {
-            print("DEBUG: Loaded existing user allocations: \(allocatedPoints)")
         }
         
         updateRemainingPoints()
-        print("DEBUG: initializeAllocatedPoints() completed")
     }
     
     private func saveCharacteristicsToCharacter() {
-        print("DEBUG: saveCharacteristicsToCharacter() called")
-        
         // Save the user's allocations to the character
         character.userCharacteristicAllocationsDict = allocatedPoints
         
         // Recalculate all characteristics based on allocations + bonuses
         character.recalculateCharacteristics()
-        
-        print("DEBUG: saveCharacteristicsToCharacter() completed - user allocations saved and characteristics recalculated")
     }
     
     private func getAppliedBonusesForCharacteristic(_ characteristicName: String) -> Int {
@@ -466,13 +455,11 @@ struct CharacteristicsStage: View {
             // Mandatory bonus
             if origin.mandatoryBonus.characteristic == characteristicName {
                 totalBonuses += origin.mandatoryBonus.bonus
-                print("DEBUG: Adding origin mandatory bonus \(origin.mandatoryBonus.bonus) to \(characteristicName)")
             }
             // Choice bonus
             if character.selectedOriginChoice == characteristicName {
                 if let choiceBonus = origin.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
                     totalBonuses += choiceBonus.bonus
-                    print("DEBUG: Adding origin choice bonus \(choiceBonus.bonus) to \(characteristicName)")
                 }
             }
         }
@@ -482,18 +469,15 @@ struct CharacteristicsStage: View {
             // Mandatory bonus
             if faction.mandatoryBonus.characteristic == characteristicName {
                 totalBonuses += faction.mandatoryBonus.bonus
-                print("DEBUG: Adding faction mandatory bonus \(faction.mandatoryBonus.bonus) to \(characteristicName)")
             }
             // Choice bonus
             if character.selectedFactionChoice == characteristicName {
                 if let choiceBonus = faction.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
                     totalBonuses += choiceBonus.bonus
-                    print("DEBUG: Adding faction choice bonus \(choiceBonus.bonus) to \(characteristicName)")
                 }
             }
         }
         
-        print("DEBUG: Total bonuses for \(characteristicName): \(totalBonuses), originChoice: '\(character.selectedOriginChoice)', factionChoice: '\(character.selectedFactionChoice)'")
         return totalBonuses
     }
     
@@ -693,24 +677,15 @@ struct OriginStage: View {
     }
     
     private func initializeOriginSelections() {
-        print("DEBUG: initializeOriginSelections() called")
-        print("DEBUG: selectedOrigin: \(selectedOrigin?.name ?? "nil")")
-        print("DEBUG: character.selectedOriginChoice: '\(character.selectedOriginChoice)'")
-        
         // Initialize from existing character data if available
         if selectedOrigin != nil {
             // Restore the previously selected choice from stored data
             selectedChoice = character.selectedOriginChoice
-            print("DEBUG: Restored selectedChoice to: '\(selectedChoice)'")
-        } else {
-            print("DEBUG: No selected origin, keeping selectedChoice empty")
         }
     }
     
     private func applyOriginBonuses() {
-        print("DEBUG: applyOriginBonuses() called with selectedChoice: '\(selectedChoice)'")
         guard let origin = selectedOrigin else { 
-            print("DEBUG: No origin selected, returning")
             return 
         }
         
@@ -720,7 +695,6 @@ struct OriginStage: View {
         // Always clear and reapply bonuses to handle selection changes
         // First, remove any previously applied bonuses for this origin
         if appliedBonuses[originKey] == true {
-            print("DEBUG: Removing previous origin bonuses for: \(originKey)")
             removeOriginBonuses(origin: origin)
         }
         
@@ -730,40 +704,26 @@ struct OriginStage: View {
         
         // Save the selected choice
         character.selectedOriginChoice = selectedChoice
-        print("DEBUG: Set character.selectedOriginChoice to: '\(character.selectedOriginChoice)'")
         
         // Recalculate characteristics to apply the bonuses
         character.recalculateCharacteristics()
-        print("DEBUG: applyOriginBonuses() completed")
     }
     
     private func removeOriginBonuses(origin: Origin) {
-        print("DEBUG: removeOriginBonuses() called")
-        print("DEBUG: Before clearing - character.selectedOriginChoice: '\(character.selectedOriginChoice)'")
-        
         // Clear the selected choice when removing bonuses
         character.selectedOriginChoice = ""
-        print("DEBUG: After clearing - character.selectedOriginChoice: '\(character.selectedOriginChoice)'")
         
         // Recalculate characteristics without the bonuses
         character.recalculateCharacteristics()
-        print("DEBUG: removeOriginBonuses() completed")
     }
     
     private func saveOriginSelectionsToCharacter() {
-        print("DEBUG: saveOriginSelectionsToCharacter() called")
-        print("DEBUG: selectedChoice: '\(selectedChoice)'")
-        print("DEBUG: character.selectedOriginChoice before apply: '\(character.selectedOriginChoice)'")
-        
         guard let origin = selectedOrigin else { 
-            print("DEBUG: No origin selected in saveOriginSelectionsToCharacter()")
             return 
         }
         
         // Apply bonuses one final time to ensure they're saved
         applyOriginBonuses()
-        
-        print("DEBUG: character.selectedOriginChoice after apply: '\(character.selectedOriginChoice)'")
         
         // Add granted equipment to equipment list
         var equipmentList = character.equipmentList
@@ -780,7 +740,6 @@ struct OriginStage: View {
             }
         }
         character.equipmentList = equipmentList
-        print("DEBUG: saveOriginSelectionsToCharacter() completed")
     }
 }
 struct FactionStage: View {
@@ -990,18 +949,12 @@ struct FactionStage: View {
     }
     
     private func initializeFactionSelections() {
-        print("DEBUG: initializeFactionSelections() called")
-        print("DEBUG: selectedFaction: \(selectedFaction?.name ?? "nil")")
-        print("DEBUG: character.selectedFactionChoice: '\(character.selectedFactionChoice)'")
-        
         guard let faction = selectedFaction else { 
-            print("DEBUG: No faction selected, returning")
             return 
         }
         
         // Restore the previously selected choice from stored data
         selectedChoice = character.selectedFactionChoice
-        print("DEBUG: Restored selectedChoice to: '\(selectedChoice)'")
         
         // Always reset to current character state when appearing
         let existingAdvances = character.factionSkillAdvances
@@ -1025,7 +978,6 @@ struct FactionStage: View {
         
         hasInitialized = true
         updateRemainingSkillAdvances()
-        print("DEBUG: initializeFactionSelections() completed")
     }
     
     private func resetFactionSelections() {
@@ -1040,12 +992,7 @@ struct FactionStage: View {
     }
     
     private func saveFactionSelectionsToCharacter() {
-        print("DEBUG: saveFactionSelectionsToCharacter() called")
-        print("DEBUG: selectedChoice: '\(selectedChoice)'")
-        print("DEBUG: character.selectedFactionChoice before apply: '\(character.selectedFactionChoice)'")
-        
         guard let faction = selectedFaction else { 
-            print("DEBUG: No faction selected in saveFactionSelectionsToCharacter()")
             return 
         }
         
@@ -1060,8 +1007,6 @@ struct FactionStage: View {
         
         // Apply characteristic bonuses
         applyFactionBonuses()
-        
-        print("DEBUG: character.selectedFactionChoice after apply: '\(character.selectedFactionChoice)'")
         
         // Add faction talents
         var allTalents = character.talentNames
@@ -1104,13 +1049,10 @@ struct FactionStage: View {
         
         // Set starting solars
         character.solars = faction.solars
-        print("DEBUG: saveFactionSelectionsToCharacter() completed")
     }
     
     private func applyFactionBonuses() {
-        print("DEBUG: applyFactionBonuses() called with selectedChoice: '\(selectedChoice)'")
         guard let faction = selectedFaction else { 
-            print("DEBUG: No faction selected, returning")
             return 
         }
         
@@ -1120,7 +1062,6 @@ struct FactionStage: View {
         // Always clear and reapply bonuses to handle selection changes
         // First, remove any previously applied bonuses for this faction
         if appliedBonuses[factionKey] == true {
-            print("DEBUG: Removing previous faction bonuses for: \(factionKey)")
             removeFactionBonuses(faction: faction)
         }
         
@@ -1144,20 +1085,14 @@ struct FactionStage: View {
         
         // Save the selected choice
         character.selectedFactionChoice = selectedChoice
-        print("DEBUG: Set character.selectedFactionChoice to: '\(character.selectedFactionChoice)'")
         
         // Recalculate characteristics to apply the bonuses
         character.recalculateCharacteristics()
-        print("DEBUG: applyFactionBonuses() completed")
     }
     
     private func removeFactionBonuses(faction: Faction) {
-        print("DEBUG: removeFactionBonuses() called")
-        print("DEBUG: Before clearing - character.selectedFactionChoice: '\(character.selectedFactionChoice)'")
-        
         // Clear the selected choice when removing bonuses
         character.selectedFactionChoice = ""
-        print("DEBUG: After clearing - character.selectedFactionChoice: '\(character.selectedFactionChoice)'")
         
         // Remove reputation influence bonus
         var reputations = character.reputations
@@ -1166,7 +1101,6 @@ struct FactionStage: View {
         
         // Recalculate characteristics without the bonuses
         character.recalculateCharacteristics()
-        print("DEBUG: removeFactionBonuses() completed")
     }
     
     private func binding(for skill: String) -> Binding<Int> {
