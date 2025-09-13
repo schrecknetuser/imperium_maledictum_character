@@ -791,7 +791,7 @@ struct OriginStage: View {
                     equipmentList.append(template.createEquipment())
                 } else {
                     // Fallback: create basic equipment object if template not found
-                    let basicEquipment = Equipment(name: equipment, category: EquipmentCategories.tools, encumbrance: 1, cost: 0, availability: "Common")
+                    let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
                     basicEquipment.equipmentDescription = "Origin granted equipment"
                     equipmentList.append(basicEquipment)
                 }
@@ -1093,7 +1093,7 @@ struct FactionStage: View {
                     equipmentList.append(template.createEquipment())
                 } else {
                     // Fallback: create basic equipment object if template not found
-                    let basicEquipment = Equipment(name: equipment, category: EquipmentCategories.tools, encumbrance: 1, cost: 0, availability: "Common")
+                    let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
                     basicEquipment.equipmentDescription = "Faction granted equipment"
                     equipmentList.append(basicEquipment)
                 }
@@ -1826,7 +1826,7 @@ struct RoleStage: View {
                         weaponList.append(template.createWeapon())
                     } else {
                         // Fallback: create basic weapon object if template not found
-                        let basicWeapon = Weapon(name: weapon, category: WeaponCategories.melee, specialization: WeaponSpecializations.basic, damage: "1", range: WeaponRanges.close, magazine: 0, encumbrance: 1, cost: 0, availability: "Common")
+                        let basicWeapon = Weapon(name: weapon, category: WeaponCategories.melee, specialization: WeaponSpecializations.none, damage: "1", range: WeaponRanges.short, magazine: 0, encumbrance: 1, availability: "Common", cost: 0)
                         weaponList.append(basicWeapon)
                     }
                 }
@@ -1845,7 +1845,7 @@ struct RoleStage: View {
                         equipmentList.append(template.createEquipment())
                     } else {
                         // Fallback: create basic equipment object if template not found
-                        let basicEquipment = Equipment(name: equipment, category: EquipmentCategories.tools, encumbrance: 1, cost: 0, availability: "Common")
+                        let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
                         basicEquipment.equipmentDescription = "Equipment from character creation"
                         equipmentList.append(basicEquipment)
                     }
@@ -1860,7 +1860,7 @@ struct RoleStage: View {
                     equipmentList.append(template.createEquipment())
                 } else {
                     // Fallback: create basic equipment object if template not found
-                    let basicEquipment = Equipment(name: equipment, category: EquipmentCategories.tools, encumbrance: 1, cost: 0, availability: "Common")
+                    let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
                     basicEquipment.equipmentDescription = "Role granted equipment"
                     equipmentList.append(basicEquipment)
                 }
