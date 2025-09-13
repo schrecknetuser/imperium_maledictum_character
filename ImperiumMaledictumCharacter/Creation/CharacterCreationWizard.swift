@@ -736,7 +736,6 @@ struct OriginStage: View {
         character.recalculateCharacteristics()
         print("DEBUG: applyOriginBonuses() completed")
     }
-    }
     
     private func removeOriginBonuses(origin: Origin) {
         print("DEBUG: removeOriginBonuses() called")
@@ -1027,7 +1026,6 @@ struct FactionStage: View {
         hasInitialized = true
         updateRemainingSkillAdvances()
         print("DEBUG: initializeFactionSelections() completed")
-    }
     }
     
     private func resetFactionSelections() {
