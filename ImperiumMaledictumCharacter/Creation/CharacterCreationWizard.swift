@@ -415,52 +415,47 @@ struct CharacteristicsStage: View {
     
     private func initializeAllocatedPoints() {
         print("DEBUG: initializeAllocatedPoints() called")
-        let characteristics = character.characteristics
-        for name in CharacteristicNames.allCharacteristics {
-            let characteristic = characteristics[name] ?? Characteristic(name: name, initialValue: 20, advances: 0)
+        
+        // Load user allocations from character
+        allocatedPoints = character.userCharacteristicAllocationsDict
+        
+        // If no allocations stored yet, initialize with current allocations
+        if allocatedPoints.isEmpty {
+            let characteristics = character.characteristics
+            for name in CharacteristicNames.allCharacteristics {
+                let characteristic = characteristics[name] ?? Characteristic(name: name, initialValue: 20, advances: 0)
+                
+                // Calculate how much is user allocation vs bonuses
+                let currentValue = characteristic.initialValue
+                let totalBonuses = getAppliedBonusesForCharacteristic(name)
+                
+                // User allocation is what's left after removing base and bonuses
+                let userAllocation = max(0, currentValue - 20 - totalBonuses)
+                allocatedPoints[name] = userAllocation
+                
+                print("DEBUG: \(name) - currentValue: \(currentValue), totalBonuses: \(totalBonuses), userAllocation: \(userAllocation)")
+            }
             
-            // Calculate how much is user allocation vs bonuses
-            let currentValue = characteristic.initialValue
-            let totalBonuses = getAppliedBonusesForCharacteristic(name)
-            
-            // User allocation is what's left after removing base and bonuses
-            let userAllocation = max(0, currentValue - 20 - totalBonuses)
-            allocatedPoints[name] = userAllocation
-            
-            print("DEBUG: \(name) - currentValue: \(currentValue), totalBonuses: \(totalBonuses), userAllocation: \(userAllocation)")
+            // Save the initialized allocations
+            character.userCharacteristicAllocationsDict = allocatedPoints
+        } else {
+            print("DEBUG: Loaded existing user allocations: \(allocatedPoints)")
         }
+        
         updateRemainingPoints()
         print("DEBUG: initializeAllocatedPoints() completed")
     }
     
     private func saveCharacteristicsToCharacter() {
         print("DEBUG: saveCharacteristicsToCharacter() called")
-        var characteristics = character.characteristics
-        for (name, points) in allocatedPoints {
-            // Get the current characteristic value to preserve any applied bonuses
-            let currentCharacteristic = characteristics[name] ?? Characteristic(name: name, initialValue: 20, advances: 0)
-            let currentValue = currentCharacteristic.initialValue
-            
-            // Calculate what the base value was before user points were allocated
-            // The user previously allocated some points, we need to remove those and add the new points
-            let totalBonuses = getAppliedBonusesForCharacteristic(name)
-            let previousUserPoints = currentValue - 20 - totalBonuses
-            let baseWithBonuses = currentValue - previousUserPoints
-            
-            print("DEBUG: \(name) - currentValue: \(currentValue), totalBonuses: \(totalBonuses), previousUserPoints: \(previousUserPoints), baseWithBonuses: \(baseWithBonuses), points: \(points)")
-            
-            // Set new value: base with bonuses + new user points
-            let newValue = baseWithBonuses + points
-            characteristics[name] = Characteristic(
-                name: name, 
-                initialValue: newValue, 
-                advances: currentCharacteristic.advances
-            )
-            
-            print("DEBUG: \(name) set to \(newValue)")
-        }
-        character.characteristics = characteristics
-        print("DEBUG: saveCharacteristicsToCharacter() completed")
+        
+        // Save the user's allocations to the character
+        character.userCharacteristicAllocationsDict = allocatedPoints
+        
+        // Recalculate all characteristics based on allocations + bonuses
+        character.recalculateCharacteristics()
+        
+        print("DEBUG: saveCharacteristicsToCharacter() completed - user allocations saved and characteristics recalculated")
     }
     
     private func getAppliedBonusesForCharacteristic(_ characteristicName: String) -> Int {
@@ -717,81 +712,24 @@ struct OriginStage: View {
             removeOriginBonuses(origin: origin)
         }
         
-        var characteristics = character.characteristics
-        
-        // Apply mandatory bonus - add directly to initialValue
-        if let characteristic = characteristics[origin.mandatoryBonus.characteristic] {
-            characteristics[origin.mandatoryBonus.characteristic] = Characteristic(
-                name: characteristic.name,
-                initialValue: characteristic.initialValue + origin.mandatoryBonus.bonus,
-                advances: characteristic.advances
-            )
-        } else {
-            characteristics[origin.mandatoryBonus.characteristic] = Characteristic(
-                name: origin.mandatoryBonus.characteristic,
-                initialValue: 20 + origin.mandatoryBonus.bonus,
-                advances: 0
-            )
-        }
-        
-        // Apply choice bonus if selected - add directly to initialValue
-        if !selectedChoice.isEmpty {
-            if let characteristic = characteristics[selectedChoice] {
-                let bonusAmount = origin.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
-                characteristics[selectedChoice] = Characteristic(
-                    name: characteristic.name,
-                    initialValue: characteristic.initialValue + bonusAmount,
-                    advances: characteristic.advances
-                )
-            } else {
-                let bonusAmount = origin.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
-                characteristics[selectedChoice] = Characteristic(
-                    name: selectedChoice,
-                    initialValue: 20 + bonusAmount,
-                    advances: 0
-                )
-            }
-        }
-        
-        character.characteristics = characteristics
-        
         // Mark this origin as having bonuses applied
         appliedBonuses[originKey] = true
         character.appliedOriginBonusesTracker = appliedBonuses
         
         // Save the selected choice
         character.selectedOriginChoice = selectedChoice
+        
+        // Recalculate characteristics to apply the bonuses
+        character.recalculateCharacteristics()
+    }
     }
     
     private func removeOriginBonuses(origin: Origin) {
-        var characteristics = character.characteristics
-        
-        // Remove mandatory bonus
-        if let characteristic = characteristics[origin.mandatoryBonus.characteristic] {
-            let newValue = max(20, characteristic.initialValue - origin.mandatoryBonus.bonus)
-            characteristics[origin.mandatoryBonus.characteristic] = Characteristic(
-                name: characteristic.name,
-                initialValue: newValue,
-                advances: characteristic.advances
-            )
-        }
-        
-        // Remove any choice bonuses that might have been applied
-        for bonus in origin.choiceBonus {
-            if let characteristic = characteristics[bonus.characteristic] {
-                let newValue = max(20, characteristic.initialValue - bonus.bonus)
-                characteristics[bonus.characteristic] = Characteristic(
-                    name: characteristic.name,
-                    initialValue: newValue,
-                    advances: characteristic.advances
-                )
-            }
-        }
-        
-        character.characteristics = characteristics
-        
         // Clear the selected choice when removing bonuses
         character.selectedOriginChoice = ""
+        
+        // Recalculate characteristics without the bonuses
+        character.recalculateCharacteristics()
     }
     
     private func saveOriginSelectionsToCharacter() {
@@ -1134,44 +1072,6 @@ struct FactionStage: View {
             removeFactionBonuses(faction: faction)
         }
         
-        var characteristics = character.characteristics
-        
-        // Apply mandatory bonus
-        if let characteristic = characteristics[faction.mandatoryBonus.characteristic] {
-            characteristics[faction.mandatoryBonus.characteristic] = Characteristic(
-                name: characteristic.name,
-                initialValue: characteristic.initialValue + faction.mandatoryBonus.bonus,
-                advances: characteristic.advances
-            )
-        } else {
-            characteristics[faction.mandatoryBonus.characteristic] = Characteristic(
-                name: faction.mandatoryBonus.characteristic,
-                initialValue: 20 + faction.mandatoryBonus.bonus,
-                advances: 0
-            )
-        }
-        
-        // Apply choice bonus if selected
-        if !selectedChoice.isEmpty {
-            if let characteristic = characteristics[selectedChoice] {
-                let bonusAmount = faction.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
-                characteristics[selectedChoice] = Characteristic(
-                    name: characteristic.name,
-                    initialValue: characteristic.initialValue + bonusAmount,
-                    advances: characteristic.advances
-                )
-            } else {
-                let bonusAmount = faction.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
-                characteristics[selectedChoice] = Characteristic(
-                    name: selectedChoice,
-                    initialValue: 20 + bonusAmount,
-                    advances: 0
-                )
-            }
-        }
-        
-        character.characteristics = characteristics
-        
         // Apply reputation influence bonus
         var reputations = character.reputations
         let influenceFaction = faction.influenceBonus
@@ -1192,35 +1092,12 @@ struct FactionStage: View {
         
         // Save the selected choice
         character.selectedFactionChoice = selectedChoice
+        
+        // Recalculate characteristics to apply the bonuses
+        character.recalculateCharacteristics()
     }
     
     private func removeFactionBonuses(faction: Faction) {
-        var characteristics = character.characteristics
-        
-        // Remove mandatory bonus
-        if let characteristic = characteristics[faction.mandatoryBonus.characteristic] {
-            let newValue = max(20, characteristic.initialValue - faction.mandatoryBonus.bonus)
-            characteristics[faction.mandatoryBonus.characteristic] = Characteristic(
-                name: characteristic.name,
-                initialValue: newValue,
-                advances: characteristic.advances
-            )
-        }
-        
-        // Remove any choice bonuses that might have been applied
-        for bonus in faction.choiceBonus {
-            if let characteristic = characteristics[bonus.characteristic] {
-                let newValue = max(20, characteristic.initialValue - bonus.bonus)
-                characteristics[bonus.characteristic] = Characteristic(
-                    name: characteristic.name,
-                    initialValue: newValue,
-                    advances: characteristic.advances
-                )
-            }
-        }
-        
-        character.characteristics = characteristics
-        
         // Clear the selected choice when removing bonuses
         character.selectedFactionChoice = ""
         
@@ -1228,6 +1105,9 @@ struct FactionStage: View {
         var reputations = character.reputations
         reputations.removeAll { $0.faction == faction.influenceBonus && $0.individual.isEmpty }
         character.reputations = reputations
+        
+        // Recalculate characteristics without the bonuses
+        character.recalculateCharacteristics()
     }
     
     private func binding(for skill: String) -> Binding<Int> {

@@ -59,6 +59,9 @@ class ImperiumCharacter: BaseCharacter {
     var selectedOriginChoice: String = "" // The characteristic selected for origin choice bonus (e.g., "toughness")
     var selectedFactionChoice: String = "" // The characteristic selected for faction choice bonus (e.g., "toughness")
     
+    // User characteristic allocations separate from final values
+    var userCharacteristicAllocations: String = "" // JSON dictionary of user-allocated points per characteristic
+    
     // Legacy characteristic properties for backward compatibility
     var weaponSkill: Int = 25
     var ballisticSkill: Int = 25  
@@ -1460,5 +1463,88 @@ class ImperiumCharacter: BaseCharacter {
         }
         
         return changes
+    }
+    
+    // MARK: - User Characteristic Allocations Management
+    
+    var userCharacteristicAllocationsDict: [String: Int] {
+        get {
+            guard let data = userCharacteristicAllocations.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([String: Int].self, from: data) else {
+                return [:]
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                userCharacteristicAllocations = String(data: encoded, encoding: .utf8) ?? ""
+            }
+        }
+    }
+    
+    func recalculateCharacteristics() {
+        // Recalculate all characteristics based on base + user allocations + bonuses
+        var newCharacteristics: [String: Characteristic] = [:]
+        
+        for characteristicName in CharacteristicNames.allCharacteristics {
+            let baseValue = 20
+            let userAllocation = userCharacteristicAllocationsDict[characteristicName] ?? 0
+            let bonuses = calculateBonusesForCharacteristic(characteristicName)
+            
+            let finalValue = baseValue + userAllocation + bonuses
+            newCharacteristics[characteristicName] = Characteristic(
+                name: characteristicName,
+                initialValue: finalValue,
+                advances: characteristics[characteristicName]?.advances ?? 0
+            )
+        }
+        
+        characteristics = newCharacteristics
+        lastModified = Date()
+    }
+    
+    private func calculateBonusesForCharacteristic(_ characteristicName: String) -> Int {
+        var totalBonuses = 0
+        
+        // Origin bonuses
+        if !homeworld.isEmpty, let origin = OriginDefinitions.getOrigin(by: homeworld) {
+            // Mandatory bonus
+            if origin.mandatoryBonus.characteristic == characteristicName {
+                totalBonuses += origin.mandatoryBonus.bonus
+            }
+            // Choice bonus
+            if selectedOriginChoice == characteristicName {
+                if let choiceBonus = origin.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
+                    totalBonuses += choiceBonus.bonus
+                }
+            }
+        }
+        
+        // Faction bonuses
+        if !faction.isEmpty, let faction = FactionDefinitions.getFaction(by: faction) {
+            // Mandatory bonus
+            if faction.mandatoryBonus.characteristic == characteristicName {
+                totalBonuses += faction.mandatoryBonus.bonus
+            }
+            // Choice bonus
+            if selectedFactionChoice == characteristicName {
+                if let choiceBonus = faction.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
+                    totalBonuses += choiceBonus.bonus
+                }
+            }
+        }
+        
+        return totalBonuses
+    }
+}
+
+extension ImperiumCharacter {
+    // Helper to access the origin and faction definitions
+    private var currentOrigin: Origin? {
+        return OriginDefinitions.getOrigin(by: homeworld)
+    }
+    
+    private var currentFaction: Faction? {
+        return FactionDefinitions.getFaction(by: faction)
     }
 }
