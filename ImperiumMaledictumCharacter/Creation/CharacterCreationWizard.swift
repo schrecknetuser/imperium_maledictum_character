@@ -1784,29 +1784,6 @@ struct RoleStage: View {
             return inRoleChoices && !inFactionTalents && !inAutoGranted
         }
         selectedTalents = Set(filteredTalents)
-        
-        // Initialize equipment selections from character data
-        let existingWeapons = character.weaponNames
-        let existingEquipment = character.equipmentNames
-        
-        // Try to match existing weapons/equipment to choices
-        for (index, choices) in role.weaponChoices.enumerated() {
-            for weapon in existingWeapons {
-                if choices.contains(weapon) {
-                    selectedWeapons[index] = weapon
-                    break
-                }
-            }
-        }
-        
-        for (index, choices) in role.equipmentChoices.enumerated() {
-            for equipment in existingEquipment {
-                if choices.contains(equipment) {
-                    selectedEquipment[index] = equipment
-                    break
-                }
-            }
-        }
     }
     
     private func resetRoleSelections() {
