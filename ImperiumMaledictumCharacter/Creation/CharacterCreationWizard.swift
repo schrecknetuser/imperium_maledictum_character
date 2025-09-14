@@ -1588,10 +1588,47 @@ struct RoleStage: View {
         remainingSkillAdvances = role.skillAdvanceCount
         updateRemainingSkillAdvances()
         
-        // Initialize specialization advances
+        // Initialize specialization advances and restore from existing character data
         specializationAdvancesDistribution = [:]
+        customSpecializations = [:]
+        let existingSpecializations = character.skillSpecializations
+        
         for specialization in role.specializationAdvances {
-            specializationAdvancesDistribution[specialization] = 0
+            var restoredAdvances = 0
+            
+            if specialization.hasPrefix("Any (") {
+                // For "Any (Skill)" specializations, look for existing custom specializations
+                let skillName = String(specialization.dropFirst(5).dropLast(1)) // Remove "Any (" and ")"
+                if let skillSpecs = existingSpecializations[skillName] {
+                    // Find the first specialization for this skill that's not in the role's predefined list
+                    for (specName, advances) in skillSpecs {
+                        let compositeKey = "\(specName) (\(skillName))"
+                        if advances > 0 && !role.specializationAdvances.contains(compositeKey) {
+                            // This is likely a custom specialization for this "Any" slot
+                            customSpecializations[specialization] = specName
+                            restoredAdvances = advances
+                            break
+                        }
+                    }
+                }
+            } else {
+                // For regular specializations, check if it's in composite format or find by name
+                if specialization.contains(" (") && specialization.hasSuffix(")") {
+                    // Parse composite format
+                    let (specName, skillName) = ImperiumCharacter.parseSpecializationKey(specialization)
+                    if let skillName = skillName, let advances = existingSpecializations[skillName]?[specName] {
+                        restoredAdvances = advances
+                    }
+                } else {
+                    // Regular specialization - find its skill and check for existing advances
+                    let skillName = SkillSpecializations.findSkillForSpecialization(specialization)
+                    if let advances = existingSpecializations[skillName]?[specialization] {
+                        restoredAdvances = advances
+                    }
+                }
+            }
+            
+            specializationAdvancesDistribution[specialization] = restoredAdvances
         }
         remainingSpecializationAdvances = role.specializationAdvanceCount
         updateRemainingSpecializationAdvances()
