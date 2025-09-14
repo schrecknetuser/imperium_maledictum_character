@@ -725,12 +725,18 @@ struct OriginStage: View {
         // Apply bonuses one final time to ensure they're saved
         applyOriginBonuses()
         
-        // Add granted equipment to equipment list
+        // Add granted equipment to equipment and armor lists
         var equipmentList = character.equipmentList
+        var armorList = character.armorList
+        
         for equipment in origin.grantedEquipment {
-            if !equipmentList.contains(where: { $0.name == equipment }) {
-                if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
-                    equipmentList.append(template.createEquipment())
+            if !equipmentList.contains(where: { $0.name == equipment }) && 
+               !armorList.contains(where: { $0.name == equipment }) {
+                // Try to find armor template first
+                if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: equipment) {
+                    armorList.append(armorTemplate.createArmor())
+                } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                    equipmentList.append(equipmentTemplate.createEquipment())
                 } else {
                     // Fallback: create basic equipment object if template not found
                     let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
@@ -740,6 +746,7 @@ struct OriginStage: View {
             }
         }
         character.equipmentList = equipmentList
+        character.armorList = armorList
     }
 }
 struct FactionStage: View {
@@ -1031,12 +1038,18 @@ struct FactionStage: View {
         
         character.talentNames = allTalents
         
-        // Add faction equipment to equipment list
+        // Add faction equipment to equipment and armor lists
         var equipmentList = character.equipmentList
+        var armorList = character.armorList
+        
         for equipment in faction.equipment {
-            if !equipmentList.contains(where: { $0.name == equipment }) {
-                if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
-                    equipmentList.append(template.createEquipment())
+            if !equipmentList.contains(where: { $0.name == equipment }) && 
+               !armorList.contains(where: { $0.name == equipment }) {
+                // Try to find armor template first
+                if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: equipment) {
+                    armorList.append(armorTemplate.createArmor())
+                } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                    equipmentList.append(equipmentTemplate.createEquipment())
                 } else {
                     // Fallback: create basic equipment object if template not found
                     let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
@@ -1046,6 +1059,7 @@ struct FactionStage: View {
             }
         }
         character.equipmentList = equipmentList
+        character.armorList = armorList
         
         // Set starting solars
         character.solars = faction.solars
@@ -1761,15 +1775,21 @@ struct RoleStage: View {
         }
         character.weaponList = weaponList
         
-        // Save equipment selections by creating equipment objects from templates
+        // Save equipment selections by creating objects from templates
         var equipmentList = character.equipmentList
+        var armorList = character.armorList
+        
         for equipment in selectedEquipment {
             if !equipment.isEmpty {
                 // Check if equipment already exists
-                if !equipmentList.contains(where: { $0.name == equipment }) {
-                    // Find equipment template and create equipment object
-                    if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
-                        equipmentList.append(template.createEquipment())
+                if !equipmentList.contains(where: { $0.name == equipment }) && 
+                   !armorList.contains(where: { $0.name == equipment }) {
+                    // Try to find armor template first
+                    if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: equipment) {
+                        armorList.append(armorTemplate.createArmor())
+                    } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                        // Find equipment template and create equipment object
+                        equipmentList.append(equipmentTemplate.createEquipment())
                     } else {
                         // Fallback: create basic equipment object if template not found
                         let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
@@ -1782,9 +1802,13 @@ struct RoleStage: View {
         
         // Add granted equipment from role
         for equipment in role.equipment {
-            if !equipmentList.contains(where: { $0.name == equipment }) {
-                if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
-                    equipmentList.append(template.createEquipment())
+            if !equipmentList.contains(where: { $0.name == equipment }) && 
+               !armorList.contains(where: { $0.name == equipment }) {
+                // Try to find armor template first
+                if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: equipment) {
+                    armorList.append(armorTemplate.createArmor())
+                } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                    equipmentList.append(equipmentTemplate.createEquipment())
                 } else {
                     // Fallback: create basic equipment object if template not found
                     let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
@@ -1795,6 +1819,7 @@ struct RoleStage: View {
         }
         
         character.equipmentList = equipmentList
+        character.armorList = armorList
     }
     
     private func skillBinding(for skill: String) -> Binding<Int> {

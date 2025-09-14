@@ -51,6 +51,7 @@ class ImperiumCharacter: BaseCharacter {
     var weaponNamesData: String = "" // JSON array of weapon names - DEPRECATED
     var equipmentListData: String = "" // JSON array of Equipment objects
     var weaponListData: String = "" // JSON array of Weapon objects
+    var armorListData: String = "" // JSON array of Armor objects
     var reputationData: String = "" // JSON data for reputation
     
     // Bonus tracking to prevent double application
@@ -552,6 +553,22 @@ class ImperiumCharacter: BaseCharacter {
         set {
             if let encoded = try? JSONEncoder().encode(newValue) {
                 weaponListData = String(data: encoded, encoding: .utf8) ?? ""
+            }
+            // Note: lastModified is handled by the change tracking system
+        }
+    }
+    
+    var armorList: [Armor] {
+        get {
+            guard let data = armorListData.data(using: .utf8),
+                  let decoded = try? JSONDecoder().decode([Armor].self, from: data) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                armorListData = String(data: encoded, encoding: .utf8) ?? ""
             }
             // Note: lastModified is handled by the change tracking system
         }

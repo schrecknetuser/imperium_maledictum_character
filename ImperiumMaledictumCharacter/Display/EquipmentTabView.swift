@@ -13,14 +13,19 @@ struct EquipmentTab: View {
     @Binding var isEditMode: Bool
     @State private var showingAddEquipmentSheet = false
     @State private var showingAddWeaponSheet = false
+    @State private var showingAddArmorSheet = false
     @State private var showingWeaponSelectionPopup = false
     @State private var showingEquipmentSelectionPopup = false
+    @State private var showingArmorSelectionPopup = false
     @State private var editingEquipmentState: EditingEquipmentState = .none
     @State private var editingWeaponState: EditingWeaponState = .none
+    @State private var editingArmorState: EditingArmorState = .none
     @State private var showingEquipmentDeleteConfirmation = false
     @State private var showingWeaponDeleteConfirmation = false
+    @State private var showingArmorDeleteConfirmation = false
     @State private var equipmentToDelete: Equipment?
     @State private var weaponToDelete: Weapon?
+    @State private var armorToDelete: Armor?
     @State private var showingUnifiedStatusPopup = false
     @State private var showingChangeHistoryPopup = false
     
@@ -62,6 +67,20 @@ struct EquipmentTab: View {
             set: { isPresented in
                 if !isPresented {
                     editingWeaponState = .none
+                }
+            }
+        )
+    }
+    
+    private var showingEditArmorSheet: Binding<Bool> {
+        Binding(
+            get: { 
+                if case .editing = editingArmorState { return true }
+                return false
+            },
+            set: { isPresented in
+                if !isPresented {
+                    editingArmorState = .none
                 }
             }
         )
@@ -162,6 +181,105 @@ struct EquipmentTab: View {
                         
                         if imperium.equipmentList.isEmpty && !isEditMode {
                             Text("No equipment")
+                                .foregroundColor(.secondary)
+                                .italic()
+                        }
+                    }
+                    
+                    Section("Armor") {
+                        let groupedArmor = Dictionary(grouping: imperium.armorList) { $0.category }
+                        
+                        ForEach(ArmorCategories.all, id: \.self) { category in
+                            if let armorInCategory = groupedArmor[category], !armorInCategory.isEmpty {
+                                // Category header
+                                HStack {
+                                    Text(category)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                    Text("(\(armorInCategory.count))")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.vertical, 4)
+                                
+                                ForEach(Array(armorInCategory.enumerated()), id: \.offset) { index, armor in
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(armor.name)
+                                                .font(.body)
+                                            
+                                            if !armor.armorDescription.isEmpty {
+                                                Text(armor.armorDescription)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .lineLimit(3)
+                                            }
+                                            
+                                            // Show armor stats
+                                            Text("Armor: \(armor.armorValue), Locations: \(armor.locations.joined(separator: ", "))")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                            
+                                            // Show traits, qualities, and flaws
+                                            let details = buildArmorDetails(armor)
+                                            if !details.isEmpty {
+                                                Text(details)
+                                                    .font(.caption)
+                                                    .foregroundColor(.secondary)
+                                                    .italic()
+                                            }
+                                            
+                                            // Show stats
+                                            Text("Encumbrance: \(armor.encumbrance), Cost: \(armor.cost), \(armor.availability)")
+                                                .font(.caption2)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        if isEditMode {
+                                            HStack(spacing: 8) {
+                                                Button(action: {
+                                                    editArmor(armor)
+                                                }) {
+                                                    Image(systemName: "pencil.circle.fill")
+                                                        .foregroundColor(.blue)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                                
+                                                Button(action: {
+                                                    armorToDelete = armor
+                                                    showingArmorDeleteConfirmation = true
+                                                }) {
+                                                    Image(systemName: "minus.circle.fill")
+                                                        .foregroundColor(.red)
+                                                }
+                                                .buttonStyle(PlainButtonStyle())
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if isEditMode {
+                            Button(action: {
+                                showingArmorSelectionPopup = true
+                            }) {
+                                HStack {
+                                    Image(systemName: "plus.circle.fill")
+                                        .foregroundColor(.blue)
+                                    Text("Add Armor")
+                                        .foregroundColor(.blue)
+                                    Spacer()
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        
+                        if imperium.armorList.isEmpty && !isEditMode {
+                            Text("No armor")
                                 .foregroundColor(.secondary)
                                 .italic()
                         }
@@ -355,6 +473,21 @@ struct EquipmentTab: View {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: true, editingWeapon: weapon, isEditMode: isEditMode)
             }
         }
+        .sheet(isPresented: $showingArmorSelectionPopup) {
+            if let imperium = imperiumCharacter {
+                ArmorSelectionPopupView(character: imperium, store: store, showingCustomArmorSheet: $showingAddArmorSheet, isEditMode: isEditMode)
+            }
+        }
+        .sheet(isPresented: showingEditArmorSheet) {
+            if let imperium = imperiumCharacter, case .editing(let armor) = editingArmorState {
+                ComprehensiveArmorSheet(character: imperium, store: store, editingArmor: armor, isEditMode: isEditMode)
+            }
+        }
+        .sheet(isPresented: $showingAddArmorSheet) {
+            if let imperium = imperiumCharacter {
+                ComprehensiveArmorSheet(character: imperium, store: store, isEditMode: isEditMode)
+            }
+        }
         .sheet(isPresented: $showingUnifiedStatusPopup) {
             if let binding = imperiumCharacterBinding {
                 UnifiedStatusPopupView(character: binding, store: store)
@@ -393,6 +526,21 @@ struct EquipmentTab: View {
         } message: {
             if let weapon = weaponToDelete {
                 Text("Are you sure you want to delete '\(weapon.name)'? This action cannot be undone.")
+            }
+        }
+        .alert("Delete Armor", isPresented: $showingArmorDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                armorToDelete = nil
+            }
+            Button("Delete", role: .destructive) {
+                if let armor = armorToDelete {
+                    removeArmor(armor)
+                }
+                armorToDelete = nil
+            }
+        } message: {
+            if let armor = armorToDelete {
+                Text("Are you sure you want to delete '\(armor.name)'? This action cannot be undone.")
             }
         }
     }
@@ -437,6 +585,7 @@ struct EquipmentTab: View {
     private func editEquipment(_ equipment: Equipment) {
         // Clear any other editing state first
         editingWeaponState = .none
+        editingArmorState = .none
         
         // Set the editing equipment atomically
         editingEquipmentState = .editing(equipment)
@@ -445,9 +594,38 @@ struct EquipmentTab: View {
     private func editWeapon(_ weapon: Weapon) {
         // Clear any other editing state first
         editingEquipmentState = .none
+        editingArmorState = .none
         
         // Set the editing weapon atomically
         editingWeaponState = .editing(weapon)
+    }
+    
+    private func editArmor(_ armor: Armor) {
+        // Clear any other editing state first
+        editingEquipmentState = .none
+        editingWeaponState = .none
+        
+        // Set the editing armor atomically
+        editingArmorState = .editing(armor)
+    }
+    
+    private func buildArmorDetails(_ armor: Armor) -> String {
+        var details: [String] = []
+        
+        if !armor.traits.isEmpty {
+            let traitNames = armor.traits.map { $0.displayName }.joined(separator: ", ")
+            details.append("Traits: \(traitNames)")
+        }
+        
+        if !armor.qualities.isEmpty {
+            details.append("Qualities: \(armor.qualities.joined(separator: ", "))")
+        }
+        
+        if !armor.flaws.isEmpty {
+            details.append("Flaws: \(armor.flaws.joined(separator: ", "))")
+        }
+        
+        return details.joined(separator: "\n")
     }
     
     private func removeEquipment(_ equipment: Equipment) {
@@ -479,6 +657,26 @@ struct EquipmentTab: View {
             weaponList.remove(at: index)
         }
         imperium.weaponList = weaponList
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: imperium)
+            store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
+    }
+    
+    private func removeArmor(_ armor: Armor) {
+        guard let imperium = imperiumCharacter else { return }
+        
+        var armorList = imperium.armorList
+        // Remove the specific armor instance using ID
+        if let index = armorList.firstIndex(where: { $0.id == armor.id }) {
+            armorList.remove(at: index)
+        }
+        imperium.armorList = armorList
         
         // Only use immediate change tracking if not in edit mode
         // When in edit mode, let the main "Done" button handle change tracking
@@ -1187,6 +1385,441 @@ struct EquipmentSelectionPopupView: View {
             store.saveChanges() // Just save to SwiftData without change tracking
         }
         
+        dismiss()
+    }
+}
+// MARK: - Editing State Enums
+enum EditingEquipmentState {
+    case none
+    case editing(Equipment)
+}
+
+enum EditingWeaponState {
+    case none
+    case editing(Weapon)
+}
+
+enum EditingArmorState {
+    case none
+    case editing(Armor)
+}
+
+// MARK: - Armor Selection Popup
+struct ArmorSelectionPopupView: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    @Binding var showingCustomArmorSheet: Bool
+    let isEditMode: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var selectedCategory: String = ArmorCategories.basic
+    @State private var selectionMode: SelectionMode = .category
+    
+    enum SelectionMode {
+        case category
+        case armor
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Group {
+                if selectionMode == .category {
+                    categorySelectionView
+                } else {
+                    armorSelectionView
+                }
+            }
+            .navigationTitle("Add Armor")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add Custom") {
+                        dismiss()
+                        showingCustomArmorSheet = true
+                    }
+                }
+            }
+        }
+    }
+    
+    private var categorySelectionView: some View {
+        List {
+            Section {
+                ForEach(ArmorCategories.all, id: \.self) { category in
+                    let armorInCategory = ArmorTemplateDefinitions.getArmorByCategory(category)
+                    
+                    Button(action: {
+                        selectedCategory = category
+                        selectionMode = .armor
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(category)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                
+                                Text("\(armorInCategory.count) armor items available")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            } header: {
+                Text("Select Armor Category")
+            } footer: {
+                Text("Choose a category to see available armor templates.")
+            }
+        }
+    }
+    
+    private var armorSelectionView: some View {
+        List {
+            Section {
+                Button(action: {
+                    selectionMode = .category
+                }) {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.blue)
+                        Text("Back to Categories")
+                            .foregroundColor(.blue)
+                        Spacer()
+                    }
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            
+            Section {
+                let armorInCategory = ArmorTemplateDefinitions.getArmorByCategory(selectedCategory)
+                
+                ForEach(Array(armorInCategory.enumerated()), id: \.offset) { index, template in
+                    Button(action: {
+                        addArmorFromTemplate(template)
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(template.name)
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                
+                                HStack {
+                                    Text("Armor: \(template.armorValue)")
+                                    Text("Locations: \(template.locations.joined(separator: ", "))")
+                                }
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                
+                                if !template.traits.isEmpty {
+                                    Text("Traits: \(template.traits.map { $0.displayName }.joined(separator: ", "))")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                }
+                                
+                                HStack {
+                                    Text("Cost: \(template.cost)")
+                                    Text("Encumbrance: \(template.encumbrance)")
+                                    Text(template.availability)
+                                }
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "plus.circle.fill")
+                                .foregroundColor(.blue)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+            } header: {
+                Text("\(selectedCategory) Armor")
+            } footer: {
+                Text("Tap armor to add it to your character, or use 'Add Custom' for custom armor.")
+            }
+        }
+    }
+    
+    private func addArmorFromTemplate(_ template: ArmorTemplate) {
+        let armor = template.createArmor()
+        
+        var armorList = character.armorList
+        armorList.append(armor)
+        character.armorList = armorList
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: character)
+            store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
+        
+        dismiss()
+    }
+}
+
+// MARK: - Comprehensive Armor Sheet
+struct ComprehensiveArmorSheet: View {
+    let character: ImperiumCharacter
+    @ObservedObject var store: CharacterStore
+    let editingArmor: Armor?
+    let isEditMode: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var itemName: String = ""
+    @State private var itemDescription: String = ""
+    @State private var category: String = ArmorCategories.basic
+    @State private var selectedLocations: Set<String> = []
+    @State private var armorValue: Int = 0
+    @State private var encumbrance: Int = 0
+    @State private var cost: Int = 0
+    @State private var availability: String = AvailabilityLevels.common
+    @State private var selectedQualities: Set<String> = []
+    @State private var selectedFlaws: Set<String> = []
+    @State private var selectedTraits: Set<String> = []
+    @State private var showingTraitPicker: Bool = false
+    
+    init(character: ImperiumCharacter, store: CharacterStore, editingArmor: Armor? = nil, isEditMode: Bool = false) {
+        self.character = character
+        self.store = store
+        self.editingArmor = editingArmor
+        self.isEditMode = isEditMode
+        
+        // Initialize state variables with editing armor values if provided
+        if let armor = editingArmor {
+            _itemName = State(initialValue: armor.name)
+            _itemDescription = State(initialValue: armor.armorDescription)
+            _category = State(initialValue: armor.category)
+            _selectedLocations = State(initialValue: Set(armor.locations))
+            _armorValue = State(initialValue: armor.armorValue)
+            _encumbrance = State(initialValue: armor.encumbrance)
+            _cost = State(initialValue: armor.cost)
+            _availability = State(initialValue: armor.availability)
+            _selectedQualities = State(initialValue: Set(armor.qualities))
+            _selectedFlaws = State(initialValue: Set(armor.flaws))
+            _selectedTraits = State(initialValue: Set(armor.traits.map { $0.name }))
+        }
+        
+        _showingTraitPicker = State(initialValue: false)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Basic Information") {
+                    TextField("Armor Name", text: $itemName)
+                    TextField("Description", text: $itemDescription, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+                
+                Section("Armor Properties") {
+                    Picker("Category", selection: $category) {
+                        ForEach(ArmorCategories.all, id: \.self) { cat in
+                            Text(cat).tag(cat)
+                        }
+                    }
+                    
+                    HStack {
+                        Text("Armor Value")
+                        Spacer()
+                        Stepper("\(armorValue)", value: $armorValue, in: 0...20)
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("Locations")
+                            .font(.headline)
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
+                            ForEach(ArmorLocations.allLocations, id: \.self) { location in
+                                HStack {
+                                    Text(location)
+                                    Spacer()
+                                    if selectedLocations.contains(location) {
+                                        Image(systemName: "checkmark")
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    if selectedLocations.contains(location) {
+                                        selectedLocations.remove(location)
+                                    } else {
+                                        selectedLocations.insert(location)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Section("Physical Properties") {
+                    HStack {
+                        Text("Encumbrance")
+                        Spacer()
+                        Stepper("\(encumbrance)", value: $encumbrance, in: 0...50)
+                    }
+                    
+                    HStack {
+                        Text("Cost")
+                        Spacer()
+                        TextField("Cost", value: $cost, format: .number)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .frame(width: 100)
+                            .keyboardType(.numberPad)
+                    }
+                    
+                    Picker("Availability", selection: $availability) {
+                        ForEach(AvailabilityLevels.all, id: \.self) { level in
+                            Text(level).tag(level)
+                        }
+                    }
+                }
+                
+                Section("Qualities") {
+                    ForEach(EquipmentQualities.all, id: \.self) { quality in
+                        HStack {
+                            Text(quality)
+                            Spacer()
+                            if selectedQualities.contains(quality) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if selectedQualities.contains(quality) {
+                                selectedQualities.remove(quality)
+                            } else {
+                                selectedQualities.insert(quality)
+                            }
+                        }
+                    }
+                }
+                
+                Section("Flaws") {
+                    ForEach(EquipmentFlaws.all, id: \.self) { flaw in
+                        HStack {
+                            Text(flaw)
+                            Spacer()
+                            if selectedFlaws.contains(flaw) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if selectedFlaws.contains(flaw) {
+                                selectedFlaws.remove(flaw)
+                            } else {
+                                selectedFlaws.insert(flaw)
+                            }
+                        }
+                    }
+                }
+                
+                Section("Armor Traits") {
+                    ForEach(ArmorTraitNames.all, id: \.self) { trait in
+                        HStack {
+                            Text(trait)
+                            Spacer()
+                            if selectedTraits.contains(trait) {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if selectedTraits.contains(trait) {
+                                selectedTraits.remove(trait)
+                            } else {
+                                selectedTraits.insert(trait)
+                            }
+                        }
+                    }
+                }
+                
+                Section {
+                    Text("Tap on items to select/deselect them for your armor.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .navigationTitle(editingArmor != nil ? "Edit Armor" : "Add Armor")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(editingArmor != nil ? "Save" : "Add") {
+                        saveArmor()
+                    }
+                    .disabled(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+    
+    private func saveArmor() {
+        let trimmedName = itemName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+        
+        let armor = Armor(
+            name: trimmedName,
+            armorDescription: itemDescription,
+            category: category,
+            locations: Array(selectedLocations),
+            armorValue: armorValue,
+            encumbrance: encumbrance,
+            cost: cost,
+            availability: availability
+        )
+        
+        // Set armor traits
+        armor.traits = selectedTraits.map { ArmorTrait(name: $0) }
+        armor.qualities = Array(selectedQualities)
+        armor.flaws = Array(selectedFlaws)
+        
+        var armorList = character.armorList
+        
+        if let editingArmor = editingArmor {
+            // Remove only the specific armor instance being edited using ID
+            if let index = armorList.firstIndex(where: { $0.id == editingArmor.id }) {
+                armorList.remove(at: index)
+            }
+        }
+        
+        armorList.append(armor)
+        character.armorList = armorList
+        
+        // Only use immediate change tracking if not in edit mode
+        // When in edit mode, let the main "Done" button handle change tracking
+        if !isEditMode {
+            let originalSnapshot = store.createSnapshot(of: character)
+            store.saveCharacterWithAutoChangeTracking(character, originalSnapshot: originalSnapshot)
+        } else {
+            store.saveChanges() // Just save to SwiftData without change tracking
+        }
         dismiss()
     }
 }

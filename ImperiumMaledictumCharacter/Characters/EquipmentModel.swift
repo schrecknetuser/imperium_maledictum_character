@@ -181,8 +181,9 @@ struct EquipmentCategories {
     static let tools = "Tools"
     static let forceFields = "Force Fields"
     static let augmetics = "Augmetics"
+    static let armor = "Armor"
     
-    static let all = [clothingPersonalGear, tools, forceFields, augmetics]
+    static let all = [clothingPersonalGear, tools, forceFields, augmetics, armor]
 }
 
 // MARK: - Equipment Template System
