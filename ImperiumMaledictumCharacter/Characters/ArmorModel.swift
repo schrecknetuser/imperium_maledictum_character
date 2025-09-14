@@ -207,9 +207,20 @@ struct ArmorTemplateDefinitions {
     // MARK: - Basic Armor
     static let basicArmor: [ArmorTemplate] = [
         ArmorTemplate(
-            name: "Robes/Light Leathers",
+            name: "Robes",
             category: ArmorCategories.basic,
-            description: "Basic protective clothing and light leather garments.",
+            description: "Basic protective clothing.",
+            locations: [ArmorLocations.arms, ArmorLocations.body, ArmorLocations.legs],
+            armorValue: 1,
+            encumbrance: 1,
+            cost: 10,
+            availability: AvailabilityLevels.common,
+            traits: [ArmorTrait(name: ArmorTraitNames.subtle)]
+        ),
+        ArmorTemplate(
+            name: "Light Leathers",
+            category: ArmorCategories.basic,
+            description: "Basic light leather garments.",
             locations: [ArmorLocations.arms, ArmorLocations.body, ArmorLocations.legs],
             armorValue: 1,
             encumbrance: 1,
