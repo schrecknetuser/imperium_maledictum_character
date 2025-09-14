@@ -88,7 +88,8 @@ struct EquipmentTab: View {
     
     var body: some View {
         NavigationView {
-            List {
+            GeometryReader { geometry in
+                List {
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
                         let groupedEquipment = Dictionary(grouping: imperium.equipmentList) { equipment in
@@ -409,6 +410,7 @@ struct EquipmentTab: View {
             .onAppear {
                 // Migrate old string-based data to new object-based system
                 imperiumCharacter?.migrateEquipmentAndWeapons()
+            }
             }
         }
         .overlay(alignment: .bottomTrailing) {
@@ -845,7 +847,7 @@ struct ComprehensiveEquipmentSheet: View {
                         Spacer()
                         TextField("Cost", value: $cost, format: .number)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 100)
+                            .frame(width: max(100, geometry.size.width * 0.2))
                             .keyboardType(.numberPad)
                     }
                     
@@ -1671,7 +1673,7 @@ struct ComprehensiveArmorSheet: View {
                         Spacer()
                         TextField("Cost", value: $cost, format: .number)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 100)
+                            .frame(width: max(100, geometry.size.width * 0.2))
                             .keyboardType(.numberPad)
                     }
                     
