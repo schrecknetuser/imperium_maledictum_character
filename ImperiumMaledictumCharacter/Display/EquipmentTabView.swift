@@ -1388,16 +1388,6 @@ struct EquipmentSelectionPopupView: View {
         dismiss()
     }
 }
-// MARK: - Editing State Enums
-enum EditingEquipmentState {
-    case none
-    case editing(Equipment)
-}
-
-enum EditingWeaponState {
-    case none
-    case editing(Weapon)
-}
 
 enum EditingArmorState {
     case none
