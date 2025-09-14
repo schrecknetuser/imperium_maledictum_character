@@ -399,8 +399,6 @@ struct EquipmentTab: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Equipment")
-            .navigationBarTitleDisplayMode(.inline)
             .listStyle(PlainListStyle())
             .safeAreaInset(edge: .bottom) {
                 // Spacer for floating buttons

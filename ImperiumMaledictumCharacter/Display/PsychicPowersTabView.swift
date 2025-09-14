@@ -39,8 +39,6 @@ struct PsychicPowersTab: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Psychic Powers")
-            .navigationBarTitleDisplayMode(.inline)
             .listStyle(PlainListStyle())
             .safeAreaInset(edge: .bottom) {
                 // Spacer for floating buttons

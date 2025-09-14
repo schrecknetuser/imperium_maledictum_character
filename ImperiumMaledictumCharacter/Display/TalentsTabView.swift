@@ -161,8 +161,6 @@ struct TalentsTab: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Talents & Powers")
-            .navigationBarTitleDisplayMode(.inline)
             .listStyle(PlainListStyle())
             .safeAreaInset(edge: .bottom) {
                 // Spacer for floating buttons
