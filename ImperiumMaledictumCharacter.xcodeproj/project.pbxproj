@@ -21,6 +21,7 @@
 		CE0525892E57860D009641C6 /* PsychicPowerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0525882E57860D009641C6 /* PsychicPowerModel.swift */; };
 		CE05258A2E57860D009641C6 /* ChangeLogEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0525862E57860D009641C6 /* ChangeLogEntry.swift */; };
 		CE05258B2E57860D009641C6 /* CharacterSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE0525872E57860D009641C6 /* CharacterSnapshot.swift */; };
+		CE81EBE02E7655D800FE4DDF /* ArmorModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE81EBDF2E7655D800FE4DDF /* ArmorModel.swift */; };
 		CE94F7502E4FE646008F9F08 /* CharacteristicModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7482E4FE646008F9F08 /* CharacteristicModel.swift */; };
 		CE94F7512E4FE646008F9F08 /* ReputationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74C2E4FE646008F9F08 /* ReputationModel.swift */; };
 		CE94F7522E4FE646008F9F08 /* FactionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74A2E4FE646008F9F08 /* FactionModel.swift */; };
@@ -57,6 +58,7 @@
 		CE0525862E57860D009641C6 /* ChangeLogEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangeLogEntry.swift; sourceTree = "<group>"; };
 		CE0525872E57860D009641C6 /* CharacterSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterSnapshot.swift; sourceTree = "<group>"; };
 		CE0525882E57860D009641C6 /* PsychicPowerModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PsychicPowerModel.swift; sourceTree = "<group>"; };
+		CE81EBDF2E7655D800FE4DDF /* ArmorModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArmorModel.swift; sourceTree = "<group>"; };
 		CE94F7482E4FE646008F9F08 /* CharacteristicModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacteristicModel.swift; sourceTree = "<group>"; };
 		CE94F7492E4FE646008F9F08 /* EquipmentModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentModel.swift; sourceTree = "<group>"; };
 		CE94F74A2E4FE646008F9F08 /* FactionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FactionModel.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 		1A00000E /* Characters */ = {
 			isa = PBXGroup;
 			children = (
+				CE81EBDF2E7655D800FE4DDF /* ArmorModel.swift */,
 				CE0525862E57860D009641C6 /* ChangeLogEntry.swift */,
 				CE0525872E57860D009641C6 /* CharacterSnapshot.swift */,
 				CE0525882E57860D009641C6 /* PsychicPowerModel.swift */,
@@ -256,6 +259,7 @@
 				CE94F7572E4FE646008F9F08 /* SkillModel.swift in Sources */,
 				1A000003 /* ContentView.swift in Sources */,
 				CE0525832E5785E2009641C6 /* UnifiedStatusPopupView.swift in Sources */,
+				CE81EBE02E7655D800FE4DDF /* ArmorModel.swift in Sources */,
 				1A000010 /* CharacterBase.swift in Sources */,
 				1A000012 /* ImperiumCharacter.swift in Sources */,
 				1A000014 /* CharacterStore.swift in Sources */,
@@ -406,7 +410,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_ASSET_PATHS = "\"ImperiumMaledictumCharacter/Preview Content\"";
 				DEVELOPMENT_TEAM = CRJA93YZ67;
 				ENABLE_PREVIEWS = YES;
@@ -435,7 +439,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_ASSET_PATHS = "\"ImperiumMaledictumCharacter/Preview Content\"";
 				DEVELOPMENT_TEAM = CRJA93YZ67;
 				ENABLE_PREVIEWS = YES;
