@@ -502,13 +502,20 @@ struct CharacteristicsTab: View {
         return Binding<Int>(
             get: {
                 guard let imperium = imperiumCharacter else { return 0 }
-                return imperium.skillAdvances[skillName] ?? 0
+                let userAdvances = imperium.skillAdvances[skillName] ?? 0
+                let factionAdvances = imperium.factionSkillAdvances[skillName] ?? 0
+                return userAdvances + factionAdvances
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
                 let originalSnapshot = store.createSnapshot(of: imperium)
+                
+                // Calculate what the user advances should be to achieve the desired total
+                let factionAdvances = imperium.factionSkillAdvances[skillName] ?? 0
+                let targetUserAdvances = max(0, newValue - factionAdvances)
+                
                 var skillAdvances = imperium.skillAdvances
-                skillAdvances[skillName] = newValue
+                skillAdvances[skillName] = targetUserAdvances
                 imperium.skillAdvances = skillAdvances
                 store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
                 // Refresh specializations list since skill advances affect specialization totals
