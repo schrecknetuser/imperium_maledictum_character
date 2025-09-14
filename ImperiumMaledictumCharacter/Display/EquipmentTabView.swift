@@ -796,12 +796,13 @@ struct ComprehensiveEquipmentSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Basic Information") {
-                    TextField(isWeapon ? "Weapon Name" : "Equipment Name", text: $itemName)
-                    TextField("Description", text: $itemDescription, axis: .vertical)
-                        .lineLimit(3...6)
-                }
+            GeometryReader { geometry in
+                Form {
+                    Section("Basic Information") {
+                        TextField(isWeapon ? "Weapon Name" : "Equipment Name", text: $itemName)
+                        TextField("Description", text: $itemDescription, axis: .vertical)
+                            .lineLimit(3...6)
+                    }
                 
                 if isWeapon {
                     Section("Weapon Properties") {
@@ -965,6 +966,7 @@ struct ComprehensiveEquipmentSheet: View {
                     }
                     .disabled(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
+            }
             }
         }
     }
@@ -1615,12 +1617,13 @@ struct ComprehensiveArmorSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Basic Information") {
-                    TextField("Armor Name", text: $itemName)
-                    TextField("Description", text: $itemDescription, axis: .vertical)
-                        .lineLimit(3...6)
-                }
+            GeometryReader { geometry in
+                Form {
+                    Section("Basic Information") {
+                        TextField("Armor Name", text: $itemName)
+                        TextField("Description", text: $itemDescription, axis: .vertical)
+                            .lineLimit(3...6)
+                    }
                 
                 Section("Armor Properties") {
                     Picker("Category", selection: $category) {
@@ -1768,6 +1771,7 @@ struct ComprehensiveArmorSheet: View {
                     }
                     .disabled(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
+            }
             }
         }
     }
