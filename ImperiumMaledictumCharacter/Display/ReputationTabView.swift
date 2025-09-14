@@ -121,7 +121,6 @@ struct ReputationTab: View {
                 .padding(.vertical)
                 .padding(.bottom, 80) // Extra space for floating buttons
         }
-        .navigationBarTitleDisplayMode(.inline)
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {
