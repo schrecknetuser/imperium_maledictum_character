@@ -39,8 +39,7 @@ struct CharacteristicsTab: View {
     }
     
     var body: some View {
-        NavigationView {
-            GeometryReader { geometry in
+        GeometryReader { geometry in
                 ScrollView {
                     VStack(spacing: 20) {
                 // Characteristics Table
@@ -452,7 +451,6 @@ struct CharacteristicsTab: View {
             imperiumCharacter?.migrateFromLegacySpecializations()
             // Refresh the specializations list
             refreshSpecializationsList()
-        }
         }
     }
     

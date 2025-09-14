@@ -34,8 +34,8 @@ struct OverviewTab: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                // Character Header
+                VStack(alignment: .leading, spacing: 0) {
+                // Character Header - Full width background
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text(character.characterType.symbol)
@@ -104,12 +104,17 @@ struct OverviewTab: View {
                     }
                 }
                 .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color(.systemGray6))
-                .cornerRadius(12)
                 
-                // Character Goals and Description
-                if let imperium = imperiumCharacter {
-                    VStack(alignment: .leading, spacing: 12) {
+                // Spacing between sections
+                Rectangle().fill(Color.clear).frame(height: 20)
+                
+                // Character Goals and Description - Standard padding
+                HStack {
+                    Spacer().frame(width: 20)
+                    if let imperium = imperiumCharacter {
+                        VStack(alignment: .leading, spacing: 12) {
                         Text("Character Information")
                             .font(.headline)
                         
@@ -220,14 +225,21 @@ struct OverviewTab: View {
                                     .italic()
                             }
                         }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                    Spacer().frame(width: 20)
                 }
                 
+                // Spacing between sections
+                Rectangle().fill(Color.clear).frame(height: 20)
+                
                 // Character Details
-                if let imperium = imperiumCharacter {
+                HStack {
+                    Spacer().frame(width: 20)
+                    if let imperium = imperiumCharacter {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Background Details")
                             .font(.headline)
@@ -280,13 +292,18 @@ struct OverviewTab: View {
                                 .foregroundColor(.secondary)
                                 .italic()
                         }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                    Spacer().frame(width: 20)
                 }
                 
-                // Experience Block
+                // Spacing between sections
+                Rectangle().fill(Color.clear).frame(height: 20)
+                
+                // Experience Block - Full width background
                 if let imperium = imperiumCharacter {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Experience")
@@ -370,13 +387,18 @@ struct OverviewTab: View {
                         }
                     }
                     .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(.systemGray6))
-                    .cornerRadius(12)
                 }
                 
+                // Spacing between sections
+                Rectangle().fill(Color.clear).frame(height: 20)
+                
                 // Notes Section
-                if let imperium = imperiumCharacter {
-                    VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Spacer().frame(width: 20)
+                    if let imperium = imperiumCharacter {
+                        VStack(alignment: .leading, spacing: 12) {
                         Text("Notes")
                             .font(.headline)
                         
@@ -416,13 +438,14 @@ struct OverviewTab: View {
                                     .italic()
                             }
                         }
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
+                    Spacer().frame(width: 20)
                 }
             }
-            .padding()
             .padding(.bottom, 80) // Extra space for floating buttons
         }
         }

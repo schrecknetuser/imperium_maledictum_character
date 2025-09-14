@@ -87,8 +87,7 @@ struct EquipmentTab: View {
     }
     
     var body: some View {
-        NavigationView {
-            GeometryReader { geometry in
+        GeometryReader { geometry in
                 List {
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
@@ -411,8 +410,6 @@ struct EquipmentTab: View {
                 // Migrate old string-based data to new object-based system
                 imperiumCharacter?.migrateEquipmentAndWeapons()
             }
-            }
-        }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {

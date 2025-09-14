@@ -31,8 +31,7 @@ struct ReputationTab: View {
     }
     
     var body: some View {
-        NavigationView {
-            ScrollView {
+        ScrollView {
                 VStack(spacing: 16) {
                     if let imperium = imperiumCharacter {
                         // Faction Reputation Block
@@ -124,7 +123,6 @@ struct ReputationTab: View {
             }
             .navigationTitle("Reputation")
             .navigationBarTitleDisplayMode(.large)
-        }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {
@@ -452,7 +450,7 @@ struct AddIndividualReputationSheet: View {
     @State private var reputationValue = 0
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Individual Details") {
                     TextField("Individual Name", text: $individualName)
@@ -568,7 +566,7 @@ struct EditIndividualReputationSheet: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Individual Details") {
                     TextField("Individual Name", text: $individualName)

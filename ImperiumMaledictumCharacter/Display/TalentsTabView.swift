@@ -34,8 +34,7 @@ struct TalentsTab: View {
     }
     
     var body: some View {
-        NavigationView {
-            List {
+        List {
                 if let imperium = imperiumCharacter {
                     // Talents Section
                     Section {
@@ -169,7 +168,6 @@ struct TalentsTab: View {
                 // Spacer for floating buttons
                 Color.clear.frame(height: 80)
             }
-        }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {
