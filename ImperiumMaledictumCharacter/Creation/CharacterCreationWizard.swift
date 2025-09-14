@@ -414,21 +414,71 @@ struct CharacteristicsStage: View {
     }
     
     private func initializeAllocatedPoints() {
-        let characteristics = character.characteristics
-        for name in CharacteristicNames.allCharacteristics {
-            let characteristic = characteristics[name] ?? Characteristic(name: name, initialValue: 20, advances: 0)
-            // Calculate allocated points as (initialValue - 20)
-            allocatedPoints[name] = characteristic.initialValue - 20
+        // Load user allocations from character
+        allocatedPoints = character.userCharacteristicAllocationsDict
+        
+        // If no allocations stored yet, initialize with current allocations
+        if allocatedPoints.isEmpty {
+            let characteristics = character.characteristics
+            for name in CharacteristicNames.allCharacteristics {
+                let characteristic = characteristics[name] ?? Characteristic(name: name, initialValue: 20, advances: 0)
+                
+                // Calculate how much is user allocation vs bonuses
+                let currentValue = characteristic.initialValue
+                let totalBonuses = getAppliedBonusesForCharacteristic(name)
+                
+                // User allocation is what's left after removing base and bonuses
+                let userAllocation = max(0, currentValue - 20 - totalBonuses)
+                allocatedPoints[name] = userAllocation
+            }
+            
+            // Save the initialized allocations
+            character.userCharacteristicAllocationsDict = allocatedPoints
         }
+        
         updateRemainingPoints()
     }
     
     private func saveCharacteristicsToCharacter() {
-        var characteristics = character.characteristics
-        for (name, points) in allocatedPoints {
-            characteristics[name] = Characteristic(name: name, initialValue: 20 + points, advances: 0)
+        // Save the user's allocations to the character
+        character.userCharacteristicAllocationsDict = allocatedPoints
+        
+        // Recalculate all characteristics based on allocations + bonuses
+        character.recalculateCharacteristics()
+    }
+    
+    private func getAppliedBonusesForCharacteristic(_ characteristicName: String) -> Int {
+        var totalBonuses = 0
+        
+        // Origin bonuses
+        if !character.homeworld.isEmpty, let origin = OriginDefinitions.getOrigin(by: character.homeworld) {
+            // Mandatory bonus
+            if origin.mandatoryBonus.characteristic == characteristicName {
+                totalBonuses += origin.mandatoryBonus.bonus
+            }
+            // Choice bonus
+            if character.selectedOriginChoice == characteristicName {
+                if let choiceBonus = origin.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
+                    totalBonuses += choiceBonus.bonus
+                }
+            }
         }
-        character.characteristics = characteristics
+        
+        // Faction bonuses
+        if !character.faction.isEmpty, let faction = FactionDefinitions.getFaction(by: character.faction) {
+            // Mandatory bonus
+            if faction.mandatoryBonus.characteristic == characteristicName {
+                totalBonuses += faction.mandatoryBonus.bonus
+            }
+            // Choice bonus
+            if character.selectedFactionChoice == characteristicName {
+                if let choiceBonus = faction.choiceBonus.first(where: { $0.characteristic == characteristicName }) {
+                    totalBonuses += choiceBonus.bonus
+                }
+            }
+        }
+        
+        return totalBonuses
     }
     
     private func binding(for characteristic: String) -> Binding<Int> {
@@ -544,7 +594,23 @@ struct OriginStage: View {
                 }
                 .pickerStyle(MenuPickerStyle())
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .onChange(of: character.homeworld) { _ in
+                .onChange(of: character.homeworld) { oldValue, newValue in
+                    // Clear selection when origin changes
+                    selectedChoice = ""
+                    
+                    // Clear tracking for old origin if it was different
+                    if !oldValue.isEmpty && oldValue != newValue {
+                        var appliedBonuses = character.appliedOriginBonusesTracker
+                        appliedBonuses[oldValue] = false
+                        character.appliedOriginBonusesTracker = appliedBonuses
+                        
+                        // Remove old origin bonuses if any
+                        if let oldOrigin = OriginDefinitions.getOrigin(by: oldValue) {
+                            removeOriginBonuses(origin: oldOrigin)
+                        }
+                    }
+                    
+                    // Apply bonuses for new origin
                     applyOriginBonuses()
                 }
             }
@@ -612,75 +678,68 @@ struct OriginStage: View {
     
     private func initializeOriginSelections() {
         // Initialize from existing character data if available
-        // This helps maintain state when navigating back and forth
+        if selectedOrigin != nil {
+            // Restore the previously selected choice from stored data
+            selectedChoice = character.selectedOriginChoice
+        }
     }
     
     private func applyOriginBonuses() {
-        guard let origin = selectedOrigin else { return }
+        guard let origin = selectedOrigin else { 
+            return 
+        }
         
         let originKey = origin.name
         var appliedBonuses = character.appliedOriginBonusesTracker
         
-        // Check if we've already applied bonuses for this origin
+        // Always clear and reapply bonuses to handle selection changes
+        // First, remove any previously applied bonuses for this origin
         if appliedBonuses[originKey] == true {
-            return
+            removeOriginBonuses(origin: origin)
         }
-        
-        var characteristics = character.characteristics
-        
-        // Apply mandatory bonus - add directly to initialValue
-        if let characteristic = characteristics[origin.mandatoryBonus.characteristic] {
-            characteristics[origin.mandatoryBonus.characteristic] = Characteristic(
-                name: characteristic.name,
-                initialValue: characteristic.initialValue + origin.mandatoryBonus.bonus,
-                advances: characteristic.advances
-            )
-        } else {
-            characteristics[origin.mandatoryBonus.characteristic] = Characteristic(
-                name: origin.mandatoryBonus.characteristic,
-                initialValue: 20 + origin.mandatoryBonus.bonus,
-                advances: 0
-            )
-        }
-        
-        // Apply choice bonus if selected - add directly to initialValue
-        if !selectedChoice.isEmpty {
-            if let characteristic = characteristics[selectedChoice] {
-                let bonusAmount = origin.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
-                characteristics[selectedChoice] = Characteristic(
-                    name: characteristic.name,
-                    initialValue: characteristic.initialValue + bonusAmount,
-                    advances: characteristic.advances
-                )
-            } else {
-                let bonusAmount = origin.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
-                characteristics[selectedChoice] = Characteristic(
-                    name: selectedChoice,
-                    initialValue: 20 + bonusAmount,
-                    advances: 0
-                )
-            }
-        }
-        
-        character.characteristics = characteristics
         
         // Mark this origin as having bonuses applied
         appliedBonuses[originKey] = true
         character.appliedOriginBonusesTracker = appliedBonuses
+        
+        // Save the selected choice
+        character.selectedOriginChoice = selectedChoice
+        
+        // Recalculate characteristics to apply the bonuses
+        character.recalculateCharacteristics()
+    }
+    
+    private func removeOriginBonuses(origin: Origin) {
+        // Clear the selected choice when removing bonuses
+        character.selectedOriginChoice = ""
+        
+        // Recalculate characteristics without the bonuses
+        character.recalculateCharacteristics()
     }
     
     private func saveOriginSelectionsToCharacter() {
-        guard let origin = selectedOrigin else { return }
+        guard let origin = selectedOrigin else { 
+            return 
+        }
         
         // Apply bonuses one final time to ensure they're saved
         applyOriginBonuses()
         
-        // Add granted equipment
-        var allEquipment = character.equipmentNames
+        // Add granted equipment to equipment list
+        var equipmentList = character.equipmentList
         for equipment in origin.grantedEquipment {
-            allEquipment.append(equipment)
+            if !equipmentList.contains(where: { $0.name == equipment }) {
+                if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                    equipmentList.append(template.createEquipment())
+                } else {
+                    // Fallback: create basic equipment object if template not found
+                    let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
+                    basicEquipment.equipmentDescription = "Origin granted equipment"
+                    equipmentList.append(basicEquipment)
+                }
+            }
         }
-        character.equipmentNames = allEquipment
+        character.equipmentList = equipmentList
     }
 }
 struct FactionStage: View {
@@ -716,7 +775,23 @@ struct FactionStage: View {
                 }
                 .pickerStyle(MenuPickerStyle())
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .onChange(of: character.faction) { _ in
+                .onChange(of: character.faction) { oldValue, newValue in
+                    // Clear selections when faction changes
+                    selectedChoice = ""
+                    
+                    // Clear tracking for old faction if it was different
+                    if !oldValue.isEmpty && oldValue != newValue {
+                        var appliedBonuses = character.appliedFactionBonusesTracker
+                        appliedBonuses[oldValue] = false
+                        character.appliedFactionBonusesTracker = appliedBonuses
+                        
+                        // Remove old faction bonuses if any
+                        if let oldFaction = FactionDefinitions.getFaction(by: oldValue) {
+                            removeFactionBonuses(faction: oldFaction)
+                        }
+                    }
+                    
+                    // Reset and apply for new faction
                     resetFactionSelections()
                     applyFactionBonuses()
                 }
@@ -874,7 +949,12 @@ struct FactionStage: View {
     }
     
     private func initializeFactionSelections() {
-        guard let faction = selectedFaction else { return }
+        guard let faction = selectedFaction else { 
+            return 
+        }
+        
+        // Restore the previously selected choice from stored data
+        selectedChoice = character.selectedFactionChoice
         
         // Always reset to current character state when appearing
         let existingAdvances = character.factionSkillAdvances
@@ -912,7 +992,9 @@ struct FactionStage: View {
     }
     
     private func saveFactionSelectionsToCharacter() {
-        guard let faction = selectedFaction else { return }
+        guard let faction = selectedFaction else { 
+            return 
+        }
         
         // Don't duplicate - this will be handled properly when we implement it fully
         // For now, just store the direct values to avoid accumulation
@@ -949,65 +1031,39 @@ struct FactionStage: View {
         
         character.talentNames = allTalents
         
-        // Add faction equipment
-        var allEquipment = character.equipmentNames
+        // Add faction equipment to equipment list
+        var equipmentList = character.equipmentList
         for equipment in faction.equipment {
-            allEquipment.append(equipment)
+            if !equipmentList.contains(where: { $0.name == equipment }) {
+                if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                    equipmentList.append(template.createEquipment())
+                } else {
+                    // Fallback: create basic equipment object if template not found
+                    let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
+                    basicEquipment.equipmentDescription = "Faction granted equipment"
+                    equipmentList.append(basicEquipment)
+                }
+            }
         }
-        character.equipmentNames = allEquipment
+        character.equipmentList = equipmentList
         
         // Set starting solars
         character.solars = faction.solars
     }
     
     private func applyFactionBonuses() {
-        guard let faction = selectedFaction else { return }
+        guard let faction = selectedFaction else { 
+            return 
+        }
         
         let factionKey = faction.name
         var appliedBonuses = character.appliedFactionBonusesTracker
         
-        // Check if we've already applied bonuses for this faction
+        // Always clear and reapply bonuses to handle selection changes
+        // First, remove any previously applied bonuses for this faction
         if appliedBonuses[factionKey] == true {
-            return
+            removeFactionBonuses(faction: faction)
         }
-        
-        var characteristics = character.characteristics
-        
-        // Apply mandatory bonus
-        if let characteristic = characteristics[faction.mandatoryBonus.characteristic] {
-            characteristics[faction.mandatoryBonus.characteristic] = Characteristic(
-                name: characteristic.name,
-                initialValue: characteristic.initialValue + faction.mandatoryBonus.bonus,
-                advances: characteristic.advances
-            )
-        } else {
-            characteristics[faction.mandatoryBonus.characteristic] = Characteristic(
-                name: faction.mandatoryBonus.characteristic,
-                initialValue: 20 + faction.mandatoryBonus.bonus,
-                advances: 0
-            )
-        }
-        
-        // Apply choice bonus if selected
-        if !selectedChoice.isEmpty {
-            if let characteristic = characteristics[selectedChoice] {
-                let bonusAmount = faction.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
-                characteristics[selectedChoice] = Characteristic(
-                    name: characteristic.name,
-                    initialValue: characteristic.initialValue + bonusAmount,
-                    advances: characteristic.advances
-                )
-            } else {
-                let bonusAmount = faction.choiceBonus.first(where: { $0.characteristic == selectedChoice })?.bonus ?? 0
-                characteristics[selectedChoice] = Characteristic(
-                    name: selectedChoice,
-                    initialValue: 20 + bonusAmount,
-                    advances: 0
-                )
-            }
-        }
-        
-        character.characteristics = characteristics
         
         // Apply reputation influence bonus
         var reputations = character.reputations
@@ -1015,8 +1071,8 @@ struct FactionStage: View {
         
         // Check if there's already a reputation entry for this faction
         if let index = reputations.firstIndex(where: { $0.faction == influenceFaction && $0.individual.isEmpty }) {
-            // Increase existing reputation by 1 (influence represents +1 reputation)
-            reputations[index].value += 1
+            // Update existing reputation by setting it to 1 (don't accumulate)
+            reputations[index].value = 1
         } else {
             // Create new reputation entry with +1 value
             reputations.append(Reputation(faction: influenceFaction, individual: "", value: 1))
@@ -1026,6 +1082,25 @@ struct FactionStage: View {
         // Mark this faction as having bonuses applied
         appliedBonuses[factionKey] = true
         character.appliedFactionBonusesTracker = appliedBonuses
+        
+        // Save the selected choice
+        character.selectedFactionChoice = selectedChoice
+        
+        // Recalculate characteristics to apply the bonuses
+        character.recalculateCharacteristics()
+    }
+    
+    private func removeFactionBonuses(faction: Faction) {
+        // Clear the selected choice when removing bonuses
+        character.selectedFactionChoice = ""
+        
+        // Remove reputation influence bonus
+        var reputations = character.reputations
+        reputations.removeAll { $0.faction == faction.influenceBonus && $0.individual.isEmpty }
+        character.reputations = reputations
+        
+        // Recalculate characteristics without the bonuses
+        character.recalculateCharacteristics()
     }
     
     private func binding(for skill: String) -> Binding<Int> {
@@ -1480,9 +1555,29 @@ struct RoleStage: View {
     private func initializeRoleSelections() {
         guard let role = selectedRole else { return }
         
-        // Initialize weapon choices array
+        // Initialize weapon choices array and try to restore previous selections
         selectedWeapons = Array(repeating: "", count: role.weaponChoices.count)
+        let existingWeaponNames = character.weaponList.map { $0.name }
+        for (choiceIndex, weaponOptions) in role.weaponChoices.enumerated() {
+            for weapon in weaponOptions {
+                if existingWeaponNames.contains(weapon) {
+                    selectedWeapons[choiceIndex] = weapon
+                    break // Only select one weapon per choice
+                }
+            }
+        }
+        
+        // Initialize equipment choices array and try to restore previous selections
         selectedEquipment = Array(repeating: "", count: role.equipmentChoices.count)
+        let existingEquipmentNames = character.equipmentList.map { $0.name }
+        for (choiceIndex, equipmentOptions) in role.equipmentChoices.enumerated() {
+            for equipment in equipmentOptions {
+                if existingEquipmentNames.contains(equipment) {
+                    selectedEquipment[choiceIndex] = equipment
+                    break // Only select one equipment per choice
+                }
+            }
+        }
         
         // Initialize skill advances from existing character data
         skillAdvancesDistribution = [:]
@@ -1493,10 +1588,47 @@ struct RoleStage: View {
         remainingSkillAdvances = role.skillAdvanceCount
         updateRemainingSkillAdvances()
         
-        // Initialize specialization advances
+        // Initialize specialization advances and restore from existing character data
         specializationAdvancesDistribution = [:]
+        customSpecializations = [:]
+        let existingSpecializations = character.skillSpecializations
+        
         for specialization in role.specializationAdvances {
-            specializationAdvancesDistribution[specialization] = 0
+            var restoredAdvances = 0
+            
+            if specialization.hasPrefix("Any (") {
+                // For "Any (Skill)" specializations, look for existing custom specializations
+                let skillName = String(specialization.dropFirst(5).dropLast(1)) // Remove "Any (" and ")"
+                if let skillSpecs = existingSpecializations[skillName] {
+                    // Find the first specialization for this skill that's not in the role's predefined list
+                    for (specName, advances) in skillSpecs {
+                        let compositeKey = "\(specName) (\(skillName))"
+                        if advances > 0 && !role.specializationAdvances.contains(compositeKey) {
+                            // This is likely a custom specialization for this "Any" slot
+                            customSpecializations[specialization] = specName
+                            restoredAdvances = advances
+                            break
+                        }
+                    }
+                }
+            } else {
+                // For regular specializations, check if it's in composite format or find by name
+                if specialization.contains(" (") && specialization.hasSuffix(")") {
+                    // Parse composite format
+                    let (specName, skillName) = ImperiumCharacter.parseSpecializationKey(specialization)
+                    if let skillName = skillName, let advances = existingSpecializations[skillName]?[specName] {
+                        restoredAdvances = advances
+                    }
+                } else {
+                    // Regular specialization - find its skill and check for existing advances
+                    let skillName = SkillSpecializations.findSkillForSpecialization(specialization)
+                    if let advances = existingSpecializations[skillName]?[specialization] {
+                        restoredAdvances = advances
+                    }
+                }
+            }
+            
+            specializationAdvancesDistribution[specialization] = restoredAdvances
         }
         remainingSpecializationAdvances = role.specializationAdvanceCount
         updateRemainingSpecializationAdvances()
@@ -1525,29 +1657,6 @@ struct RoleStage: View {
             return inRoleChoices && !inFactionTalents && !inAutoGranted
         }
         selectedTalents = Set(filteredTalents)
-        
-        // Initialize equipment selections from character data
-        let existingWeapons = character.weaponNames
-        let existingEquipment = character.equipmentNames
-        
-        // Try to match existing weapons/equipment to choices
-        for (index, choices) in role.weaponChoices.enumerated() {
-            for weapon in existingWeapons {
-                if choices.contains(weapon) {
-                    selectedWeapons[index] = weapon
-                    break
-                }
-            }
-        }
-        
-        for (index, choices) in role.equipmentChoices.enumerated() {
-            for equipment in existingEquipment {
-                if choices.contains(equipment) {
-                    selectedEquipment[index] = equipment
-                    break
-                }
-            }
-        }
     }
     
     private func resetRoleSelections() {
@@ -1633,29 +1742,59 @@ struct RoleStage: View {
         }
         character.talentNames = allTalents
         
-        // Save weapon selections
-        var allWeapons = character.weaponNames
+        // Save weapon selections by creating weapon objects from templates
+        var weaponList = character.weaponList
         for weapon in selectedWeapons {
-            if !weapon.isEmpty && !allWeapons.contains(weapon) {
-                allWeapons.append(weapon)
+            if !weapon.isEmpty {
+                // Check if weapon already exists
+                if !weaponList.contains(where: { $0.name == weapon }) {
+                    // Find weapon template and create weapon object
+                    if let template = WeaponTemplateDefinitions.getTemplate(for: weapon) {
+                        weaponList.append(template.createWeapon())
+                    } else {
+                        // Fallback: create basic weapon object if template not found
+                        let basicWeapon = Weapon(name: weapon, category: WeaponCategories.melee, specialization: WeaponSpecializations.none, damage: "1", range: WeaponRanges.short, magazine: 0, encumbrance: 1, availability: "Common", cost: 0)
+                        weaponList.append(basicWeapon)
+                    }
+                }
             }
         }
-        character.weaponNames = allWeapons
+        character.weaponList = weaponList
         
-        // Save equipment selections  
-        var allEquipment = character.equipmentNames
+        // Save equipment selections by creating equipment objects from templates
+        var equipmentList = character.equipmentList
         for equipment in selectedEquipment {
-            if !equipment.isEmpty && !allEquipment.contains(equipment) {
-                allEquipment.append(equipment)
+            if !equipment.isEmpty {
+                // Check if equipment already exists
+                if !equipmentList.contains(where: { $0.name == equipment }) {
+                    // Find equipment template and create equipment object
+                    if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                        equipmentList.append(template.createEquipment())
+                    } else {
+                        // Fallback: create basic equipment object if template not found
+                        let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
+                        basicEquipment.equipmentDescription = "Equipment from character creation"
+                        equipmentList.append(basicEquipment)
+                    }
+                }
             }
         }
         
         // Add granted equipment from role
         for equipment in role.equipment {
-            allEquipment.append(equipment)
+            if !equipmentList.contains(where: { $0.name == equipment }) {
+                if let template = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                    equipmentList.append(template.createEquipment())
+                } else {
+                    // Fallback: create basic equipment object if template not found
+                    let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
+                    basicEquipment.equipmentDescription = "Role granted equipment"
+                    equipmentList.append(basicEquipment)
+                }
+            }
         }
         
-        character.equipmentNames = allEquipment
+        character.equipmentList = equipmentList
     }
     
     private func skillBinding(for skill: String) -> Binding<Int> {
