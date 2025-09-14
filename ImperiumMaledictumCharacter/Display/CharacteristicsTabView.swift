@@ -40,8 +40,8 @@ struct CharacteristicsTab: View {
     
     var body: some View {
         GeometryReader { geometry in
-                ScrollView {
-                    VStack(spacing: 20) {
+            ScrollView {
+                VStack(spacing: 20) {
                 // Characteristics Table
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Characteristics")
@@ -384,6 +384,10 @@ struct CharacteristicsTab: View {
             }
             .padding()
             .padding(.bottom, 80) // Extra space for floating buttons
+            }
+            .ignoresSafeArea(.container, edges: .bottom)
+            .safeAreaInset(edge: .top) {
+                Color.clear.frame(height: 0)
             }
         }
         .overlay(alignment: .bottomTrailing) {
