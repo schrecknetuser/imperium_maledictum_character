@@ -44,9 +44,7 @@ struct PsychicPowersTab: View {
                 // Spacer for floating buttons
                 Color.clear.frame(height: 80)
             }
-            .safeAreaInset(edge: .top) {
-                Color.clear.frame(height: 0)
-            }
+            .navigationBarTitleDisplayMode(.inline)
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {

@@ -404,9 +404,7 @@ struct EquipmentTab: View {
                 // Spacer for floating buttons
                 Color.clear.frame(height: 80)
             }
-            .safeAreaInset(edge: .top) {
-                Color.clear.frame(height: 0)
-            }
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 // Migrate old string-based data to new object-based system
                 imperiumCharacter?.migrateEquipmentAndWeapons()
