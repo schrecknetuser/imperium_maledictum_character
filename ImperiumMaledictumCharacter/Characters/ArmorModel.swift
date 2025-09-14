@@ -356,6 +356,18 @@ struct ArmorTemplateDefinitions {
             cost: 1000,
             availability: AvailabilityLevels.rare,
             traits: [ArmorTrait(name: ArmorTraitNames.loud)]
+        ),
+        // Alias for backward compatibility
+        ArmorTemplate(
+            name: "Flak Armour",
+            category: ArmorCategories.flak,
+            description: "Standard issue Imperial Guard flak armor providing full body protection.",
+            locations: [ArmorLocations.all],
+            armorValue: 4,
+            encumbrance: 4,
+            cost: 1000,
+            availability: AvailabilityLevels.rare,
+            traits: [ArmorTrait(name: ArmorTraitNames.loud)]
         )
     ]
     
