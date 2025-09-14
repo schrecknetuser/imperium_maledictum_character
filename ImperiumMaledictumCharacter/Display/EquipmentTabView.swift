@@ -87,8 +87,8 @@ struct EquipmentTab: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
-                List {
+        return GeometryReader { geometry in
+            List {
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
                         let groupedEquipment = Dictionary(grouping: imperium.equipmentList) { equipment in
@@ -541,6 +541,7 @@ struct EquipmentTab: View {
             if let armor = armorToDelete {
                 Text("Are you sure you want to delete '\(armor.name)'? This action cannot be undone.")
             }
+        }
         }
     }
     
