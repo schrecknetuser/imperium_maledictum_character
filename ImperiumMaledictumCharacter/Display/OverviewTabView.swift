@@ -32,8 +32,9 @@ struct OverviewTab: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
                 // Character Header
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -243,7 +244,7 @@ struct OverviewTab: View {
                                 Spacer()
                                 TextField("Solars", value: $tempSolars, format: .number)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .frame(width: 80)
+                                    .frame(width: max(80, geometry.size.width * 0.15))
                                     .keyboardType(.numberPad)
                                     .onAppear {
                                         if let imperium = imperiumCharacter {
@@ -304,7 +305,7 @@ struct OverviewTab: View {
                                     Spacer()
                                     TextField("Total", value: totalExperienceBinding, format: .number)
                                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 80)
+                                        .frame(width: max(80, geometry.size.width * 0.15))
                                         .keyboardType(.numberPad)
                                 }
                                 
@@ -319,7 +320,7 @@ struct OverviewTab: View {
                                     Spacer()
                                     TextField("Spent", value: spentExperienceBinding, format: .number)
                                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 80)
+                                        .frame(width: max(80, geometry.size.width * 0.15))
                                         .keyboardType(.numberPad)
                                 }
                                 
@@ -423,6 +424,7 @@ struct OverviewTab: View {
             }
             .padding()
             .padding(.bottom, 80) // Extra space for floating buttons
+        }
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
