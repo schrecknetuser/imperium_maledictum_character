@@ -58,7 +58,7 @@ struct CharacterDetailView: View {
                 .tag(4)
         }
         .navigationTitle(character.name.isEmpty ? "Unnamed Character" : character.name)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if isEditMode {

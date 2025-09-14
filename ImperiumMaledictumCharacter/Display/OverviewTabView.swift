@@ -110,13 +110,11 @@ struct OverviewTab: View {
                 // Spacing between sections
                 Rectangle().fill(Color.clear).frame(height: 20)
                 
-                // Character Goals and Description - Standard padding
-                HStack {
-                    Spacer().frame(width: 20)
-                    if let imperium = imperiumCharacter {
-                        VStack(alignment: .leading, spacing: 12) {
-                        Text("Character Information")
-                            .font(.headline)
+                // Character Goals and Description - Full width background
+                if let imperium = imperiumCharacter {
+                    VStack(alignment: .leading, spacing: 12) {
+                    Text("Character Information")
+                        .font(.headline)
                         
                         if isEditMode {
                             let shortTermGoalBinding = Binding<String>(
@@ -227,22 +225,19 @@ struct OverviewTab: View {
                         }
                         }
                         .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
                     }
-                    Spacer().frame(width: 20)
-                }
                 
                 // Spacing between sections
                 Rectangle().fill(Color.clear).frame(height: 20)
                 
-                // Character Details
-                HStack {
-                    Spacer().frame(width: 20)
-                    if let imperium = imperiumCharacter {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Background Details")
-                            .font(.headline)
+                // Character Details - Full width background
+                if let imperium = imperiumCharacter {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Background Details")
+                        .font(.headline)
                         
                         if !imperium.background.isEmpty {
                             DetailRow(title: "Background", value: imperium.background)
@@ -294,11 +289,10 @@ struct OverviewTab: View {
                         }
                         }
                         .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
                     }
-                    Spacer().frame(width: 20)
-                }
                 
                 // Spacing between sections
                 Rectangle().fill(Color.clear).frame(height: 20)
@@ -394,13 +388,11 @@ struct OverviewTab: View {
                 // Spacing between sections
                 Rectangle().fill(Color.clear).frame(height: 20)
                 
-                // Notes Section
-                HStack {
-                    Spacer().frame(width: 20)
-                    if let imperium = imperiumCharacter {
-                        VStack(alignment: .leading, spacing: 12) {
-                        Text("Notes")
-                            .font(.headline)
+                // Notes Section - Full width background
+                if let imperium = imperiumCharacter {
+                    VStack(alignment: .leading, spacing: 12) {
+                    Text("Notes")
+                        .font(.headline)
                         
                         if isEditMode {
                             let notesBinding = Binding<String>(
@@ -440,11 +432,10 @@ struct OverviewTab: View {
                         }
                         }
                         .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
                     }
-                    Spacer().frame(width: 20)
-                }
             }
             .padding(.bottom, 80) // Extra space for floating buttons
         }
