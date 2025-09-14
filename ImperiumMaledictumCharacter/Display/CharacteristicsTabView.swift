@@ -387,7 +387,7 @@ struct CharacteristicsTab: View {
             }
         }
         .navigationTitle("Stats")
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {
