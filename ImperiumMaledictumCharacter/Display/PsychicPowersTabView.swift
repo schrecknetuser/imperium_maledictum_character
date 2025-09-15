@@ -76,11 +76,6 @@ struct PsychicPowersTab: View {
             .padding(.trailing, 20)
             .padding(.bottom, 20)
         }
-        .safeAreaInset(edge: .top) { 
-            Rectangle()
-                .fill(Color.clear)
-                .frame(height: 0)
-        }
         .sheet(isPresented: $showingUnifiedStatusPopup) {
             if let binding = imperiumCharacterBinding {
                 UnifiedStatusPopupView(character: binding, store: store)

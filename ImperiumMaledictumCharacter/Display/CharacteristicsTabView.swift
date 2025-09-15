@@ -418,11 +418,6 @@ struct CharacteristicsTab: View {
             .padding(.trailing, 20)
             .padding(.bottom, 20)
         }
-        .safeAreaInset(edge: .top) { 
-            Rectangle()
-                .fill(Color.clear)
-                .frame(height: 0)
-        }
         .sheet(isPresented: $showingAddSpecializationSheet, onDismiss: {
             // Refresh the specializations list when sheet is dismissed (in case something was added)
             refreshSpecializationsList()
