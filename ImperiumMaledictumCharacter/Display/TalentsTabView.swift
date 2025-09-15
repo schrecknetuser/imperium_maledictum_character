@@ -198,6 +198,11 @@ struct TalentsTab: View {
             .padding(.trailing, 20)
             .padding(.bottom, 20)
         }
+        .safeAreaInset(edge: .top) { 
+            Rectangle()
+                .fill(Color.clear)
+                .frame(height: 0)
+        }
         .sheet(isPresented: $showingAddTalentSheet) {
             if let imperium = imperiumCharacter {
                 AddTalentSheet(character: imperium, store: store, isEditMode: isEditMode)

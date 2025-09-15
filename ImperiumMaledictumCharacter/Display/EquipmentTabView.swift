@@ -440,6 +440,11 @@ struct EquipmentTab: View {
             .padding(.trailing, 20)
             .padding(.bottom, 20)
         }
+        .safeAreaInset(edge: .top) { 
+            Rectangle()
+                .fill(Color.clear)
+                .frame(height: 0)
+        }
         .sheet(isPresented: $showingAddEquipmentSheet) {
             if let imperium = imperiumCharacter {
                 ComprehensiveEquipmentSheet(character: imperium, store: store, isWeapon: false, isEditMode: isEditMode)
