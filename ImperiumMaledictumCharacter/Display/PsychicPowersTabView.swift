@@ -30,13 +30,6 @@ struct PsychicPowersTab: View {
     
     var body: some View {
         List {
-            // Invisible header to ensure proper navigation bar clearance
-            Section {
-                Color.clear.frame(height: 1)
-            }
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            
                 if let imperium = imperiumCharacter {
                     ForEach(imperium.psychicPowers, id: \.self) { power in
                         Text(power)

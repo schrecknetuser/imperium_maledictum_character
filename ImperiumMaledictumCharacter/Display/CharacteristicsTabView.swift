@@ -42,9 +42,6 @@ struct CharacteristicsTab: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                // Invisible spacer to ensure proper navigation bar clearance
-                Color.clear.frame(height: 1)
-                
                 // Characteristics Table
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Characteristics")
