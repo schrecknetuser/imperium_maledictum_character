@@ -35,6 +35,13 @@ struct TalentsTab: View {
     
     var body: some View {
         List {
+            // Invisible header to ensure proper navigation bar clearance
+            Section {
+                Color.clear.frame(height: 1)
+            }
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+            
                 if let imperium = imperiumCharacter {
                     // Talents Section
                     Section {

@@ -41,7 +41,10 @@ struct CharacteristicsTab: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(alignment: .leading, spacing: 0) {
+                // Invisible spacer to ensure proper navigation bar clearance
+                Color.clear.frame(height: 1)
+                
                 // Characteristics Table
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Characteristics")
@@ -187,6 +190,7 @@ struct CharacteristicsTab: View {
                 .padding()
                 .background(Color(.systemGray6))
                 .cornerRadius(12)
+                .padding(.bottom, 20)
                 
                 // Skills Table
                 VStack(alignment: .leading, spacing: 12) {
@@ -261,6 +265,7 @@ struct CharacteristicsTab: View {
                 .padding()
                 .background(Color(.systemGray6))
                 .cornerRadius(12)
+                .padding(.bottom, 20)
                 
                 // Specializations Table
                 VStack(alignment: .leading, spacing: 12) {

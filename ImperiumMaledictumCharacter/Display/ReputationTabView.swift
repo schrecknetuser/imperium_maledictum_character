@@ -31,8 +31,12 @@ struct ReputationTab: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 16) {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                // Invisible spacer to ensure proper navigation bar clearance
+                Color.clear.frame(height: 1)
+                
                     if let imperium = imperiumCharacter {
                         // Faction Reputation Block
                         VStack(alignment: .leading, spacing: 12) {
@@ -176,6 +180,7 @@ struct ReputationTab: View {
                     individual: individual
                 )
             }
+        }
         }
     }
     

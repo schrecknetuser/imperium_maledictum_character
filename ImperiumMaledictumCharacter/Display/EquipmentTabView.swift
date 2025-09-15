@@ -89,6 +89,13 @@ struct EquipmentTab: View {
     var body: some View {
         return GeometryReader { geometry in
             List {
+                // Invisible header to ensure proper navigation bar clearance
+                Section {
+                    Color.clear.frame(height: 1)
+                }
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
                         let groupedEquipment = Dictionary(grouping: imperium.equipmentList) { equipment in
