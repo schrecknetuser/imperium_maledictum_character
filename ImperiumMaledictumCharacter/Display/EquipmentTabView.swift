@@ -406,6 +406,7 @@ struct EquipmentTab: View {
                 // Migrate old string-based data to new object-based system
                 imperiumCharacter?.migrateEquipmentAndWeapons()
             }
+        .padding(.top, 20) // Add top padding to wrapping control
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {

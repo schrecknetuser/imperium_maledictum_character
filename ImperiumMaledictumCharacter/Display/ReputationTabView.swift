@@ -121,6 +121,7 @@ struct ReputationTab: View {
                 }
                 .padding(.bottom, 80) // Extra space for floating buttons
         }
+        .padding(.top, 20) // Add top padding to wrapping control
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {
