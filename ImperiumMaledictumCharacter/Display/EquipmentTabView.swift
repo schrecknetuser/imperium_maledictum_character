@@ -400,10 +400,7 @@ struct EquipmentTab: View {
                 }
             }
             .listStyle(PlainListStyle())
-            .safeAreaInset(edge: .bottom) {
-                // Spacer for floating buttons
-                Color.clear.frame(height: 80)
-            }
+            .padding(.bottom, 80) // Extra space for floating buttons
             .onAppear {
                 // Migrate old string-based data to new object-based system
                 imperiumCharacter?.migrateEquipmentAndWeapons()

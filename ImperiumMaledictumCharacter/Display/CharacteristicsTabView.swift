@@ -384,7 +384,6 @@ struct CharacteristicsTab: View {
                 .background(Color(.systemGray6))
                 .cornerRadius(12)
             }
-            .padding()
             .padding(.bottom, 80) // Extra space for floating buttons
             }
         }

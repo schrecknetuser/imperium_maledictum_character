@@ -40,10 +40,7 @@ struct PsychicPowersTab: View {
                 }
             }
             .listStyle(PlainListStyle())
-            .safeAreaInset(edge: .bottom) {
-                // Spacer for floating buttons
-                Color.clear.frame(height: 80)
-            }
+            .padding(.bottom, 80) // Extra space for floating buttons
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {
