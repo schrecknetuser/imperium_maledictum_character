@@ -400,6 +400,12 @@ struct EquipmentTab: View {
                 }
             }
             .listStyle(PlainListStyle())
+            .safeAreaInset(edge: .top, spacing: 0) {
+                // Force proper navigation bar clearance
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(height: 1)
+            }
             .padding(.bottom, 80) // Extra space for floating buttons
             .onAppear {
                 // Migrate old string-based data to new object-based system

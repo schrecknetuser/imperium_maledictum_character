@@ -387,6 +387,12 @@ struct CharacteristicsTab: View {
             .padding(.bottom, 80) // Extra space for floating buttons
             }
         }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            // Force proper navigation bar clearance
+            Rectangle()
+                .fill(Color.clear)
+                .frame(height: 1)
+        }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {

@@ -40,6 +40,12 @@ struct PsychicPowersTab: View {
                 }
             }
             .listStyle(PlainListStyle())
+            .safeAreaInset(edge: .top, spacing: 0) {
+                // Force proper navigation bar clearance
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(height: 1)
+            }
             .padding(.bottom, 80) // Extra space for floating buttons
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
