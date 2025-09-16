@@ -87,7 +87,7 @@ struct EquipmentTab: View {
     }
     
     var body: some View {
-        NavigationView {
+        return GeometryReader { geometry in
             List {
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
@@ -399,18 +399,14 @@ struct EquipmentTab: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Equipment")
-            .navigationBarTitleDisplayMode(.inline)
             .listStyle(PlainListStyle())
-            .safeAreaInset(edge: .bottom) {
-                // Spacer for floating buttons
-                Color.clear.frame(height: 80)
-            }
+            .contentMargins(.top, 44) // Add top margin for navigation bar clearance
+            .padding(.bottom, 80) // Extra space for floating buttons
             .onAppear {
                 // Migrate old string-based data to new object-based system
                 imperiumCharacter?.migrateEquipmentAndWeapons()
             }
-        }
+        .padding(.top, 20) // Add top padding to wrapping control
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {
@@ -542,6 +538,7 @@ struct EquipmentTab: View {
             if let armor = armorToDelete {
                 Text("Are you sure you want to delete '\(armor.name)'? This action cannot be undone.")
             }
+        }
         }
     }
     
@@ -794,12 +791,13 @@ struct ComprehensiveEquipmentSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Basic Information") {
-                    TextField(isWeapon ? "Weapon Name" : "Equipment Name", text: $itemName)
-                    TextField("Description", text: $itemDescription, axis: .vertical)
-                        .lineLimit(3...6)
-                }
+            GeometryReader { geometry in
+                Form {
+                    Section("Basic Information") {
+                        TextField(isWeapon ? "Weapon Name" : "Equipment Name", text: $itemName)
+                        TextField("Description", text: $itemDescription, axis: .vertical)
+                            .lineLimit(3...6)
+                    }
                 
                 if isWeapon {
                     Section("Weapon Properties") {
@@ -845,7 +843,7 @@ struct ComprehensiveEquipmentSheet: View {
                         Spacer()
                         TextField("Cost", value: $cost, format: .number)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 100)
+                            .frame(width: max(100, geometry.size.width * 0.2))
                             .keyboardType(.numberPad)
                     }
                     
@@ -963,6 +961,7 @@ struct ComprehensiveEquipmentSheet: View {
                     }
                     .disabled(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
+            }
             }
         }
     }
@@ -1613,12 +1612,13 @@ struct ComprehensiveArmorSheet: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Basic Information") {
-                    TextField("Armor Name", text: $itemName)
-                    TextField("Description", text: $itemDescription, axis: .vertical)
-                        .lineLimit(3...6)
-                }
+            GeometryReader { geometry in
+                Form {
+                    Section("Basic Information") {
+                        TextField("Armor Name", text: $itemName)
+                        TextField("Description", text: $itemDescription, axis: .vertical)
+                            .lineLimit(3...6)
+                    }
                 
                 Section("Armor Properties") {
                     Picker("Category", selection: $category) {
@@ -1671,7 +1671,7 @@ struct ComprehensiveArmorSheet: View {
                         Spacer()
                         TextField("Cost", value: $cost, format: .number)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .frame(width: 100)
+                            .frame(width: max(100, geometry.size.width * 0.2))
                             .keyboardType(.numberPad)
                     }
                     
@@ -1766,6 +1766,7 @@ struct ComprehensiveArmorSheet: View {
                     }
                     .disabled(itemName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
+            }
             }
         }
     }

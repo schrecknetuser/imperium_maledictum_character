@@ -32,9 +32,10 @@ struct OverviewTab: View {
     }
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Character Header
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                // Character Header - Full width background
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text(character.characterType.symbol)
@@ -103,14 +104,17 @@ struct OverviewTab: View {
                     }
                 }
                 .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color(.systemGray6))
-                .cornerRadius(12)
                 
-                // Character Goals and Description
+                // Spacing between sections
+                Rectangle().fill(Color.clear).frame(height: 20)
+                
+                // Character Goals and Description - Full width background
                 if let imperium = imperiumCharacter {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Character Information")
-                            .font(.headline)
+                    Text("Character Information")
+                        .font(.headline)
                         
                         if isEditMode {
                             let shortTermGoalBinding = Binding<String>(
@@ -219,17 +223,21 @@ struct OverviewTab: View {
                                     .italic()
                             }
                         }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                }
                 
-                // Character Details
+                // Spacing between sections
+                Rectangle().fill(Color.clear).frame(height: 20)
+                
+                // Character Details - Full width background
                 if let imperium = imperiumCharacter {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Background Details")
-                            .font(.headline)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Background Details")
+                        .font(.headline)
                         
                         if !imperium.background.isEmpty {
                             DetailRow(title: "Background", value: imperium.background)
@@ -243,7 +251,7 @@ struct OverviewTab: View {
                                 Spacer()
                                 TextField("Solars", value: $tempSolars, format: .number)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .frame(width: 80)
+                                    .frame(width: max(80, geometry.size.width * 0.15))
                                     .keyboardType(.numberPad)
                                     .onAppear {
                                         if let imperium = imperiumCharacter {
@@ -279,13 +287,17 @@ struct OverviewTab: View {
                                 .foregroundColor(.secondary)
                                 .italic()
                         }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                }
                 
-                // Experience Block
+                // Spacing between sections
+                Rectangle().fill(Color.clear).frame(height: 20)
+                
+                // Experience Block - Full width background
                 if let imperium = imperiumCharacter {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Experience")
@@ -304,7 +316,7 @@ struct OverviewTab: View {
                                     Spacer()
                                     TextField("Total", value: totalExperienceBinding, format: .number)
                                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 80)
+                                        .frame(width: max(80, geometry.size.width * 0.15))
                                         .keyboardType(.numberPad)
                                 }
                                 
@@ -319,7 +331,7 @@ struct OverviewTab: View {
                                     Spacer()
                                     TextField("Spent", value: spentExperienceBinding, format: .number)
                                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 80)
+                                        .frame(width: max(80, geometry.size.width * 0.15))
                                         .keyboardType(.numberPad)
                                 }
                                 
@@ -369,15 +381,18 @@ struct OverviewTab: View {
                         }
                     }
                     .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color(.systemGray6))
-                    .cornerRadius(12)
                 }
                 
-                // Notes Section
+                // Spacing between sections
+                Rectangle().fill(Color.clear).frame(height: 20)
+                
+                // Notes Section - Full width background
                 if let imperium = imperiumCharacter {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Notes")
-                            .font(.headline)
+                    Text("Notes")
+                        .font(.headline)
                         
                         if isEditMode {
                             let notesBinding = Binding<String>(
@@ -415,14 +430,15 @@ struct OverviewTab: View {
                                     .italic()
                             }
                         }
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                }
             }
-            .padding()
             .padding(.bottom, 80) // Extra space for floating buttons
+        }
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons

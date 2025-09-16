@@ -29,8 +29,7 @@ struct PsychicPowersTab: View {
     }
     
     var body: some View {
-        NavigationView {
-            List {
+        List {
                 if let imperium = imperiumCharacter {
                     ForEach(imperium.psychicPowers, id: \.self) { power in
                         Text(power)
@@ -40,14 +39,10 @@ struct PsychicPowersTab: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .navigationTitle("Psychic Powers")
-            .navigationBarTitleDisplayMode(.inline)
             .listStyle(PlainListStyle())
-            .safeAreaInset(edge: .bottom) {
-                // Spacer for floating buttons
-                Color.clear.frame(height: 80)
-            }
-        }
+            .contentMargins(.top, 44) // Add top margin for navigation bar clearance
+            .padding(.bottom, 80) // Extra space for floating buttons
+        .padding(.top, 20) // Add top padding to wrapping control
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {

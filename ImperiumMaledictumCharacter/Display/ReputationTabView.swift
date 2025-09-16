@@ -31,15 +31,14 @@ struct ReputationTab: View {
     }
     
     var body: some View {
-        NavigationView {
+        GeometryReader { geometry in
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 0) {
                     if let imperium = imperiumCharacter {
                         // Faction Reputation Block
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Faction Reputation")
                                 .font(.headline)
-                                .padding(.horizontal)
                             
                             LazyVStack(spacing: 8) {
                                 ForEach(ImperiumFactionsList.factions, id: \.self) { faction in
@@ -53,8 +52,9 @@ struct ReputationTab: View {
                                     )
                                 }
                             }
-                            .padding(.horizontal)
                         }
+                        .padding()
+                        .padding(.top, 44) // Add explicit top padding for navigation bar clearance
                         
                         // Individual Reputation Block
                         VStack(alignment: .leading, spacing: 12) {
@@ -119,12 +119,9 @@ struct ReputationTab: View {
                         }
                     }
                 }
-                .padding(.vertical)
                 .padding(.bottom, 80) // Extra space for floating buttons
-            }
-            .navigationTitle("Reputation")
-            .navigationBarTitleDisplayMode(.large)
         }
+        .padding(.top, 20) // Add top padding to wrapping control
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
             HStack(spacing: 16) {
@@ -180,6 +177,7 @@ struct ReputationTab: View {
                     individual: individual
                 )
             }
+        }
         }
     }
     
@@ -452,7 +450,7 @@ struct AddIndividualReputationSheet: View {
     @State private var reputationValue = 0
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Individual Details") {
                     TextField("Individual Name", text: $individualName)
@@ -568,7 +566,7 @@ struct EditIndividualReputationSheet: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Individual Details") {
                     TextField("Individual Name", text: $individualName)
