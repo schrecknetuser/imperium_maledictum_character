@@ -33,7 +33,7 @@ struct ReputationTab: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 30) {
                     if let imperium = imperiumCharacter {
                         // Faction Reputation Block
                         VStack(alignment: .leading, spacing: 12) {
@@ -119,12 +119,6 @@ struct ReputationTab: View {
                     }
                 }
                 .padding(.bottom, 80) // Extra space for floating buttons
-        }
-        .safeAreaInset(edge: .top, spacing: 0) {
-            // Force proper navigation bar clearance
-            Rectangle()
-                .fill(Color.clear)
-                .frame(height: 1)
         }
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons
