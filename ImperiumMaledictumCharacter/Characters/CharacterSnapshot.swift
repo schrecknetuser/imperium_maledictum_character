@@ -47,6 +47,7 @@ class CharacterSnapshot {
     let skillsAdvancesData: String
     let factionSkillAdvancesData: String
     let specializationAdvancesData: String
+    let skillSpecializationsData: String  // Add new format
     let talentNamesData: String
     let equipmentListData: String
     let weaponListData: String
@@ -97,6 +98,7 @@ class CharacterSnapshot {
         self.skillsAdvancesData = character.skillsAdvancesData
         self.factionSkillAdvancesData = character.factionSkillAdvancesData
         self.specializationAdvancesData = character.specializationAdvancesData
+        self.skillSpecializationsData = character.skillSpecializationsData
         self.talentNamesData = character.talentNamesData
         self.equipmentListData = character.equipmentListData
         self.weaponListData = character.weaponListData
@@ -148,6 +150,7 @@ class CharacterSnapshot {
         character.skillsAdvancesData = self.skillsAdvancesData
         character.factionSkillAdvancesData = self.factionSkillAdvancesData
         character.specializationAdvancesData = self.specializationAdvancesData
+        character.skillSpecializationsData = self.skillSpecializationsData
         character.talentNamesData = self.talentNamesData
         character.equipmentListData = self.equipmentListData
         character.weaponListData = self.weaponListData

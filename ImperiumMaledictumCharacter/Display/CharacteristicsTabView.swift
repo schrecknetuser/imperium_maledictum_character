@@ -463,17 +463,31 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
-                let originalSnapshot = store.createSnapshot(of: imperium)
                 
-                var characteristics = imperium.characteristics
-                if var characteristic = characteristics[characteristicName] {
-                    characteristic.initialValue = max(1, newValue) // Minimum value of 1
-                    characteristics[characteristicName] = characteristic
-                    imperium.characteristics = characteristics
-                    store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
-                    // Refresh specializations list since characteristic values affect specialization totals
-                    refreshSpecializationsList()
+                // Only log changes immediately when not in edit mode
+                // When in edit mode, changes will be logged when "Done" is pressed
+                if !isEditMode {
+                    let originalSnapshot = store.createSnapshot(of: imperium)
+                    
+                    var characteristics = imperium.characteristics
+                    if var characteristic = characteristics[characteristicName] {
+                        characteristic.initialValue = max(1, newValue) // Minimum value of 1
+                        characteristics[characteristicName] = characteristic
+                        imperium.characteristics = characteristics
+                        store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                    }
+                } else {
+                    var characteristics = imperium.characteristics
+                    if var characteristic = characteristics[characteristicName] {
+                        characteristic.initialValue = max(1, newValue) // Minimum value of 1
+                        characteristics[characteristicName] = characteristic
+                        imperium.characteristics = characteristics
+                        store.saveChanges()
+                    }
                 }
+                
+                // Refresh specializations list since characteristic values affect specialization totals
+                refreshSpecializationsList()
             }
         )
     }
@@ -486,17 +500,31 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
-                let originalSnapshot = store.createSnapshot(of: imperium)
                 
-                var characteristics = imperium.characteristics
-                if var characteristic = characteristics[characteristicName] {
-                    characteristic.advances = newValue
-                    characteristics[characteristicName] = characteristic
-                    imperium.characteristics = characteristics
-                    store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
-                    // Refresh specializations list since characteristic values affect specialization totals
-                    refreshSpecializationsList()
+                // Only log changes immediately when not in edit mode
+                // When in edit mode, changes will be logged when "Done" is pressed
+                if !isEditMode {
+                    let originalSnapshot = store.createSnapshot(of: imperium)
+                    
+                    var characteristics = imperium.characteristics
+                    if var characteristic = characteristics[characteristicName] {
+                        characteristic.advances = newValue
+                        characteristics[characteristicName] = characteristic
+                        imperium.characteristics = characteristics
+                        store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                    }
+                } else {
+                    var characteristics = imperium.characteristics
+                    if var characteristic = characteristics[characteristicName] {
+                        characteristic.advances = newValue
+                        characteristics[characteristicName] = characteristic
+                        imperium.characteristics = characteristics
+                        store.saveChanges()
+                    }
                 }
+                
+                // Refresh specializations list since characteristic values affect specialization totals
+                refreshSpecializationsList()
             }
         )
     }
@@ -511,16 +539,27 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
-                let originalSnapshot = store.createSnapshot(of: imperium)
                 
                 // Calculate what the user advances should be to achieve the desired total
                 let factionAdvances = imperium.factionSkillAdvances[skillName] ?? 0
                 let targetUserAdvances = max(0, newValue - factionAdvances)
                 
-                var skillAdvances = imperium.skillAdvances
-                skillAdvances[skillName] = targetUserAdvances
-                imperium.skillAdvances = skillAdvances
-                store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                // Only log changes immediately when not in edit mode
+                // When in edit mode, changes will be logged when "Done" is pressed
+                if !isEditMode {
+                    let originalSnapshot = store.createSnapshot(of: imperium)
+                    
+                    var skillAdvances = imperium.skillAdvances
+                    skillAdvances[skillName] = targetUserAdvances
+                    imperium.skillAdvances = skillAdvances
+                    store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                } else {
+                    var skillAdvances = imperium.skillAdvances
+                    skillAdvances[skillName] = targetUserAdvances
+                    imperium.skillAdvances = skillAdvances
+                    store.saveChanges()
+                }
+                
                 // Refresh specializations list since skill advances affect specialization totals
                 refreshSpecializationsList()
             }
@@ -535,9 +574,20 @@ struct CharacteristicsTab: View {
             },
             set: { newValue in
                 guard let imperium = imperiumCharacter else { return }
-                let originalSnapshot = store.createSnapshot(of: imperium)
-                imperium.setSpecializationAdvances(specialization: specializationName, skill: skillName, advances: newValue)
-                store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                
+                // Only log changes immediately when not in edit mode
+                // When in edit mode, changes will be logged when "Done" is pressed
+                if !isEditMode {
+                    let originalSnapshot = store.createSnapshot(of: imperium)
+                    imperium.setSpecializationAdvances(specialization: specializationName, skill: skillName, advances: newValue)
+                    store.saveCharacterWithAutoChangeTracking(imperium, originalSnapshot: originalSnapshot)
+                } else {
+                    imperium.setSpecializationAdvances(specialization: specializationName, skill: skillName, advances: newValue)
+                    store.saveChanges()
+                }
+                
+                // Refresh specializations list to reflect changes immediately
+                refreshSpecializationsList()
             }
         )
     }
