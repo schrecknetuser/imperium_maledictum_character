@@ -41,7 +41,7 @@ struct CharacteristicsTab: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(alignment: .leading, spacing: 30) {
+                VStack(alignment: .leading, spacing: 0) {
                 // Characteristics Table
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Characteristics")
@@ -185,6 +185,7 @@ struct CharacteristicsTab: View {
                     }
                 }
                 .padding()
+                .padding(.top, 44) // Add explicit top padding for navigation bar clearance
                 .background(Color(.systemGray6))
                 .cornerRadius(12)
                 .padding(.bottom, 20)

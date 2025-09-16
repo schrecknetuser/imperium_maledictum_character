@@ -30,14 +30,6 @@ struct PsychicPowersTab: View {
     
     var body: some View {
         List {
-            // Navigation bar clearance section
-            Section {
-                Color.clear
-                    .frame(height: 0)
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-            }
-            
                 if let imperium = imperiumCharacter {
                     ForEach(imperium.psychicPowers, id: \.self) { power in
                         Text(power)
@@ -48,6 +40,7 @@ struct PsychicPowersTab: View {
                 }
             }
             .listStyle(PlainListStyle())
+            .contentMargins(.top, 44) // Add top margin for navigation bar clearance
             .padding(.bottom, 80) // Extra space for floating buttons
         .overlay(alignment: .bottomTrailing) {
             // Floating Action Buttons

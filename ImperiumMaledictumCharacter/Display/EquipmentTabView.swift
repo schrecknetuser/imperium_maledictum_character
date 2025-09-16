@@ -89,14 +89,6 @@ struct EquipmentTab: View {
     var body: some View {
         return GeometryReader { geometry in
             List {
-                // Navigation bar clearance section
-                Section {
-                    Color.clear
-                        .frame(height: 0)
-                        .listRowBackground(Color.clear)
-                        .listRowSeparator(.hidden)
-                }
-                
                 if let imperium = imperiumCharacter {
                     Section("Equipment") {
                         let groupedEquipment = Dictionary(grouping: imperium.equipmentList) { equipment in
@@ -408,6 +400,7 @@ struct EquipmentTab: View {
                 }
             }
             .listStyle(PlainListStyle())
+            .contentMargins(.top, 44) // Add top margin for navigation bar clearance
             .padding(.bottom, 80) // Extra space for floating buttons
             .onAppear {
                 // Migrate old string-based data to new object-based system

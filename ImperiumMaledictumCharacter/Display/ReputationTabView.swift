@@ -33,7 +33,7 @@ struct ReputationTab: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(alignment: .leading, spacing: 30) {
+                VStack(alignment: .leading, spacing: 0) {
                     if let imperium = imperiumCharacter {
                         // Faction Reputation Block
                         VStack(alignment: .leading, spacing: 12) {
@@ -54,6 +54,7 @@ struct ReputationTab: View {
                             }
                         }
                         .padding()
+                        .padding(.top, 44) // Add explicit top padding for navigation bar clearance
                         
                         // Individual Reputation Block
                         VStack(alignment: .leading, spacing: 12) {
