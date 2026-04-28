@@ -191,23 +191,21 @@ class ImperiumCharacter: BaseCharacter {
     }
     
     func calculateMaxWounds() -> Int {
-        // New formula: (current_strength - current_strength%10)/10 + (current_willpower-current_willpower%10)/10 + 2*(current_toughness - current_toughness%10)/10
-        let strengthComponent = (strength - strength % 10) / 10
-        let willpowerComponent = (willpower - willpower % 10) / 10
-        let toughnessComponent = 2 * ((toughness - toughness % 10) / 10)
-        return strengthComponent + willpowerComponent + toughnessComponent
+        let str = characteristics[CharacteristicNames.strength]?.derivedValue ?? strength
+        let wil = characteristics[CharacteristicNames.willpower]?.derivedValue ?? willpower
+        let tgh = characteristics[CharacteristicNames.toughness]?.derivedValue ?? toughness
+        return (str - str % 10) / 10 + (wil - wil % 10) / 10 + 2 * ((tgh - tgh % 10) / 10)
     }
     
     func calculateCorruptionThreshold() -> Int {
-        // Corruption threshold: (current_willpower-current_willpower%10)/10 + (current_toughness - current_toughness%10)/10
-        let willpowerComponent = (willpower - willpower % 10) / 10
-        let toughnessComponent = (toughness - toughness % 10) / 10
-        return willpowerComponent + toughnessComponent
+        let wil = characteristics[CharacteristicNames.willpower]?.derivedValue ?? willpower
+        let tgh = characteristics[CharacteristicNames.toughness]?.derivedValue ?? toughness
+        return (wil - wil % 10) / 10 + (tgh - tgh % 10) / 10
     }
     
     func calculateCriticalWoundsThreshold() -> Int {
-        // Critical wounds threshold: (toughness - toughness%10)/10
-        return (toughness - toughness % 10) / 10
+        let tgh = characteristics[CharacteristicNames.toughness]?.derivedValue ?? toughness
+        return (tgh - tgh % 10) / 10
     }
     
     var availableExperience: Int {
