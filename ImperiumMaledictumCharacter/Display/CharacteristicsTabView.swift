@@ -48,25 +48,24 @@ struct CharacteristicsTab: View {
                         .font(.headline)
                     
                     VStack(spacing: 0) {
-                        // Header row with responsive sizing
-                        HStack {
+                        // Header row
+                        HStack(spacing: 0) {
                             Text("Char.")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: max(40, geometry.size.width * 0.08), alignment: .leading)
+                                .frame(width: geometry.size.width * 0.12, alignment: .leading)
                             Text("Base")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: isEditMode ? max(80, geometry.size.width * 0.15) : max(50, geometry.size.width * 0.1), alignment: .center)
+                                .frame(maxWidth: .infinity, alignment: .center)
                             Text("Adv.")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: isEditMode ? max(80, geometry.size.width * 0.15) : max(50, geometry.size.width * 0.1), alignment: .center)
+                                .frame(maxWidth: .infinity, alignment: .center)
                             Text("Total")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: max(50, geometry.size.width * 0.1), alignment: .center)
-                            Spacer()
+                                .frame(width: geometry.size.width * 0.14, alignment: .center)
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 8)
@@ -74,12 +73,11 @@ struct CharacteristicsTab: View {
                         
                         ForEach(Array(getCharacteristicsList().enumerated()), id: \.element.abbreviation) { index, characteristic in
                             VStack(spacing: 0) {
-                                HStack {
+                                HStack(spacing: 0) {
                                     Text(characteristic.abbreviation)
                                         .font(.caption)
-                                        .frame(width: max(40, geometry.size.width * 0.08), alignment: .leading)
+                                        .frame(width: geometry.size.width * 0.12, alignment: .leading)
                                     
-                                    // Base Value Section with responsive sizing
                                     if isEditMode {
                                         HStack(spacing: 2) {
                                             Button(action: {
@@ -99,7 +97,7 @@ struct CharacteristicsTab: View {
                                             
                                             Text("\(characteristic.baseValue)")
                                                 .font(.caption)
-                                                .frame(minWidth: 25)
+                                                .frame(minWidth: 20)
                                             
                                             Button(action: {
                                                 let current = imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20
@@ -116,14 +114,13 @@ struct CharacteristicsTab: View {
                                             }
                                             .disabled((imperiumCharacter?.characteristics[characteristic.name]?.initialValue ?? 20) >= 100)
                                         }
-                                        .frame(width: max(80, geometry.size.width * 0.15), alignment: .center)
+                                        .frame(maxWidth: .infinity)
                                     } else {
                                         Text("\(characteristic.baseValue)")
                                             .font(.caption)
-                                            .frame(width: max(50, geometry.size.width * 0.1), alignment: .center)
+                                            .frame(maxWidth: .infinity, alignment: .center)
                                     }
                                     
-                                    // Advances Section with responsive sizing
                                     if isEditMode {
                                         HStack(spacing: 2) {
                                             Button(action: {
@@ -143,7 +140,7 @@ struct CharacteristicsTab: View {
                                             
                                             Text("\(characteristic.advances)")
                                                 .font(.caption)
-                                                .frame(minWidth: 25)
+                                                .frame(minWidth: 20)
                                             
                                             Button(action: {
                                                 let current = imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0
@@ -160,18 +157,17 @@ struct CharacteristicsTab: View {
                                             }
                                             .disabled((imperiumCharacter?.characteristics[characteristic.name]?.advances ?? 0) >= 20)
                                         }
-                                        .frame(width: max(80, geometry.size.width * 0.15), alignment: .center)
+                                        .frame(maxWidth: .infinity)
                                     } else {
                                         Text("\(characteristic.advances)")
                                             .font(.caption)
-                                            .frame(width: max(50, geometry.size.width * 0.1), alignment: .center)
+                                            .frame(maxWidth: .infinity, alignment: .center)
                                     }
                                     
                                     Text("\(characteristic.totalValue)")
                                         .font(.caption)
                                         .fontWeight(.medium)
-                                        .frame(width: max(50, geometry.size.width * 0.1), alignment: .center)
-                                    Spacer()
+                                        .frame(width: geometry.size.width * 0.14, alignment: .center)
                                 }
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
@@ -196,8 +192,8 @@ struct CharacteristicsTab: View {
                         .font(.headline)
                     
                     VStack(spacing: 0) {
-                        // Header row with responsive sizing
-                        HStack {
+                        // Header row
+                        HStack(spacing: 0) {
                             Text("Skill")
                                 .font(.caption)
                                 .fontWeight(.medium)
@@ -205,15 +201,15 @@ struct CharacteristicsTab: View {
                             Text("Char.")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: max(40, geometry.size.width * 0.08), alignment: .center)
+                                .frame(width: geometry.size.width * 0.10, alignment: .center)
                             Text("Adv.")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: max(55, geometry.size.width * 0.12), alignment: .center)
+                                .frame(width: geometry.size.width * 0.14, alignment: .center)
                             Text("Total")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: max(45, geometry.size.width * 0.1), alignment: .center)
+                                .frame(width: geometry.size.width * 0.12, alignment: .center)
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 8)
@@ -221,33 +217,32 @@ struct CharacteristicsTab: View {
                         
                         ForEach(Array(getSkillsList().enumerated()), id: \.element.name) { index, skill in
                             VStack(spacing: 0) {
-                                HStack {
+                                HStack(spacing: 0) {
                                     Text(skill.name)
                                         .font(.caption)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     Text(skill.characteristicAbbreviation)
                                         .font(.caption)
-                                        .frame(width: max(40, geometry.size.width * 0.08), alignment: .center)
+                                        .frame(width: geometry.size.width * 0.10, alignment: .center)
                                     
                                     if isEditMode {
-                                        // Editable dropdown for advances with better sizing
                                         Picker("Advances", selection: getSkillAdvanceBinding(for: skill.name)) {
                                             ForEach(0...4, id: \.self) { value in
                                                 Text("\(value)").tag(value)
                                             }
                                         }
                                         .pickerStyle(MenuPickerStyle())
-                                        .frame(width: max(55, geometry.size.width * 0.12))
+                                        .frame(width: geometry.size.width * 0.14)
                                     } else {
                                         Text("\(skill.advances)")
                                             .font(.caption)
-                                            .frame(width: max(55, geometry.size.width * 0.12), alignment: .center)
+                                            .frame(width: geometry.size.width * 0.14, alignment: .center)
                                     }
                                     
                                     Text("\(skill.totalValue)")
                                         .font(.caption)
                                         .fontWeight(.medium)
-                                        .frame(width: max(45, geometry.size.width * 0.1), alignment: .center)
+                                        .frame(width: geometry.size.width * 0.12, alignment: .center)
                                 }
                                 .padding(.horizontal)
                                 .padding(.vertical, 6)
@@ -271,30 +266,28 @@ struct CharacteristicsTab: View {
                         .font(.headline)
                     
                     VStack(spacing: 0) {
-                        // Header row with dynamic sizing
-                        HStack {
+                        // Header row
+                        HStack(spacing: 0) {
                             Text("Specialization")
-                                .font(.system(.caption, design: .default))
+                                .font(.caption)
                                 .fontWeight(.medium)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .frame(minWidth: 120)
                             Text("Skill")
-                                .font(.system(.caption, design: .default))
+                                .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: max(80, geometry.size.width * 0.15), alignment: .center)
+                                .frame(width: geometry.size.width * 0.18, alignment: .center)
                             Text("Adv.")
-                                .font(.system(.caption, design: .default))
+                                .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: max(60, geometry.size.width * 0.12), alignment: .center)
+                                .frame(width: geometry.size.width * 0.14, alignment: .center)
                             Text("Total")
-                                .font(.system(.caption, design: .default))
+                                .font(.caption)
                                 .fontWeight(.medium)
-                                .frame(width: max(50, geometry.size.width * 0.1), alignment: .center)
+                                .frame(width: geometry.size.width * 0.12, alignment: .center)
                             
-                            // Space for delete button in edit mode
                             if isEditMode {
-                                Text("") // Empty header for delete column
-                                    .frame(width: 40, alignment: .center)
+                                Text("")
+                                    .frame(width: 35, alignment: .center)
                             }
                         }
                         .padding(.horizontal)
@@ -303,50 +296,45 @@ struct CharacteristicsTab: View {
                         
                         ForEach(Array(specializationsList.enumerated()), id: \.element.id) { index, specialization in
                             VStack(spacing: 0) {
-                                HStack {
+                                HStack(spacing: 0) {
                                     Text(specialization.name)
-                                        .font(.system(.caption, design: .default))
+                                        .font(.caption)
                                         .lineLimit(2)
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .frame(minWidth: 120)
                                     Text(specialization.skillName)
-                                        .font(.system(.caption, design: .default))
+                                        .font(.caption)
                                         .lineLimit(1)
-                                        .frame(width: max(80, geometry.size.width * 0.15), alignment: .center)
+                                        .frame(width: geometry.size.width * 0.18, alignment: .center)
                                     
-                                    // Advances column - consistent width in both modes with better responsive sizing
                                     if isEditMode {
-                                        // Editable dropdown for advances with improved sizing
                                         Picker("Advances", selection: getSpecializationAdvanceBinding(for: specialization.name, skill: specialization.skillName)) {
                                             ForEach(0...4, id: \.self) { value in
                                                 Text("\(value)").tag(value)
                                             }
                                         }
                                         .pickerStyle(MenuPickerStyle())
-                                        .frame(width: max(60, geometry.size.width * 0.12), alignment: .center)
+                                        .frame(width: geometry.size.width * 0.14, alignment: .center)
                                     } else {
                                         Text("\(specialization.advances)")
-                                            .font(.system(.caption, design: .default))
-                                            .frame(width: max(60, geometry.size.width * 0.12), alignment: .center)
+                                            .font(.caption)
+                                            .frame(width: geometry.size.width * 0.14, alignment: .center)
                                     }
                                     
-                                    // Total column
                                     Text("\(specialization.totalValue)")
-                                        .font(.system(.caption, design: .default))
+                                        .font(.caption)
                                         .fontWeight(.medium)
-                                        .frame(width: max(50, geometry.size.width * 0.1), alignment: .center)
+                                        .frame(width: geometry.size.width * 0.12, alignment: .center)
                                     
-                                    // Delete button column - only in edit mode, fixed width
                                     if isEditMode {
                                         Button(action: {
                                             specializationToDelete = (name: specialization.name, skill: specialization.skillName)
                                             showingDeleteConfirmation = true
                                         }) {
                                             Image(systemName: "trash")
-                                                .font(.system(.caption, design: .default))
+                                                .font(.caption)
                                                 .foregroundColor(.red)
                                         }
-                                        .frame(width: 40, height: 25)
+                                        .frame(width: 35, height: 25)
                                         .background(Color(.systemGray5))
                                         .cornerRadius(6)
                                     }
