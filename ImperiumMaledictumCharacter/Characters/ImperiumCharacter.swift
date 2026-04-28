@@ -82,6 +82,7 @@ class ImperiumCharacter: BaseCharacter {
     var fate: Int = 3
     var spentFate: Int = 0
     var solars: Int = 0
+    var warpCharge: Int = 0
     
     // Experience tracking
     var totalExperience: Int = 0
@@ -206,6 +207,15 @@ class ImperiumCharacter: BaseCharacter {
     func calculateCriticalWoundsThreshold() -> Int {
         let tgh = characteristics[CharacteristicNames.toughness]?.derivedValue ?? toughness
         return (tgh - tgh % 10) / 10
+    }
+    
+    func calculateWarpChargeThreshold() -> Int {
+        let wil = characteristics[CharacteristicNames.willpower]?.derivedValue ?? willpower
+        let base = (wil - wil % 10) / 10
+        if talentNames.contains("Sanctioned Psyker") {
+            return base * 2
+        }
+        return base
     }
     
     var availableExperience: Int {
@@ -1052,6 +1062,9 @@ class ImperiumCharacter: BaseCharacter {
         // Check critical wounds (as this is different from non-critical wounds)
         if criticalWounds != originalCharacter.criticalWounds {
             changes.append("critical wounds \(originalCharacter.criticalWounds)→\(criticalWounds)")
+        }
+        if warpCharge != originalCharacter.warpCharge {
+            changes.append("warp charge \(originalCharacter.warpCharge)→\(warpCharge)")
         }
         
         // Check injuries lists changes  

@@ -65,6 +65,7 @@ struct StatusContentView: View {
     @State private var fate: Int = 0
     @State private var spentFate: Int = 0
     @State private var solars: Int = 0
+    @State private var warpCharge: Int = 0
     
     // Store original snapshot for change tracking
     @State private var originalSnapshot: CharacterSnapshot?
@@ -177,6 +178,49 @@ struct StatusContentView: View {
                     }
                     
                     Text("Critical Wounds Threshold: \(character.calculateCriticalWoundsThreshold())")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                // Warp Charge
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Warp Charge")
+                        .font(.headline)
+                    
+                    HStack {
+                        Button(action: {
+                            if warpCharge > 0 {
+                                warpCharge -= 1
+                                updateCharacter()
+                            }
+                        }) {
+                            Image(systemName: "minus.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.purple)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .disabled(warpCharge <= 0)
+                        
+                        Spacer()
+                        
+                        Text("\(warpCharge)")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            warpCharge += 1
+                            updateCharacter()
+                        }) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(.purple)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    
+                    Text("Warp Charge Threshold: \(character.calculateWarpChargeThreshold())")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -321,6 +365,7 @@ struct StatusContentView: View {
             fate = character.fate
             spentFate = character.spentFate
             solars = character.solars
+            warpCharge = character.warpCharge
             
             // Create original snapshot for change tracking
             originalSnapshot = store.createSnapshot(of: character)
@@ -333,6 +378,7 @@ struct StatusContentView: View {
         character.fate = fate
         character.spentFate = spentFate
         character.solars = solars
+        character.warpCharge = warpCharge
         
         // Save with change tracking if we have the original snapshot
         if let snapshot = originalSnapshot {

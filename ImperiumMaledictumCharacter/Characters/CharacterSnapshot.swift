@@ -41,6 +41,7 @@ class CharacterSnapshot {
     let totalExperience: Int
     let spentExperience: Int
     let criticalWounds: Int
+    let warpCharge: Int
     
     // Data strings for complex objects
     let characteristicsData: String
@@ -93,6 +94,7 @@ class CharacterSnapshot {
         self.totalExperience = character.totalExperience
         self.spentExperience = character.spentExperience
         self.criticalWounds = character.criticalWounds
+        self.warpCharge = character.warpCharge
         
         // Complex data
         self.characteristicsData = character.characteristicsData
@@ -146,6 +148,7 @@ class CharacterSnapshot {
         character.totalExperience = self.totalExperience
         character.spentExperience = self.spentExperience
         character.criticalWounds = self.criticalWounds
+        character.warpCharge = self.warpCharge
         
         // Complex data
         character.characteristicsData = self.characteristicsData
