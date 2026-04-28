@@ -339,9 +339,16 @@ struct StatusContentView: View {
                         
                         Spacer()
                         
-                        Text("\(solars)")
+                        TextField("0", value: $solars, format: .number)
                             .font(.title2)
                             .fontWeight(.bold)
+                            .multilineTextAlignment(.center)
+                            .keyboardType(.numberPad)
+                            .frame(width: 80)
+                            .onChange(of: solars) {
+                                if solars < 0 { solars = 0 }
+                                updateCharacter()
+                            }
                         
                         Spacer()
                         
