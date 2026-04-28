@@ -1083,6 +1083,9 @@ class ImperiumCharacter: BaseCharacter {
         let weaponChanges = getDetailedWeaponChanges(originalCharacter: originalCharacter)
         changes.append(contentsOf: weaponChanges)
         
+        let armorChanges = getDetailedArmorChanges(originalCharacter: originalCharacter)
+        changes.append(contentsOf: armorChanges)
+        
         let psychicPowerChanges = getDetailedPsychicPowerChanges(originalCharacter: originalCharacter)
         changes.append(contentsOf: psychicPowerChanges)
         
@@ -1319,6 +1322,33 @@ class ImperiumCharacter: BaseCharacter {
         for removedId in removedIds {
             if let weapon = originalWeapons.first(where: { $0.id == removedId }) {
                 changes.append("weapon removed: \(weapon.name)")
+            }
+        }
+        
+        return changes
+    }
+    
+    private func getDetailedArmorChanges(originalCharacter: ImperiumCharacter) -> [String] {
+        guard armorListData != originalCharacter.armorListData else { return [] }
+        
+        var changes: [String] = []
+        let currentArmor = armorList
+        let originalArmor = originalCharacter.armorList
+        
+        let currentIds = Set(currentArmor.map { $0.id })
+        let originalIds = Set(originalArmor.map { $0.id })
+        
+        let addedIds = currentIds.subtracting(originalIds)
+        for addedId in addedIds {
+            if let armor = currentArmor.first(where: { $0.id == addedId }) {
+                changes.append("armor added: \(armor.name)")
+            }
+        }
+        
+        let removedIds = originalIds.subtracting(currentIds)
+        for removedId in removedIds {
+            if let armor = originalArmor.first(where: { $0.id == removedId }) {
+                changes.append("armor removed: \(armor.name)")
             }
         }
         

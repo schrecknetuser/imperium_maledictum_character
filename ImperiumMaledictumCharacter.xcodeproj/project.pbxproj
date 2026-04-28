@@ -32,7 +32,6 @@
 		CE94F7572E4FE646008F9F08 /* SkillModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F74D2E4FE646008F9F08 /* SkillModel.swift */; };
 		CE94F7592E515FB4008F9F08 /* CriticalWoundModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7582E515FB4008F9F08 /* CriticalWoundModel.swift */; };
 		CE94F75B2E526378008F9F08 /* ConditionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F75A2E526378008F9F08 /* ConditionModel.swift */; };
-		CE94F7652E52B197008F9F08 /* PsychicPowersTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7622E52B197008F9F08 /* PsychicPowersTabView.swift */; };
 		CE94F7662E52B197008F9F08 /* StatusPopupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7632E52B197008F9F08 /* StatusPopupView.swift */; };
 		CE94F7672E52B197008F9F08 /* EquipmentTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F75F2E52B197008F9F08 /* EquipmentTabView.swift */; };
 		CE94F7692E52B197008F9F08 /* TalentsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE94F7642E52B197008F9F08 /* TalentsTabView.swift */; };
@@ -73,7 +72,6 @@
 		CE94F75D2E52B197008F9F08 /* CharacteristicsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacteristicsTabView.swift; sourceTree = "<group>"; };
 		CE94F75F2E52B197008F9F08 /* EquipmentTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EquipmentTabView.swift; sourceTree = "<group>"; };
 		CE94F7612E52B197008F9F08 /* OverviewTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewTabView.swift; sourceTree = "<group>"; };
-		CE94F7622E52B197008F9F08 /* PsychicPowersTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PsychicPowersTabView.swift; sourceTree = "<group>"; };
 		CE94F7632E52B197008F9F08 /* StatusPopupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusPopupView.swift; sourceTree = "<group>"; };
 		CE94F7642E52B197008F9F08 /* TalentsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalentsTabView.swift; sourceTree = "<group>"; };
 		CE94F76E2E52B86C008F9F08 /* ReputationTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReputationTabView.swift; sourceTree = "<group>"; };
@@ -140,7 +138,6 @@
 				CE94F75D2E52B197008F9F08 /* CharacteristicsTabView.swift */,
 				CE94F75F2E52B197008F9F08 /* EquipmentTabView.swift */,
 				CE94F7612E52B197008F9F08 /* OverviewTabView.swift */,
-				CE94F7622E52B197008F9F08 /* PsychicPowersTabView.swift */,
 				CE94F7632E52B197008F9F08 /* StatusPopupView.swift */,
 				CE94F7642E52B197008F9F08 /* TalentsTabView.swift */,
 				1A000017 /* CharacterDetailView.swift */,
@@ -271,7 +268,6 @@
 				1A000018 /* CharacterDetailView.swift in Sources */,
 				CE0525852E5785EB009641C6 /* ChangeHistoryPopupView.swift in Sources */,
 				1A000001 /* ImperiumMaledictumCharacterApp.swift in Sources */,
-				CE94F7652E52B197008F9F08 /* PsychicPowersTabView.swift in Sources */,
 				CE94F7662E52B197008F9F08 /* StatusPopupView.swift in Sources */,
 				CE94F7672E52B197008F9F08 /* EquipmentTabView.swift in Sources */,
 				CE94F7692E52B197008F9F08 /* TalentsTabView.swift in Sources */,

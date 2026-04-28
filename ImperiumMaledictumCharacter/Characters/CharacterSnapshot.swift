@@ -51,6 +51,7 @@ class CharacterSnapshot {
     let talentNamesData: String
     let equipmentListData: String
     let weaponListData: String
+    let armorListData: String
     let psychicPowersData: String
     let reputationData: String
     let headInjuries: String
@@ -102,6 +103,7 @@ class CharacterSnapshot {
         self.talentNamesData = character.talentNamesData
         self.equipmentListData = character.equipmentListData
         self.weaponListData = character.weaponListData
+        self.armorListData = character.armorListData
         self.psychicPowersData = character.psychicPowersData
         self.reputationData = character.reputationData
         self.headInjuries = character.headInjuries
@@ -154,6 +156,7 @@ class CharacterSnapshot {
         character.talentNamesData = self.talentNamesData
         character.equipmentListData = self.equipmentListData
         character.weaponListData = self.weaponListData
+        character.armorListData = self.armorListData
         character.psychicPowersData = self.psychicPowersData
         character.reputationData = self.reputationData
         character.headInjuries = self.headInjuries
