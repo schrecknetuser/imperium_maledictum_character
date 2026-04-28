@@ -43,6 +43,9 @@ struct OverviewTab: View {
                         
                         VStack(alignment: .leading) {
                             if isEditMode {
+                                Text("Name")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
                                 TextField("Character Name", text: $character.name)
                                     .font(.title)
                                     .fontWeight(.bold)
@@ -54,53 +57,81 @@ struct OverviewTab: View {
                             }
                             
                             if isEditMode {
+                                Text("Faction")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
                                 TextField("Faction", text: $character.faction)
-                                    .font(.headline)
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                             } else if !character.faction.isEmpty {
-                                Text(character.faction)
-                                    .font(.headline)
+                                Text("Faction")
+                                    .font(.caption2)
                                     .foregroundColor(.secondary)
+                                Text(character.faction)
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
                             }
                             
                             if isEditMode {
+                                Text("Role")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
                                 TextField("Role", text: $character.role)
                                     .font(.subheadline)
+                                    .fontWeight(.bold)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                             } else if !character.role.isEmpty {
+                                Text("Role")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
                                 Text(character.role)
                                     .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .fontWeight(.bold)
                             }
                             
                             if let imperium = imperiumCharacter {
                                 if isEditMode {
+                                    Text("Homeworld")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
                                     let homeworldBinding = Binding<String>(
                                         get: { imperium.homeworld },
                                         set: { imperium.homeworld = $0 }
                                     )
                                     TextField("Homeworld", text: homeworldBinding)
                                         .font(.subheadline)
+                                        .fontWeight(.bold)
                                         .textFieldStyle(RoundedBorderTextFieldStyle())
                                 } else if !imperium.homeworld.isEmpty {
+                                    Text("Homeworld")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
                                     Text(imperium.homeworld)
                                         .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                                        .fontWeight(.bold)
                                 }
+                            }
+                            
+                            if isEditMode {
+                                Text("Campaign")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                TextField("Campaign", text: $character.campaign)
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            } else if !character.campaign.isEmpty {
+                                Text("Campaign")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Text(character.campaign)
+                                    .font(.subheadline)
+                                    .fontWeight(.bold)
                             }
                         }
                         
                         Spacer()
-                    }
-                    
-                    if isEditMode {
-                        TextField("Campaign", text: $character.campaign)
-                            .font(.caption)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                    } else if !character.campaign.isEmpty {
-                        Text("Campaign: \(character.campaign)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
                     }
                 }
                 .padding()
