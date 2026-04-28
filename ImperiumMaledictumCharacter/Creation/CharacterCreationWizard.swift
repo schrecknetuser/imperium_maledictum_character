@@ -523,12 +523,14 @@ struct CharacteristicAllocationField: View {
                     Image(systemName: "minus")
                         .font(.caption)
                         .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                        .frame(width: 32, height: 32)
+                        .background(Color(.systemGray5))
+                        .cornerRadius(6)
+                        .contentShape(Rectangle())
                 }
-                .frame(width: 32, height: 32)
-                .background(Color(.systemGray5))
-                .foregroundColor(.primary)
-                .cornerRadius(6)
-                .disabled(finalValue <= 5) // Allow going down to 5 (minimum viable characteristic)
+                .buttonStyle(PlainButtonStyle())
+                .disabled(finalValue <= 5)
                 
                 VStack(spacing: 1) {
                     Text("\(finalValue)")
@@ -548,11 +550,13 @@ struct CharacteristicAllocationField: View {
                     Image(systemName: "plus")
                         .font(.caption)
                         .fontWeight(.bold)
+                        .foregroundColor(.primary)
+                        .frame(width: 32, height: 32)
+                        .background(Color(.systemGray5))
+                        .cornerRadius(6)
+                        .contentShape(Rectangle())
                 }
-                .frame(width: 32, height: 32)
-                .background(Color(.systemGray5))
-                .foregroundColor(.primary)
-                .cornerRadius(6)
+                .buttonStyle(PlainButtonStyle())
                 .disabled(finalValue >= 100)
             }
         }
