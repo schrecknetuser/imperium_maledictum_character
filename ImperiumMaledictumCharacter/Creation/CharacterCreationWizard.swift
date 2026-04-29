@@ -734,15 +734,28 @@ struct OriginStage: View {
         var armorList = character.armorList
         
         for equipment in origin.grantedEquipment {
-            if !equipmentList.contains(where: { $0.name == equipment }) && 
-               !armorList.contains(where: { $0.name == equipment }) {
-                // Try to find armor template first
-                if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: equipment) {
-                    armorList.append(armorTemplate.createArmor())
-                } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
-                    equipmentList.append(equipmentTemplate.createEquipment())
+            let (baseName, quality) = Self.extractQuality(from: equipment)
+            if !equipmentList.contains(where: { $0.name == equipment || $0.name == baseName }) && 
+               !armorList.contains(where: { $0.name == equipment || $0.name == baseName }) {
+                if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: baseName) {
+                    let armor = armorTemplate.createArmor()
+                    if quality != nil {
+                        armor.name = equipment
+                        var flaws = armor.flaws
+                        flaws.append(quality!)
+                        armor.flaws = flaws
+                    }
+                    armorList.append(armor)
+                } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: baseName) {
+                    let eq = equipmentTemplate.createEquipment()
+                    if quality != nil {
+                        eq.name = equipment
+                        var flaws = eq.flaws
+                        flaws.append(quality!)
+                        eq.flaws = flaws
+                    }
+                    equipmentList.append(eq)
                 } else {
-                    // Fallback: create basic equipment object if template not found
                     let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
                     basicEquipment.equipmentDescription = "Origin granted equipment"
                     equipmentList.append(basicEquipment)
@@ -751,6 +764,17 @@ struct OriginStage: View {
         }
         character.equipmentList = equipmentList
         character.armorList = armorList
+    }
+    
+    static func extractQuality(from name: String) -> (baseName: String, quality: String?) {
+        if let openParen = name.lastIndex(of: "("),
+           let closeParen = name.lastIndex(of: ")"),
+           closeParen == name.index(before: name.endIndex) {
+            let quality = String(name[name.index(after: openParen)..<closeParen])
+            let baseName = String(name[name.startIndex..<openParen]).trimmingCharacters(in: .whitespaces)
+            return (baseName, quality)
+        }
+        return (name, nil)
     }
 }
 struct FactionStage: View {
@@ -1042,20 +1066,22 @@ struct FactionStage: View {
         
         character.talentNames = allTalents
         
-        // Add faction equipment to equipment and armor lists
+        // Add faction equipment to equipment, armor, and weapon lists
         var equipmentList = character.equipmentList
         var armorList = character.armorList
+        var weaponList = character.weaponList
         
         for equipment in faction.equipment {
             if !equipmentList.contains(where: { $0.name == equipment }) && 
-               !armorList.contains(where: { $0.name == equipment }) {
-                // Try to find armor template first
+               !armorList.contains(where: { $0.name == equipment }) &&
+               !weaponList.contains(where: { $0.name == equipment }) {
                 if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: equipment) {
                     armorList.append(armorTemplate.createArmor())
+                } else if let weaponTemplate = WeaponTemplateDefinitions.getTemplate(for: equipment) {
+                    weaponList.append(weaponTemplate.createWeapon())
                 } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
                     equipmentList.append(equipmentTemplate.createEquipment())
                 } else {
-                    // Fallback: create basic equipment object if template not found
                     let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
                     basicEquipment.equipmentDescription = "Faction granted equipment"
                     equipmentList.append(basicEquipment)
@@ -1064,6 +1090,7 @@ struct FactionStage: View {
         }
         character.equipmentList = equipmentList
         character.armorList = armorList
+        character.weaponList = weaponList
         
         // Set starting solars
         character.solars = faction.solars
@@ -1573,27 +1600,21 @@ struct RoleStage: View {
     private func initializeRoleSelections() {
         guard let role = selectedRole else { return }
         
-        // Initialize weapon choices array and try to restore previous selections
+        // Restore weapon selections from tracking data
         selectedWeapons = Array(repeating: "", count: role.weaponChoices.count)
-        let existingWeaponNames = character.weaponList.map { $0.name }
-        for (choiceIndex, weaponOptions) in role.weaponChoices.enumerated() {
-            for weapon in weaponOptions {
-                if existingWeaponNames.contains(weapon) {
-                    selectedWeapons[choiceIndex] = weapon
-                    break // Only select one weapon per choice
-                }
+        if let data = character.roleWeaponSelectionsData.data(using: .utf8),
+           let previous = try? JSONDecoder().decode([String].self, from: data) {
+            for (i, weapon) in previous.enumerated() where i < selectedWeapons.count {
+                selectedWeapons[i] = weapon
             }
         }
         
-        // Initialize equipment choices array and try to restore previous selections
+        // Restore equipment selections from tracking data
         selectedEquipment = Array(repeating: "", count: role.equipmentChoices.count)
-        let existingEquipmentNames = character.equipmentList.map { $0.name }
-        for (choiceIndex, equipmentOptions) in role.equipmentChoices.enumerated() {
-            for equipment in equipmentOptions {
-                if existingEquipmentNames.contains(equipment) {
-                    selectedEquipment[choiceIndex] = equipment
-                    break // Only select one equipment per choice
-                }
+        if let data = character.roleEquipmentSelectionsData.data(using: .utf8),
+           let previous = try? JSONDecoder().decode([String].self, from: data) {
+            for (i, equipment) in previous.enumerated() where i < selectedEquipment.count {
+                selectedEquipment[i] = equipment
             }
         }
         
@@ -1687,6 +1708,8 @@ struct RoleStage: View {
         selectedEquipment = []
         remainingSkillAdvances = 0
         remainingSpecializationAdvances = 0
+        character.roleWeaponSelectionsData = ""
+        character.roleEquipmentSelectionsData = ""
         
         if selectedRole != nil {
             initializeRoleSelections()
@@ -1695,6 +1718,7 @@ struct RoleStage: View {
     
     private func saveRoleSelectionsToCharacter() {
         guard let role = selectedRole else { return }
+        let isFirstRoleSave = character.roleWeaponSelectionsData.isEmpty
         
         // Save skill advances (replace, don't add to avoid duplication)
         var currentAdvances = character.skillAdvances
@@ -1760,70 +1784,104 @@ struct RoleStage: View {
         }
         character.talentNames = allTalents
         
-        // Save weapon selections by creating weapon objects from templates
+        // Remove previously saved role weapon selections, then add current ones
         var weaponList = character.weaponList
+        if let data = character.roleWeaponSelectionsData.data(using: .utf8),
+           let previousSelections = try? JSONDecoder().decode([String].self, from: data) {
+            for prevWeapon in previousSelections where !prevWeapon.isEmpty {
+                if let idx = weaponList.lastIndex(where: { $0.name == prevWeapon }) {
+                    weaponList.remove(at: idx)
+                }
+            }
+        }
         for weapon in selectedWeapons {
             if !weapon.isEmpty {
-                // Check if weapon already exists
-                if !weaponList.contains(where: { $0.name == weapon }) {
-                    // Find weapon template and create weapon object
-                    if let template = WeaponTemplateDefinitions.getTemplate(for: weapon) {
-                        weaponList.append(template.createWeapon())
-                    } else {
-                        // Fallback: create basic weapon object if template not found
-                        let basicWeapon = Weapon(name: weapon, category: WeaponCategories.melee, specialization: WeaponSpecializations.none, damage: "1", range: WeaponRanges.short, magazine: 0, encumbrance: 1, availability: "Common", cost: 0)
-                        weaponList.append(basicWeapon)
-                    }
+                if let template = WeaponTemplateDefinitions.getTemplate(for: weapon) {
+                    weaponList.append(template.createWeapon())
+                } else {
+                    let basicWeapon = Weapon(name: weapon, category: WeaponCategories.melee, specialization: WeaponSpecializations.none, damage: "1", range: WeaponRanges.short, magazine: 0, encumbrance: 1, availability: "Common", cost: 0)
+                    weaponList.append(basicWeapon)
                 }
             }
         }
         character.weaponList = weaponList
+        if let encoded = try? JSONEncoder().encode(selectedWeapons) {
+            character.roleWeaponSelectionsData = String(data: encoded, encoding: .utf8) ?? ""
+        }
         
-        // Save equipment selections by creating objects from templates
+        // Remove previously saved role equipment selections, then add current ones
         var equipmentList = character.equipmentList
         var armorList = character.armorList
+        var roleWeaponList = character.weaponList
+        
+        if let data = character.roleEquipmentSelectionsData.data(using: .utf8),
+           let previousEquipment = try? JSONDecoder().decode([String].self, from: data) {
+            for prevEquip in previousEquipment where !prevEquip.isEmpty {
+                if let idx = armorList.lastIndex(where: { $0.name == prevEquip }) {
+                    armorList.remove(at: idx)
+                } else if let idx = roleWeaponList.lastIndex(where: { $0.name == prevEquip }) {
+                    roleWeaponList.remove(at: idx)
+                } else if let idx = equipmentList.lastIndex(where: { $0.name == prevEquip }) {
+                    equipmentList.remove(at: idx)
+                }
+            }
+        }
         
         for equipment in selectedEquipment {
             if !equipment.isEmpty {
-                // Check if equipment already exists
-                if !equipmentList.contains(where: { $0.name == equipment }) && 
-                   !armorList.contains(where: { $0.name == equipment }) {
-                    // Try to find armor template first
-                    if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: equipment) {
-                        armorList.append(armorTemplate.createArmor())
-                    } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
-                        // Find equipment template and create equipment object
-                        equipmentList.append(equipmentTemplate.createEquipment())
-                    } else {
-                        // Fallback: create basic equipment object if template not found
-                        let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
-                        basicEquipment.equipmentDescription = "Equipment from character creation"
-                        equipmentList.append(basicEquipment)
+                if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: equipment) {
+                    armorList.append(armorTemplate.createArmor())
+                } else if let weaponTemplate = WeaponTemplateDefinitions.getTemplate(for: equipment) {
+                    roleWeaponList.append(weaponTemplate.createWeapon())
+                } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                    equipmentList.append(equipmentTemplate.createEquipment())
+                } else {
+                    let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
+                    basicEquipment.equipmentDescription = "Equipment from character creation"
+                    equipmentList.append(basicEquipment)
+                }
+            }
+        }
+        if let encoded = try? JSONEncoder().encode(selectedEquipment) {
+            character.roleEquipmentSelectionsData = String(data: encoded, encoding: .utf8) ?? ""
+        }
+        
+        // Add granted equipment from role (remove previous copies only on subsequent saves)
+        if !isFirstRoleSave {
+            for equipment in role.equipment {
+                if ArmorTemplateDefinitions.getTemplate(for: equipment) != nil {
+                    if let idx = armorList.lastIndex(where: { $0.name == equipment }) {
+                        armorList.remove(at: idx)
+                    }
+                } else if WeaponTemplateDefinitions.getTemplate(for: equipment) != nil {
+                    if let idx = roleWeaponList.lastIndex(where: { $0.name == equipment }) {
+                        roleWeaponList.remove(at: idx)
+                    }
+                } else {
+                    if let idx = equipmentList.lastIndex(where: { $0.name == equipment }) {
+                        equipmentList.remove(at: idx)
                     }
                 }
             }
         }
         
-        // Add granted equipment from role
         for equipment in role.equipment {
-            if !equipmentList.contains(where: { $0.name == equipment }) && 
-               !armorList.contains(where: { $0.name == equipment }) {
-                // Try to find armor template first
-                if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: equipment) {
-                    armorList.append(armorTemplate.createArmor())
-                } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
-                    equipmentList.append(equipmentTemplate.createEquipment())
-                } else {
-                    // Fallback: create basic equipment object if template not found
-                    let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
-                    basicEquipment.equipmentDescription = "Role granted equipment"
-                    equipmentList.append(basicEquipment)
-                }
+            if let armorTemplate = ArmorTemplateDefinitions.getTemplate(for: equipment) {
+                armorList.append(armorTemplate.createArmor())
+            } else if let weaponTemplate = WeaponTemplateDefinitions.getTemplate(for: equipment) {
+                roleWeaponList.append(weaponTemplate.createWeapon())
+            } else if let equipmentTemplate = EquipmentTemplateDefinitions.getTemplate(for: equipment) {
+                equipmentList.append(equipmentTemplate.createEquipment())
+            } else {
+                let basicEquipment = Equipment(name: equipment, encumbrance: 1, cost: 0, availability: "Common")
+                basicEquipment.equipmentDescription = "Role granted equipment"
+                equipmentList.append(basicEquipment)
             }
         }
         
         character.equipmentList = equipmentList
         character.armorList = armorList
+        character.weaponList = roleWeaponList
     }
     
     private func skillBinding(for skill: String) -> Binding<Int> {

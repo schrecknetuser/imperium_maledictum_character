@@ -60,6 +60,10 @@ class ImperiumCharacter: BaseCharacter {
     var selectedOriginChoice: String = "" // The characteristic selected for origin choice bonus (e.g., "toughness")
     var selectedFactionChoice: String = "" // The characteristic selected for faction choice bonus (e.g., "toughness")
     
+    // Role selection tracking for proper remove-and-readd when navigating back
+    var roleWeaponSelectionsData: String = ""
+    var roleEquipmentSelectionsData: String = ""
+    
     // User characteristic allocations separate from final values
     var userCharacteristicAllocations: String = "" // JSON dictionary of user-allocated points per characteristic
     
@@ -798,16 +802,17 @@ class ImperiumCharacter: BaseCharacter {
         var updatedEquipmentList: [Equipment] = []
         for equipment in equipmentList {
             if equipment.name.contains("(") && equipment.name.contains(")") {
-                // This equipment has a full name like "Writing Kit (Shoddy)"
-                // Re-parse it to extract base name and traits
-                let reparsedEquipment = parseEquipmentFromName(equipment.name)
-                updatedEquipmentList.append(reparsedEquipment)
+                if EquipmentTemplateDefinitions.getTemplate(for: equipment.name) != nil {
+                    updatedEquipmentList.append(equipment)
+                } else {
+                    let reparsedEquipment = parseEquipmentFromName(equipment.name)
+                    updatedEquipmentList.append(reparsedEquipment)
+                }
             } else {
-                // This equipment already has a base name, keep it as is
                 updatedEquipmentList.append(equipment)
             }
         }
-        
+
         if updatedEquipmentList.count > 0 {
             equipmentList = updatedEquipmentList
         }
@@ -816,15 +821,18 @@ class ImperiumCharacter: BaseCharacter {
         var updatedWeaponList: [Weapon] = []
         for weapon in weaponList {
             if weapon.name.contains("(") && weapon.name.contains(")") {
-                // This weapon has a full name, re-parse it
-                let reparsedWeapon = parseWeaponFromName(weapon.name)
-                updatedWeaponList.append(reparsedWeapon)
+                // Skip if the full name matches a template — already correct
+                if WeaponTemplateDefinitions.getTemplate(for: weapon.name) != nil {
+                    updatedWeaponList.append(weapon)
+                } else {
+                    let reparsedWeapon = parseWeaponFromName(weapon.name)
+                    updatedWeaponList.append(reparsedWeapon)
+                }
             } else {
-                // This weapon already has a base name, keep it as is
                 updatedWeaponList.append(weapon)
             }
         }
-        
+
         if updatedWeaponList.count > 0 {
             weaponList = updatedWeaponList
         }
@@ -875,20 +883,22 @@ class ImperiumCharacter: BaseCharacter {
     }
     
     private func parseEquipmentFromName(_ fullName: String) -> Equipment {
+        // Try full name first — handles templates with parentheses in their name
+        if let template = EquipmentTemplateDefinitions.getTemplate(for: fullName) {
+            return template.createEquipment()
+        }
+
         let baseName = parseBaseName(fullName)
         let parenthesesContent = parseParenthesesContent(fullName)
-        
-        // Try to get equipment from template first
+
         let equipment: Equipment
         if let template = EquipmentTemplateDefinitions.getTemplate(for: baseName) {
             equipment = template.createEquipment()
-            // Use the base name to keep equipment items with same base name grouped together
             equipment.name = baseName
         } else {
             equipment = Equipment(name: baseName)
         }
-        
-        // Parse qualities, flaws, and traits from parentheses
+
         for content in parenthesesContent {
             if EquipmentQualities.all.contains(content) {
                 var qualities = equipment.qualities
@@ -904,25 +914,27 @@ class ImperiumCharacter: BaseCharacter {
                 equipment.traits = traits
             }
         }
-        
+
         return equipment
     }
     
     private func parseWeaponFromName(_ fullName: String) -> Weapon {
+        // Try full name first — handles templates like "Shotgun (Combat)"
+        if let template = WeaponTemplateDefinitions.getTemplate(for: fullName) {
+            return template.createWeapon()
+        }
+
         let baseName = parseBaseName(fullName)
         let parenthesesContent = parseParenthesesContent(fullName)
-        
-        // Try to get weapon from template first
+
         let weapon: Weapon
         if let template = WeaponTemplateDefinitions.getTemplate(for: baseName) {
             weapon = template.createWeapon()
-            // Use the base name to keep weapon items with same base name grouped together
             weapon.name = baseName
         } else {
             weapon = Weapon(name: baseName)
         }
-        
-        // Parse modifications, qualities, flaws, and traits from parentheses
+
         for content in parenthesesContent {
             if WeaponModifications.all.contains(content) {
                 var modifications = weapon.modifications
@@ -942,7 +954,7 @@ class ImperiumCharacter: BaseCharacter {
                 weapon.weaponTraits = traits
             }
         }
-        
+
         return weapon
     }
     

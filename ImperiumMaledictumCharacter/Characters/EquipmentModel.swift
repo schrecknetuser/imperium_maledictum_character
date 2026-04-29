@@ -257,9 +257,17 @@ struct EquipmentTemplateDefinitions {
     // MARK: - Clothing and Personal Gear
     static let clothingPersonalGear: [EquipmentTemplate] = [
         EquipmentTemplate(
-            name: "Backpack/Slings",
+            name: "Backpack",
             category: EquipmentCategories.clothingPersonalGear,
-            description: "When worn, a backpack or sling increases your maximum Encumbrance by 4.",
+            description: "When worn, a backpack increases your maximum Encumbrance by 4.",
+            encumbrance: 1,
+            cost: 20,
+            availability: AvailabilityLevels.common
+        ),
+        EquipmentTemplate(
+            name: "Slings",
+            category: EquipmentCategories.clothingPersonalGear,
+            description: "When worn, slings increase your maximum Encumbrance by 4.",
             encumbrance: 1,
             cost: 20,
             availability: AvailabilityLevels.common
@@ -610,6 +618,46 @@ struct EquipmentTemplateDefinitions {
             description: "These basic kits are ideal in areas where technology is unavailable or unreliable. Each kit contains parchment, ink, quills, and other writing implements.",
             encumbrance: 0,
             cost: 25,
+            availability: AvailabilityLevels.common
+        ),
+        EquipmentTemplate(
+            name: "Instrument of Divination",
+            category: EquipmentCategories.tools,
+            description: "A device used by psykers and astropaths to sense the currents of the Warp and divine possible futures. Instruments of Divination come in many forms, from crystal spheres to rune stones to spinning orreries. When used in conjunction with psychic abilities, an Instrument of Divination grants +1 SL to Psyniscience Tests.",
+            encumbrance: 0,
+            cost: 500,
+            availability: AvailabilityLevels.rare
+        ),
+        EquipmentTemplate(
+            name: "Drop Harness",
+            category: EquipmentCategories.tools,
+            description: "A harness and line system designed for rapid descent from aircraft or high structures. The controlled-descent mechanism slows the user's fall to a safe speed. When using a Drop Harness, you can descend up to 30 metres per round safely and do not suffer falling damage while the harness is functioning.",
+            encumbrance: 1,
+            cost: 300,
+            availability: AvailabilityLevels.scarce
+        ),
+        EquipmentTemplate(
+            name: "Grapnel & Line",
+            category: EquipmentCategories.tools,
+            description: "A grappling hook attached to a length of strong, thin rope. It can be thrown to reach elevated positions or to cross gaps. The line is 30 metres long and can support the weight of a Medium-sized creature. Using a Grapnel & Line requires a Challenging (+0) Ranged (Thrown) Test to secure it properly.",
+            encumbrance: 1,
+            cost: 50,
+            availability: AvailabilityLevels.common
+        ),
+        EquipmentTemplate(
+            name: "Heavy Laud Hailer",
+            category: EquipmentCategories.tools,
+            description: "A more powerful version of the standard Laud Hailer, the Heavy Laud Hailer can project sound over much greater distances and is often mounted on vehicles or carried by dedicated operators. When using a Heavy Laud Hailer, your voice or other sounds can be heard up to 500 metres away, and you gain +1 SL to Presence (Leadership) Tests when addressing large groups.",
+            encumbrance: 2,
+            cost: 300,
+            availability: AvailabilityLevels.scarce
+        ),
+        EquipmentTemplate(
+            name: "Silencer",
+            category: EquipmentCategories.tools,
+            description: "A sound suppression device that uses sonic baffles and other mechanisms to reduce the noise of a weapon. It can be attached to any Solid Projectile ranged weapon. While attached, a Silencer removes the weapon's Loud Trait.",
+            encumbrance: 0,
+            cost: 400,
             availability: AvailabilityLevels.common
         )
     ]

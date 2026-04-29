@@ -120,7 +120,7 @@ struct FactionDefinitions {
             skillAdvances: ["Dexterity", "Linguistics", "Logic", "Lore", "Medicae", "Navigation"],
             influenceBonus: "Adeptus Administratum",
             talents: ["Data Delver"],
-            equipment: ["Robes", "Dataslate", "Writing Kit", "Auto Quill"],
+            equipment: ["Robes", "Dataslate", "Writing Kit", "Auto-Quill"],
             solars: 800,
             description: "The vast bureaucracy that administers the Imperium"
         ),
@@ -165,7 +165,7 @@ struct FactionDefinitions {
             skillAdvances: ["Awareness", "Discipline", "Intuition", "Logic", "Lore", "Presence"],
             influenceBonus: "Inquisition",
             talents: [],
-            equipment: ["Laspistol", "Armoured Bodyglove", "Glow-globe", "Manacles", "Auspex"],
+            equipment: ["Las Pistol", "Armoured Bodyglove", "Glow-globe", "Manacles", "Auspex"],
             solars: 400,
             description: "The Emperor's secret police and investigators of heresy"
         ),
@@ -180,7 +180,7 @@ struct FactionDefinitions {
             skillAdvances: ["Awareness", "Logic", "Navigation", "Piloting", "Reflexes", "Tech"],
             influenceBonus: "Navis Imperialis",
             talents: ["Void Legs"],
-            equipment: ["Laspistol", "Void Suit", "Lascutter"],
+            equipment: ["Las Pistol", "Void Suit", "Lascutter"],
             solars: 500,
             description: "The Imperial Navy - rulers of the void between stars"
         ),
@@ -232,7 +232,7 @@ struct RoleDefinitions {
             skillAdvanceCount: 3,
             specializationAdvances: ["Any (Intuition)", "Any (Presence)", "Any (Rapport)"],
             specializationAdvanceCount: 2,
-            weaponChoices: [["Knife", "Laspistol", "Stub Revolver"]],
+            weaponChoices: [["Knife", "Las Pistol", "Stub Revolver"]],
             equipment: ["Survival Gear", "Vox Bead"],
             equipmentChoices: [["Laud Hailer", "Pict Recorder", "Vox-caster"]],
             description: "Masters of communication and negotiation"
@@ -245,7 +245,7 @@ struct RoleDefinitions {
             skillAdvanceCount: 3,
             specializationAdvances: ["Fear (Discipline)", "Forbidden (Linguistics)", "Forbidden (Lore)", "Psyniscience (Awareness)", "Any (Psychic Mastery)"],
             specializationAdvanceCount: 2,
-            weaponChoices: [["Knife", "Staff"], ["Laspistol", "Stub Revolver"]],
+            weaponChoices: [["Knife", "Staff"], ["Las Pistol", "Stub Revolver"]],
             equipment: ["Survival Gear", "Vox Bead"],
             equipmentChoices: [["Psy Focus", "Auspex"]],
             description: "Those touched by the warp or trained to combat it"
@@ -260,7 +260,7 @@ struct RoleDefinitions {
             specializationAdvanceCount: 2,
             weaponChoices: [],
             equipment: ["Survival Gear", "Vox Bead", "Slings", "Dataslate"],
-            equipmentChoices: [["Auspex", "Auto-quill"], ["Chirurgeon's Tools", "Combi-Tool", "Diagnostor", "Multicompass", "Multikey"]],
+            equipmentChoices: [["Auspex", "Auto-quill"], ["Chirurgeon's Kit", "Combi-Tool", "Diagnostor", "Multicompass", "Multikey"]],
             description: "Scholars, medics, and technical specialists"
         ),
         Role(
@@ -271,7 +271,7 @@ struct RoleDefinitions {
             skillAdvanceCount: 3,
             specializationAdvances: ["Any (Ranged)", "Any (Reflexes)", "Any (Stealth)"],
             specializationAdvanceCount: 2,
-            weaponChoices: [["Autopistol", "Laspistol"], ["Lasgun", "Sniper Rifle"]],
+            weaponChoices: [["Autopistol", "Las Pistol"], ["Lasgun", "Sniper Rifle"]],
             equipment: ["Survival Gear", "Vox Bead", "Silencer", "Smoke Grenade", "Knife", "Knife"],
             equipmentChoices: [["Auspex", "Comm Leech"], ["Disguise Kit", "Drop Harness", "Grapnel & Line", "Magnoculars", "Multikey", "Pict Recorder", "Photo-visors", "Signal Jammer"]],
             description: "Infiltrators, assassins, and covert operatives"
@@ -284,7 +284,7 @@ struct RoleDefinitions {
             skillAdvanceCount: 3,
             specializationAdvances: ["Any (Melee)", "Any (Ranged)", "Any (Reflexes)"],
             specializationAdvanceCount: 2,
-            weaponChoices: [["Sword", "Chainsword"], ["Laspistol", "Stub Revolver"], ["Lasgun", "Shotgun (Combat)"]],
+            weaponChoices: [["Sword", "Chainsword"], ["Las Pistol", "Stub Revolver"], ["Lasgun", "Shotgun (Combat)"]],
             equipment: ["Survival Gear", "Vox Bead", "Frag Grenade", "Backpack", "Knife"],
             equipmentChoices: [["Scrap-plate", "Flak Jacket"]],
             description: "Professional soldiers and combat specialists"
@@ -297,9 +297,9 @@ struct RoleDefinitions {
             skillAdvanceCount: 3,
             specializationAdvances: ["Any (Discipline)", "Any (Lore)", "Any (Melee)"],
             specializationAdvanceCount: 2,
-            weaponChoices: [["Great Weapon", "Chainsword"], ["Laspistol", "Hand Flamer"]],
+            weaponChoices: [["Great Weapon", "Chainsword"], ["Las Pistol", "Hand Flamer"]],
             equipment: ["Holy Icon", "Vox Bead", "Knife"],
-            equipmentChoices: [["Heavy Leathers", "Robe"], ["Heavy Laud Hailer", "Writing Kit"]],
+            equipmentChoices: [["Heavy Leathers", "Robes"], ["Heavy Laud Hailer", "Writing Kit"]],
             description: "Fanatical believers driven by unwavering faith"
         )
     ]

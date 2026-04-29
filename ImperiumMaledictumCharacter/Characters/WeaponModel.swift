@@ -346,6 +346,7 @@ struct WeaponTemplateDefinitions {
         WeaponTemplate(name: "Shotgun (Pump Action)", category: WeaponCategories.ranged, specialization: WeaponSpecializations.longGun, damage: "6", range: WeaponRanges.medium, magazine: 8, encumbrance: 1, cost: 400, availability: "Common", traits: ["Inflict (Prone)", "Loud", "Spread", "Two-handed"]),
         WeaponTemplate(name: "Sniper Rifle", category: WeaponCategories.ranged, specialization: WeaponSpecializations.longGun, damage: "8", range: WeaponRanges.extreme, magazine: 6, encumbrance: 2, cost: 1000, availability: "Scarce", traits: ["Loud", "Two-handed"]),
         WeaponTemplate(name: "Stub Pistol", category: WeaponCategories.ranged, specialization: WeaponSpecializations.pistol, damage: "6", range: WeaponRanges.medium, magazine: 2, encumbrance: 0, cost: 250, availability: "Common", traits: ["Burst", "Close", "Loud"]),
+        WeaponTemplate(name: "Stub Automatic", category: WeaponCategories.ranged, specialization: WeaponSpecializations.pistol, damage: "5", range: WeaponRanges.medium, magazine: 4, encumbrance: 0, cost: 300, availability: "Common", traits: ["Close", "Loud", "Rapid Fire (2)"]),
         WeaponTemplate(name: "Stub Revolver", category: WeaponCategories.ranged, specialization: WeaponSpecializations.pistol, damage: "6", range: WeaponRanges.medium, magazine: 6, encumbrance: 0, cost: 200, availability: "Common", traits: ["Close", "Loud", "Reliable"]),
         
         // Specialised Ranged Weapons
@@ -375,6 +376,7 @@ struct WeaponTemplateDefinitions {
         WeaponTemplate(name: "Improvised (One-handed)", category: WeaponCategories.melee, specialization: WeaponSpecializations.oneHanded, damage: "1+StrB", encumbrance: 1, cost: 0, availability: "–", traits: ["Ineffective"]),
         WeaponTemplate(name: "Improvised (Two-handed)", category: WeaponCategories.melee, specialization: WeaponSpecializations.twoHanded, damage: "2+StrB", encumbrance: 3, cost: 0, availability: "–", traits: ["Ineffective", "Two-handed"]),
         WeaponTemplate(name: "Knife", category: WeaponCategories.melee, specialization: WeaponSpecializations.oneHanded, damage: "0+StrB", encumbrance: 0, cost: 50, availability: "Common", traits: ["Subtle", "Thrown (Short)"]),
+        WeaponTemplate(name: "Knife (Mono-Edge)", category: WeaponCategories.melee, specialization: WeaponSpecializations.oneHanded, damage: "0+StrB", encumbrance: 0, cost: 300, availability: "Rare", traits: ["Penetrating (2)", "Subtle", "Thrown (Short)"]),
         WeaponTemplate(name: "Staff", category: WeaponCategories.melee, specialization: WeaponSpecializations.twoHanded, damage: "1+StrB", encumbrance: 2, cost: 25, availability: "Common", traits: ["Defensive", "Two-handed"]),
         WeaponTemplate(name: "Sword", category: WeaponCategories.melee, specialization: WeaponSpecializations.oneHanded, damage: "2+StrB", encumbrance: 1, cost: 150, availability: "Common", traits: []),
         WeaponTemplate(name: "Unarmed", category: WeaponCategories.melee, specialization: WeaponSpecializations.brawling, damage: "0+StrB", encumbrance: 0, cost: 0, availability: "–", traits: ["Ineffective"]),
