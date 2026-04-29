@@ -119,7 +119,6 @@ struct EquipmentTab: View {
                                                 Text(equipment.equipmentDescription)
                                                     .font(.caption)
                                                     .foregroundColor(.secondary)
-                                                    .lineLimit(3)
                                             }
                                             
                                             // Show traits, qualities, and flaws
@@ -213,7 +212,6 @@ struct EquipmentTab: View {
                                                 Text(armor.armorDescription)
                                                     .font(.caption)
                                                     .foregroundColor(.secondary)
-                                                    .lineLimit(3)
                                             }
                                             
                                             // Show armor stats
@@ -312,7 +310,6 @@ struct EquipmentTab: View {
                                                 Text(weapon.weaponDescription)
                                                     .font(.caption)
                                                     .foregroundColor(.secondary)
-                                                    .lineLimit(3)
                                             }
                                             
                                             // Show weapon stats based on category
